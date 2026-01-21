@@ -1,5 +1,6 @@
 import { processHtml } from "./ThemeProcessor";
-// @ts-expect-error - html2pdf.js lacks TypeScript definitions
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - html2pdf.js may or may not have TypeScript definitions
 import html2pdf from "html2pdf.js";
 
 export interface ExportOptions {
