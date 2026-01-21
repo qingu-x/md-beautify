@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "highlight.js": "^11.11.1",
+    "html2pdf.js": "^0.14.0",
     "juice": "^5.2.0",
     "katex": "^0.16.27",
     "markdown-it": "^14.1.0",
@@ -24,9 +25,11 @@
     "markdown-it-sup": "^2.0.0",
     "markdown-it-table-of-contents": "^0.4.4",
     "markdown-it-task-lists": "^2.1.1",
-    "mathjax": "^3.0.1"
+    "mathjax": "^3.0.1",
+    "mermaid": "^11.12.2"
   },
   "devDependencies": {
+    "@types/html2pdf.js": "^0.10.0",
     "@types/markdown-it": "^12.2.3",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"

@@ -36,12 +36,17 @@
   font-synthesis: style;
 }
 
-/* 强制图片自适应 */
+/* 强制图片自适应，但允许通过属性覆盖高度 */
 #wemd img {
   max-width: 100% !important;
-  height: auto !important;
+  /* height: auto !important; */
   display: block;
   margin: 10px auto;
+}
+
+/* 仅当未指定 height 属性时，才强制高度自适应以保持比例 */
+#wemd img:not([height]) {
+  height: auto !important;
 }
 
 /* 针对整个预览容器启用字体合成 */
@@ -66,4 +71,20 @@
 }
 
 /* 如果用户希望完全跟随 Obsidian 主题，可以使用下面的变量 */
-/* .theme-dark .wemd-dark-mode#wemd { background-color: var(--background-primary); } */
+.theme-dark .wemd-dark-mode#wemd {
+  background-color: var(--background-primary);
+}
+
+#wemd pre.custom::before {
+  display: none !important;
+}
+
+#wemd pre.custom code {
+  padding-top: 16px !important;
+  font-family:
+    Operator Mono,
+    Consolas,
+    Monaco,
+    Menlo,
+    monospace;
+}

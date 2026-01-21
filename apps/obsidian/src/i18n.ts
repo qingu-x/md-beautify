@@ -70,6 +70,12 @@ const translations = {
 		msg_no_local_images: "No local images found",
 		msg_uploading_all: "Uploading {count} images...",
 		msg_upload_all_done: "Successfully uploaded {count} images",
+		export_html_command: "Export to HTML",
+		export_pdf_command: "Export to PDF",
+		export_pdf_image_command: "Export to PDF (Image - No selection)",
+		export_pdf_vector_command: "Export to PDF (Vector - Selectable)",
+		export_success: "Export successful",
+		export_failed: "Export failed: ",
 	},
 	zh: {
 		preview_ribbon_tooltip: "预览美化排版",
@@ -141,6 +147,12 @@ const translations = {
 		msg_no_local_images: "未发现本地图片",
 		msg_uploading_all: "正在上传 {count} 张图片...",
 		msg_upload_all_done: "成功上传 {count} 张图片",
+		export_html_command: "导出为 HTML",
+		export_pdf_command: "导出为 PDF",
+		export_pdf_image_command: "导出为 PDF (图片 - 不可选中)",
+		export_pdf_vector_command: "导出为 PDF (矢量 - 可选中)",
+		export_success: "导出成功",
+		export_failed: "导出失败: ",
 	}
 };
 

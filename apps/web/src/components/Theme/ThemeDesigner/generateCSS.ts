@@ -197,7 +197,7 @@ export function generateCSS(v: DesignerVariables): string {
     v.quoteTextColor,
     v.quoteBorderWidth,
     v.quoteBorderStyle,
-    v.quotePaddingX,
+    v.quotePaddingX ?? 20,
     v.quoteTextCentered,
   );
   const headingExtras = [
@@ -214,6 +214,8 @@ export function generateCSS(v: DesignerVariables): string {
   font-family: ${v.fontFamily};
   padding: 0 ${v.pagePadding ?? 8}px;
   color: ${v.paragraphColor};
+  overflow-wrap: break-word;
+  letter-spacing: ${v.globalLetterSpacing ?? 0}px;
 }
 #wemd figcaption {
   color: ${v.imageCaptionColor};
@@ -225,7 +227,13 @@ export function generateCSS(v: DesignerVariables): string {
 
 #wemd strong { 
   font-weight: bold;
-  ${v.strongStyle === "none" ? "color: inherit;" : `color: ${v.primaryColor};`}
+  ${
+    v.strongColor && v.strongColor !== "inherit"
+      ? `color: ${v.strongColor};`
+      : v.strongStyle === "none"
+        ? "color: inherit;"
+        : `color: ${v.primaryColor};`
+  }
   ${v.strongStyle === "highlighter" ? `background: ${v.primaryColor}20; padding: 0 2px; border-radius: 2px;` : ""}
   ${v.strongStyle === "highlighter-bottom" ? `background: linear-gradient(to bottom, transparent 60%, ${v.primaryColor}30 60%); padding: 0 2px;` : ""}
   ${v.strongStyle === "underline" ? `border-bottom: 2px solid ${v.primaryColor}; padding-bottom: 1px;` : ""}
@@ -239,6 +247,29 @@ export function generateCSS(v: DesignerVariables): string {
   padding: ${v.paragraphPadding ?? 0}px 0;
   ${v.textIndent ? "text-indent: 2em;" : ""}
   ${v.textJustify ? "text-align: justify;" : ""}
+}
+
+#wemd dt {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-top: 16px;
+  color: #000000;
+}
+
+#wemd dt::after {
+  content: "：";
+  display: inline;
+}
+
+#wemd dd {
+  margin-left: 0;
+  margin-top: 4px;
+  color: #333333;
+  line-height: ${v.lineHeight};
+}
+
+#wemd dd p {
+  margin: 4px 0;
 }
 
 #wemd h1 .content {
@@ -277,14 +308,15 @@ export function generateCSS(v: DesignerVariables): string {
 }
 #wemd h4 { margin: ${v.h4.marginTop}px 0 ${v.h4.marginBottom}px; ${v.h4.centered ? "text-align: center;" : ""} }
 
-/* 统一引用样式处理 */
 #wemd blockquote, 
 #wemd .multiquote-1, 
 #wemd .multiquote-2, 
 #wemd .multiquote-3 {
   ${quotePreset.base}
-  margin: 24px 0 !important;
+  margin: ${v.paragraphMargin}px 0 !important;
   border-left-color: ${v.quoteBorderColor};
+  border-left-style: ${v.quoteBorderStyle};
+  padding: ${v.quotePaddingY}px ${v.quotePaddingX}px;
 }
 #wemd blockquote p,
 #wemd .multiquote-1 p,
@@ -292,23 +324,76 @@ export function generateCSS(v: DesignerVariables): string {
 #wemd .multiquote-3 p { 
   color: ${v.quoteTextColor}; 
   margin: 0 !important;
+  font-size: ${v.quoteFontSize}px;
+  line-height: ${v.quoteLineHeight};
+  ${v.quoteTextCentered ? "text-align: center !important;" : ""}
 }
 
-#wemd pre code.hljs {
+#wemd pre {
+  margin: ${v.paragraphMargin}px 0;
+  position: relative;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#wemd pre code {
   display: block;
   background: ${v.codeBackground};
   font-size: ${v.codeFontSize}px;
   padding: ${v.showMacBar ? "36px 16px 16px" : "16px"};
   position: relative;
   white-space: pre;
+  border-radius: 0;
+  word-wrap: normal;
+  word-break: keep-all;
+  text-align: left;
+  letter-spacing: 0;
+  word-spacing: 0;
+  width: 100%;
+  box-sizing: border-box;
   overflow-x: auto;
-  border-radius: 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
 #wemd pre.custom {
   position: relative;
-  overflow: visible;
-  margin: 16px 0;
+  margin: ${v.paragraphMargin}px 0;
+}
+
+#wemd .mermaid {
+  background: #f8f8f8;
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 6px;
+  white-space: pre;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+#wemd .mermaid svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+#wemd .mermaid svg line,
+#wemd .mermaid svg path {
+  vector-effect: non-scaling-stroke;
+}
+
+#wemd .mermaid svg text {
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  font-kerning: normal;
+}
+
+#wemd .mermaid svg .eventWrapper {
+  filter: none !important;
 }
 
 ${
@@ -316,6 +401,7 @@ ${
     ? `
 #wemd pre.custom::before {
   content: "";
+  display: block;
   position: absolute;
   top: 10px;
   left: 12px;
@@ -338,14 +424,26 @@ ${getCodeThemeCSS(v.codeTheme)}
   border-radius: ${v.inlineCodeStyle === "rounded" ? "12px" : v.inlineCodeStyle === "github" ? "4px" : "2px"};
   font-size: 0.9em;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  white-space: normal;
   ${v.inlineCodeStyle === "github" ? "border: 1px solid rgba(0,0,0,0.06);" : ""}
   ${v.inlineCodeStyle === "color-text" ? `background: transparent; font-weight: bold; border-bottom: 2px solid ${v.primaryColor}50;` : ""}
+}
+
+/* 代码块样式需要更高优先级覆盖行内代码样式 */
+#wemd pre code,
+#wemd pre code.hljs {
+  padding: ${v.showMacBar ? "36px 16px 16px" : "16px"} !important;
+  white-space: pre;
+  text-align: left;
+  letter-spacing: 0;
+  word-spacing: 0;
 }
 
 #wemd a {
   color: ${v.linkColor || v.primaryColor};
   text-decoration: none;
   border-bottom: ${v.linkUnderline ? `1px solid ${v.linkColor || v.primaryColor}` : "none"};
+  word-break: break-all;
 }
 
 #wemd em {
@@ -366,16 +464,33 @@ ${getCodeThemeCSS(v.codeTheme)}
 }
 
 #wemd hr {
-  height: ${v.hrHeight}px;
-  background: ${v.hrColor};
-  border: none;
   margin: ${v.hrMargin}px 0;
-}
+  border: 0;
+  ${(() => {
+    const style = v.hrStyle || "solid";
+    const color = v.hrColor;
+    const height = v.hrHeight;
 
+    if (style === "pill") {
+      return `
+    height: ${height}px;
+    background: ${color};
+    width: 20%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 8px;
+      `;
+    }
+
+    return `
+    border-top: ${height}px ${style} ${color};
+    `;
+  })()}
+}
 #wemd table {
   width: 100%;
   border-collapse: collapse;
-  margin: 16px 0;
+  margin: ${v.paragraphMargin}px 0;
 }
 
 #wemd th {
@@ -514,7 +629,7 @@ ${
   border-left-width: 4px;
   border-left-style: solid;
   border-radius: 4px;
-  margin: 16px 0;
+  margin: ${v.paragraphMargin}px 0;
   padding: 12px 16px;
 }
 
@@ -526,9 +641,9 @@ ${
   border-radius: ${v.imageBorderRadius}px;
 }
 
-#wemd ul { list-style-type: ${v.ulStyle}; padding-left: 20px; margin: 16px 0; }
+#wemd ul { list-style-type: ${v.ulStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.ulFontSize || v.ulFontSize === "inherit" ? v.fontSize : v.ulFontSize}; }
 #wemd ul ul { list-style-type: ${v.ulStyleL2}; margin: 4px 0; }
-#wemd ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: 16px 0; }
+#wemd ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.olFontSize || v.olFontSize === "inherit" ? v.fontSize : v.olFontSize}; }
 #wemd ol ol { list-style-type: ${v.olStyleL2}; margin: 4px 0; }
 #wemd li { margin: ${v.listSpacing}px 0; line-height: ${v.lineHeight}; }
 
@@ -595,12 +710,17 @@ ${quotePreset.extra}
   margin-bottom: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
   letter-spacing: 0.05em;
 }
 
 #wemd .callout-icon {
   font-size: 18px;
+  margin-right: 8px;
+}
+
+#wemd .callout p {
+  margin: 0 !important;
 }
 
 #wemd .callout-note { border-left: 4px solid #6366f1; background: #f5f5ff; }
@@ -608,5 +728,35 @@ ${quotePreset.extra}
 #wemd .callout-important { border-left: 4px solid #8b5cf6; background: #f5f3ff; }
 #wemd .callout-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
 #wemd .callout-caution { border-left: 4px solid #ef4444; background: #fff5f5; }
+
+/* Mermaid 样式覆盖 */
+#wemd .mermaid foreignObject { overflow: visible; }
+#wemd .mermaid .label {
+  color: ${v.paragraphColor};
+  font-family: ${v.fontFamily};
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  line-height: 1.2;
+  white-space: normal;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  font-kerning: normal;
+}
+#wemd .mermaid .label * {
+  margin: 0;
+  padding: 0;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+}
+#wemd .mermaid .edgeLabel .label {
+  display: block;
+  white-space: normal;
+  text-align: left;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  font-kerning: normal;
+}
 `;
 }

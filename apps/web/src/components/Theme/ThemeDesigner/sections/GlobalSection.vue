@@ -104,6 +104,19 @@ const handlePrimaryColorChange = (color: string) => {
     </div>
 
     <div class="designer-field">
+      <label>全局字间距: {{ variables.globalLetterSpacing ?? 0 }}px</label>
+      <input
+        type="range"
+        class="designer-slider"
+        :min="-2"
+        :max="5"
+        :step="0.1"
+        :value="variables.globalLetterSpacing ?? 0"
+        @input="updateVariable('globalLetterSpacing', Number(($event.target as HTMLInputElement).value))"
+      />
+    </div>
+
+    <div class="designer-field">
       <label>正文颜色</label>
       <ColorSelector
         :value="variables.paragraphColor"
@@ -138,6 +151,20 @@ const handlePrimaryColorChange = (color: string) => {
           {{ opt.label }}
         </button>
       </div>
+    </div>
+
+    <div class="designer-field">
+      <label>加粗颜色</label>
+      <ColorSelector
+        :value="variables.strongColor || 'inherit'"
+        :presets="[
+          { label: '跟随主题', value: 'inherit' },
+          { label: '深灰', value: '#333333' },
+          { label: '纯黑', value: '#000000' },
+          variables.primaryColor,
+        ]"
+        @change="updateVariable('strongColor', $event)"
+      />
     </div>
   </div>
 </template>

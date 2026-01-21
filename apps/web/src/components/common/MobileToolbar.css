@@ -162,3 +162,8 @@
 .mobile-menu-item:active {
   background: var(--bg-hover);
 }
+
+.mobile-menu-item.highlight {
+  color: var(--accent-primary);
+  font-weight: 600;
+}

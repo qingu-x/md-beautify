@@ -19,7 +19,7 @@
     </template>
 
     <template v-else>
-      <Header />
+      <Header ref="headerRef" />
       
       <button
         class="history-toggle"
@@ -80,6 +80,10 @@
           @view-change="setActiveView"
           @copy-to-wechat="copyToWechat"
           @open-theme="showThemePanel = true"
+          @open-storage="headerRef?.openStorageModal"
+          @open-image-host="headerRef?.openImageHostModal"
+          @export-html="() => exportHtml()"
+          @export-pdf="() => exportPdf()"
         />
       </main>
 
@@ -113,6 +117,7 @@ import { Toast } from './components/common';
 
 import { useFileSystem } from './hooks/useFileSystem';
 import { useMobileView } from './hooks/useMobileView';
+import { useExport } from './hooks/useExport';
 import { useEditorStore } from './store/editorStore';
 import { useHistoryStore } from './store/historyStore';
 import { useFileStore } from './store/fileStore';
@@ -136,13 +141,19 @@ const historyLoading = computed(() => historyStore.loading);
 const fileLoading = computed(() => fileStore.isLoading);
 
 const { isMobile, activeView, setActiveView } = useMobileView();
+const { exportHtml, exportPdf } = useExport();
 
 const themeStore = useThemeStore();
 const uiThemeStore = useUIThemeStore();
 
+const headerRef = ref<any>(null);
+
 const copyToWechat = () => {
-  const isDarkMode = uiThemeStore.theme === "dark";
-  const css = themeStore.getThemeCSS(themeStore.themeId, isDarkMode);
+  // 复制到微信时始终使用浅色模式的 CSS，因为微信 App 会自动处理深色模式反色
+  // 如果使用深色模式 CSS (isDarkMode=true)，在微信浅色模式下会显示异常
+  // 另外，如果当前选中的是深色主题，强制切换到默认主题进行复制
+  const copyThemeId = themeStore.themeId === 'dark' ? 'default' : themeStore.themeId;
+  const css = themeStore.getThemeCSS(copyThemeId, false);
   editorStore.copyToWechat(css);
 };
 
@@ -178,10 +189,11 @@ const updateInfo = ref<{
   releaseNotes: string;
 } | null>(null);
 
-const handleKeyDown = (e: KeyboardEvent) => {
+const handleKeyDown = async (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key === "s") {
     e.preventDefault();
-    saveFile();
+    // 快捷键保存逻辑已在 MarkdownEditor.vue 中统一处理
+    // 这里不再重复处理，避免冲突
   }
 };
 

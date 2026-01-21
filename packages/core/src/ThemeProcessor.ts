@@ -110,7 +110,7 @@ export const processHtml = (
   if (hasMacBar && inlinePseudoElements) {
     let paddingTop = 36;
     const paddingMatch = css.match(
-      /pre\s+code\.hljs\s*\{[^}]*padding:\s*(\d+)px/i,
+      /pre\s+code(?:\.hljs)?\s*\{[^}]*padding:\s*(\d+)px/i,
     );
     if (paddingMatch) {
       paddingTop = parseInt(paddingMatch[1], 10);
@@ -245,21 +245,87 @@ export const processHtml = (
     }
   }
 
-  // 将 HTML 包裹在 id="wemd" 的 section 中，以便 juice 能够匹配以 #wemd 开头的选择器
-  const wrappedHtml = `<section id="${SECTION_ID}">${html}</section>`;
+  // 包裹在 section#wemd 中，复制时添加透明背景防止某些浏览器保留选区背景色
+  const bgStyle = inlinePseudoElements
+    ? ' style="background:transparent;background-color:transparent;"'
+    : "";
+  const wrappedHtml = `<section id="${SECTION_ID}"${bgStyle}>${html}</section>`;
 
   if (!inlineStyles) {
     return wrappedHtml;
   }
 
   try {
-    const res = juice.inlineContent(wrappedHtml, css, {
+    let res = juice.inlineContent(wrappedHtml, css, {
       inlinePseudoElements,
       preserveImportant: true,
     });
 
-    // 保留 section#wemd 包裹层以保持 #wemd 样式（边距、最大宽度、边框等）
-    // 这与遗留行为一致，其中 #wemd 样式应用于容器
+    // 如果 juice 处理结果为空（可能是由于某些极端输入或配置），则返回包装后的 HTML
+    if (!res) {
+      return wrappedHtml;
+    }
+
+    // 在 juice 处理之后，为代码块追加关键内联样式
+    // 这确保我们的样式不会被 juice 覆盖，且优先级最高
+    if (inlinePseudoElements) {
+      const appendStyleValue = (styleValue: string, extra: string) => {
+        const trimmed = styleValue.trim();
+        if (!trimmed) return extra;
+        const needsSemicolon = !trimmed.endsWith(";");
+        return `${trimmed}${needsSemicolon ? ";" : ""}${extra}`;
+      };
+
+      // 处理 pre 元素：确保 overflow 和 white-space 正确
+      res = res.replace(
+        /<pre([^>]*)(style="[^"]*")([^>]*)>/gi,
+        (match, before: string, styleAttr: string, after: string) => {
+          const styleMatch = styleAttr.match(/style="([^"]*)"/i);
+          const existing = styleMatch ? styleMatch[1] : "";
+          const nextStyle = appendStyleValue(
+            existing,
+            "overflow-x:auto;-webkit-overflow-scrolling:touch;",
+          );
+          return `<pre${before}style="${nextStyle}"${after}>`;
+        },
+      );
+
+      // 处理 code 元素：防止 text-align:justify 破坏代码格式
+      // 匹配所有带 style 属性的 code 元素（不限制 class）
+      res = res.replace(
+        /<code([^>]*)(style="[^"]*")([^>]*)>/gi,
+        (match, before: string, styleAttr: string, after: string) => {
+          const styleMatch = styleAttr.match(/style="([^"]*)"/i);
+          const existing = styleMatch ? styleMatch[1] : "";
+          const normalized = existing.replace(
+            /white-space:\s*pre-wrap/gi,
+            "white-space:pre",
+          );
+          const nextStyle = appendStyleValue(
+            normalized,
+            "text-align:left;letter-spacing:0;word-spacing:0;",
+          );
+          return `<code${before}style="${nextStyle}"${after}>`;
+        },
+      );
+
+      // 4. 术语列表 (Definition List) 伪元素转换
+      if (css.includes("dt::after") && css.includes('content: "："')) {
+        res = res.replace(
+          /<dt([^>]*)(style="[^"]*")([^>]*)>([\s\S]*?)<\/dt>/gi,
+          (
+            match,
+            before: string,
+            styleAttr: string,
+            after: string,
+            content: string,
+          ) => {
+            return `<dt${before}${styleAttr}${after}>${content}：</dt>`;
+          },
+        );
+      }
+    }
+
     return res;
   } catch (e) {
     console.error("Juice inline error:", e);

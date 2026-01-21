@@ -523,6 +523,7 @@ export type StyleCategory =
   | "quote"
   | "list"
   | "code"
+  | "mermaid"
   | "image"
   | "table"
   | "other";
@@ -541,6 +542,7 @@ export const styleCategories: CategoryConfig[] = [
   { id: "quote", label: "引用", icon: "❝", description: "引用块样式" },
   { id: "list", label: "列表", icon: "☰", description: "列表样式" },
   { id: "code", label: "代码", icon: "</>", description: "代码块样式" },
+  { id: "mermaid", label: "图表", icon: "📊", description: "Mermaid 图表" },
   { id: "image", label: "图片", icon: "🖼", description: "图片样式" },
   { id: "table", label: "表格", icon: "田", description: "表格样式" },
   { id: "other", label: "其他", icon: "⋯", description: "其他样式" },

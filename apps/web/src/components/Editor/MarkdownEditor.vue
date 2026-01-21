@@ -11,6 +11,10 @@ import {
 } from "./markdownTheme";
 import { useUIThemeStore } from "../../store/uiThemeStore";
 import { useEditorStore } from "../../store/editorStore";
+import { useFileStore } from "../../store/fileStore";
+import { useHistoryStore } from "../../store/historyStore";
+import { useThemeStore } from "../../store/themeStore";
+import { useFileSystem } from "../../hooks/useFileSystem";
 import { countWords, countLines } from "../../utils/wordCount";
 import Toolbar from "./Toolbar.vue";
 import SearchPanel from "./SearchPanel.vue";
@@ -20,6 +24,19 @@ import { SYNC_SCROLL_EVENT, type SyncScrollDetail } from '../Preview/MarkdownPre
 import { toast } from '../../hooks/useToast';
 import { customKeymap } from "./editorShortcuts";
 
+// 从 markdown 中提取标题的工具函数
+function deriveTitle(markdown: string): string {
+  const UNTITLED_TITLE = "未命名文章";
+  const trimmed = markdown.trim();
+  if (!trimmed) return UNTITLED_TITLE;
+  const headingMatch = trimmed.match(/^(#+)\s*(.+)$/m);
+  if (headingMatch) {
+    return headingMatch[2].trim().slice(0, 50) || UNTITLED_TITLE;
+  }
+  const firstLine = trimmed.split(/\r?\n/).find((line) => line.trim());
+  return firstLine ? firstLine.trim().slice(0, 50) : UNTITLED_TITLE;
+}
+
 const props = defineProps<{
   initialValue?: string;
 }>();
@@ -27,7 +44,11 @@ const props = defineProps<{
 const editorRef = ref<HTMLDivElement | null>(null);
 const viewRef = ref<EditorView | null>(null);
 const editorStore = useEditorStore();
+const fileStore = useFileStore();
+const historyStore = useHistoryStore();
+const themeStore = useThemeStore();
 const uiThemeStore = useUIThemeStore();
+const { saveFile } = useFileSystem();
 const isSyncing = ref(false);
 const showSearch = ref(false);
 
@@ -35,10 +56,49 @@ const wordCount = ref(0);
 const lineCount = ref(0);
 
 // Cmd/Ctrl+F 打开搜索面板
-const handleGlobalKeyDown = (e: KeyboardEvent) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === "f") {
-    e.preventDefault();
-    showSearch.value = true;
+const handleGlobalKeyDown = async (e: KeyboardEvent) => {
+  if (e.metaKey || e.ctrlKey) {
+    if (e.key === "f") {
+      e.preventDefault();
+      showSearch.value = true;
+    } else if (e.key === "s") {
+      e.preventDefault();
+      if (fileStore.currentFile) {
+        // 文件系统模式：保存文件
+        await saveFile();
+      } else if (historyStore.activeId) {
+        // 浏览器存储模式（IndexedDB）：保存到历史记录
+        // 注意：不传 title，保留用户已修改的标题
+        try {
+          await historyStore.persistActiveSnapshot({
+            markdown: editorStore.markdown,
+            theme: themeStore.themeId,
+            themeName: themeStore.themeName,
+            customCSS: themeStore.customCSS,
+          });
+          toast.success("保存成功");
+        } catch (error) {
+          console.error("Failed to save to history:", error);
+          toast.error("保存失败");
+        }
+      } else {
+        // 没有激活的历史记录，创建新的快照
+        try {
+          const title = deriveTitle(editorStore.markdown);
+          await historyStore.saveSnapshot({
+            markdown: editorStore.markdown,
+            theme: themeStore.themeId,
+            themeName: themeStore.themeName,
+            customCSS: themeStore.customCSS,
+            title,
+          });
+          toast.success("保存成功");
+        } catch (error) {
+          console.error("Failed to save snapshot:", error);
+          toast.error("保存失败");
+        }
+      }
+    }
   }
 };
 

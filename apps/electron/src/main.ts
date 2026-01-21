@@ -10,6 +10,19 @@ let isDev = !app.isPackaged || process.argv.includes('--dev') || !!process.env.E
 app.setName('WeMD');
 app.setAppUserModelId('com.wemd.app');
 
+interface FileEntry {
+    name: string;
+    path: string;
+    isDirectory: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    size: number;
+    themeName?: string;
+    children?: FileEntry[];
+    level?: number;
+    parentPath?: string;
+}
+
 let mainWindow: BrowserWindow | null = null;
 let workspaceDir: string | null = null;
 let fileWatcher: fs.FSWatcher | null = null;
@@ -82,59 +95,91 @@ function getUniqueFilePath(dir: string, filename: string): string {
     return candidate;
 }
 
-interface FileEntry {
-    name: string;
-    path: string;
-    isDirectory: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    size: number;
-    themeName: string;
-}
 
-function scanWorkspace(dir: string): FileEntry[] {
+function scanWorkspace(dir: string, level: number = 0, parentPath: string = ''): FileEntry[] {
     if (!dir || !fs.existsSync(dir)) return [];
     try {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
-        const mdFiles = entries
-            .filter(entry => entry.isFile() && entry.name.endsWith('.md') && !entry.name.startsWith('.'))
-            .map(entry => {
-                const fullPath = path.join(dir, entry.name);
-                const stats = fs.statSync(fullPath);
+        const results: FileEntry[] = [];
 
-                // 尝试读取 Frontmatter 获取 themeName
-                let themeName = '默认主题';
-                try {
-                    const fd = fs.openSync(fullPath, 'r');
-                    const buffer = Buffer.alloc(500); // 读取前 500 字节
-                    const bytesRead = fs.readSync(fd, buffer, 0, 500, 0);
-                    fs.closeSync(fd);
+        // 分别处理文件夹和文件
+        const directories = entries.filter(entry => 
+            entry.isDirectory() && 
+            !entry.name.startsWith('.') && 
+            entry.name !== 'node_modules'
+        );
+        
+        const files = entries.filter(entry => 
+            entry.isFile() && 
+            entry.name.endsWith('.md') && 
+            !entry.name.startsWith('.')
+        );
 
-                    const content = buffer.toString('utf8', 0, bytesRead);
-                    const match = content.match(/^---\n([\s\S]*?)\n---/);
-                    if (match) {
-                        const frontmatter = match[1];
-                        const themeMatch = frontmatter.match(/themeName:\s*(.+)/);
-                        if (themeMatch) {
-                            themeName = themeMatch[1].trim().replace(/^['"]|['"]$/g, '');
-                        }
-                    }
-                } catch (e) {
-                    // 忽略读取错误
-                }
-
-                return {
-                    name: entry.name,
+        // 处理文件夹
+        for (const dirEntry of directories) {
+            const fullPath = path.join(dir, dirEntry.name);
+            const stats = fs.statSync(fullPath);
+            const children = scanWorkspace(fullPath, level + 1, fullPath);
+            
+            if (children.length > 0) {
+                results.push({
+                    name: dirEntry.name,
                     path: fullPath,
-                    isDirectory: false,
+                    isDirectory: true,
                     createdAt: stats.birthtime,
                     updatedAt: stats.mtime,
-                    size: stats.size,
-                    themeName
-                };
-            })
-            .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()); // 按更新时间降序
-        return mdFiles;
+                    size: 0,
+                    children,
+                    level,
+                    parentPath
+                });
+            }
+        }
+
+        // 处理文件
+        for (const fileEntry of files) {
+            const fullPath = path.join(dir, fileEntry.name);
+            const stats = fs.statSync(fullPath);
+
+            // 尝试读取 Frontmatter 获取 themeName
+            let themeName = '默认主题';
+            try {
+                const fd = fs.openSync(fullPath, 'r');
+                const buffer = Buffer.alloc(500);
+                const bytesRead = fs.readSync(fd, buffer, 0, 500, 0);
+                fs.closeSync(fd);
+
+                const content = buffer.toString('utf8', 0, bytesRead);
+                const match = content.match(/^---\n([\s\S]*?)\n---/);
+                if (match) {
+                    const frontmatter = match[1];
+                    const themeMatch = frontmatter.match(/themeName:\s*(.+)/);
+                    if (themeMatch) {
+                        themeName = themeMatch[1].trim().replace(/^['"]|['"]$/g, '');
+                    }
+                }
+            } catch (e) {
+                // 忽略读取错误
+            }
+
+            results.push({
+                name: fileEntry.name,
+                path: fullPath,
+                isDirectory: false,
+                createdAt: stats.birthtime,
+                updatedAt: stats.mtime,
+                size: stats.size,
+                themeName,
+                level,
+                parentPath
+            });
+        }
+
+        // 文件夹按名称排序，文件按更新时间降序
+        const sortedDirs = results.filter(r => r.isDirectory).sort((a, b) => a.name.localeCompare(b.name));
+        const sortedFiles = results.filter(r => !r.isDirectory).sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+        
+        return [...sortedDirs, ...sortedFiles];
     } catch (error) {
         console.error('Scan workspace failed:', error);
         return [];
@@ -180,6 +225,22 @@ function createWindow() {
     console.log('[WeMD] resourcesPath:', process.resourcesPath);
 
     mainWindow.loadURL(startUrl);
+    
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            shell.openExternal(url);
+            return { action: 'deny' };
+        }
+        return { action: 'allow' };
+    });
+
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        if (url !== startUrl && (url.startsWith('http://') || url.startsWith('https://'))) {
+            event.preventDefault();
+            shell.openExternal(url);
+        }
+    });
+    
     mainWindow.on('closed', () => {
         mainWindow = null;
         stopWatching();
@@ -196,6 +257,66 @@ ipcMain.handle('window:maximize', () => {
 });
 ipcMain.handle('window:close', () => mainWindow?.close());
 ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized());
+
+// 导出管理
+ipcMain.handle('export:html', async (_event, { content, title }) => {
+    if (!mainWindow) return;
+    const { filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: '导出 HTML',
+        defaultPath: `${title || 'export'}.html`,
+        filters: [{ name: 'HTML Files', extensions: ['html'] }]
+    });
+
+    if (filePath) {
+        fs.writeFileSync(filePath, content, 'utf8');
+        return true;
+    }
+    return false;
+});
+
+ipcMain.handle('export:pdf', async (_event, { content, title }) => {
+    if (!mainWindow) return;
+
+    const printWindow = new BrowserWindow({
+        show: false,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    });
+
+    try {
+        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(content)}`);
+        const data = await printWindow.webContents.printToPDF({
+            printBackground: true,
+            margins: {
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0
+            },
+            pageSize: 'A4',
+            preferCSSPageSize: true
+        });
+
+        const { filePath } = await dialog.showSaveDialog(mainWindow, {
+            title: '导出 PDF',
+            defaultPath: `${title || 'export'}.pdf`,
+            filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+        });
+
+        if (filePath) {
+            fs.writeFileSync(filePath, data);
+            return true;
+        }
+    } catch (error) {
+        console.error('Export PDF failed:', error);
+        throw error;
+    } finally {
+        printWindow.close();
+    }
+    return false;
+});
 
 // 工作区管理
 ipcMain.handle('workspace:select', async () => {

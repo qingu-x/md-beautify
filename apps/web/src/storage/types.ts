@@ -1,4 +1,4 @@
-export type StorageType = 'indexeddb' | 'filesystem';
+export type StorageType = "indexeddb" | "filesystem";
 
 export interface FileItem {
   path: string;
@@ -6,6 +6,10 @@ export interface FileItem {
   size?: number;
   updatedAt?: string;
   meta?: Record<string, unknown>;
+  isDirectory?: boolean;
+  children?: FileItem[];
+  level?: number;
+  parentPath?: string;
 }
 
 export interface StorageInitResult {

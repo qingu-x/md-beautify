@@ -1,14 +1,16 @@
 <template>
   <button
     :class="classNames"
-    @click="$emit('click')"
+    @click="$emit('click', $event)"
     :aria-label="label"
     :title="label"
     :data-tooltip="label"
   >
-    <slot name="icon">
-      <component :is="icon" v-if="icon" />
-    </slot>
+    <span class="floating-btn-icon">
+      <slot name="icon">
+        <component :is="icon" v-if="icon" />
+      </slot>
+    </span>
   </button>
 </template>
 
@@ -27,7 +29,7 @@ const props = defineProps<{
 }>();
 
 defineEmits<{
-  (e: 'click'): void;
+  (e: 'click', event: MouseEvent): void;
 }>();
 
 const classNames = computed(() => {

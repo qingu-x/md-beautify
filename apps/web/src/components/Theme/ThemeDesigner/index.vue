@@ -12,6 +12,7 @@ const ParagraphSection = defineAsyncComponent(() => import("./sections/Paragraph
 const QuoteSection = defineAsyncComponent(() => import("./sections/QuoteSection.vue"));
 const ListSection = defineAsyncComponent(() => import("./sections/ListSection.vue"));
 const CodeSection = defineAsyncComponent(() => import("./sections/CodeSection.vue"));
+const MermaidSection = defineAsyncComponent(() => import("./sections/MermaidSection.vue"));
 const ImageSection = defineAsyncComponent(() => import("./sections/ImageSection.vue"));
 const TableSection = defineAsyncComponent(() => import("./sections/TableSection.vue"));
 const OtherSection = defineAsyncComponent(() => import("./sections/OtherSection.vue"));
@@ -42,10 +43,17 @@ watch(() => props.initialVariables, (newVars: DesignerVariables | undefined) => 
 }, { deep: true });
 
 // 当变量改变时，生成 CSS 并通知父组件
+let cssUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 watch(variables, (newVars: DesignerVariables) => {
-  const css = generateCSS(newVars);
-  emit("css-change", css);
-  emit("variables-change", newVars);
+  if (cssUpdateTimer) {
+    clearTimeout(cssUpdateTimer);
+  }
+  cssUpdateTimer = setTimeout(() => {
+    const css = generateCSS(newVars);
+    emit("css-change", css);
+    emit("variables-change", newVars);
+    cssUpdateTimer = null;
+  }, 16);
 }, { deep: true, immediate: true });
 
 const handleVariableChange = (updates: Partial<DesignerVariables>) => {
@@ -124,6 +132,11 @@ const handlePrimaryColorChange = (newColor: string) => {
         />
         <CodeSection
           v-if="activeTab === 'code'"
+          :variables="variables"
+          @change="handleVariableChange"
+        />
+        <MermaidSection
+          v-if="activeTab === 'mermaid'"
           :variables="variables"
           @change="handleVariableChange"
         />

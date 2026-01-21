@@ -9,12 +9,17 @@ export interface SyncScrollDetail {
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
+import mermaid from "mermaid";
 import { createMarkdownParser, processHtml } from "@wemd/core";
 import { useEditorStore } from "../../store/editorStore";
 import { useThemeStore } from "../../store/themeStore";
 import { useUIThemeStore } from "../../store/uiThemeStore";
 import { hasMathFormula, renderMathInElement } from "../../utils/katexRenderer";
 import { convertLinksToFootnotes } from "../../utils/linkFootnote";
+import {
+  getMermaidConfig,
+  getThemedMermaidDiagram,
+} from "../../utils/mermaidConfig";
 import {
   getLinkToFootnoteEnabled,
   LINK_TO_FOOTNOTE_EVENT,
@@ -30,6 +35,7 @@ const linkToFootnoteEnabled = ref(getLinkToFootnoteEnabled());
 const previewRef = ref<HTMLDivElement | null>(null);
 const scrollContainerRef = ref<HTMLDivElement | null>(null);
 const isSyncing = ref(false);
+const mermaidRenderId = ref(0);
 
 // 创建 parser 实例
 const parser = createMarkdownParser();
@@ -37,6 +43,17 @@ const parser = createMarkdownParser();
 const themeCSS = computed(() => {
   return themeStore.getThemeCSS(themeStore.themeId, uiThemeStore.theme === "dark");
 });
+
+// 获取当前主题
+const currentTheme = computed(() => {
+  return (
+    themeStore.customThemes.find((t: any) => t.id === themeStore.themeId) ||
+    themeStore.allThemes.find((t: any) => t.id === themeStore.themeId)
+  );
+});
+
+const designerVars = computed(() => currentTheme.value?.designerVariables);
+const mermaidTheme = computed(() => designerVars.value?.mermaidTheme || "base");
 
 watch(
   [
@@ -72,6 +89,71 @@ watch(html, () => {
       if (previewRef.value) {
         renderMathInElement(previewRef.value);
       }
+    }, 100);
+  });
+});
+
+// Mermaid 渲染
+watch([html, mermaidTheme, designerVars, () => uiThemeStore.theme], () => {
+  if (!previewRef.value || !html.value) return;
+
+  const renderToken = ++mermaidRenderId.value;
+
+  nextTick(() => {
+    setTimeout(() => {
+      if (!previewRef.value) return;
+      const mermaidBlocks = Array.from(
+        previewRef.value.querySelectorAll<HTMLElement>(".mermaid")
+      );
+      if (mermaidBlocks.length === 0) return;
+
+      const initConfig = getMermaidConfig(
+        designerVars.value,
+        uiThemeStore.theme === "dark",
+      );
+
+      mermaidBlocks.forEach((block, index) => {
+        if (!block.dataset.mermaidRaw) {
+          block.dataset.mermaidRaw = block.textContent ?? "";
+        }
+        const diagram = block.dataset.mermaidRaw ?? "";
+        if (!diagram.trim()) return;
+
+        const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+
+        mermaid
+          .render(`preview-${renderToken}-${index}`, themedDiagram)
+          .then(({ svg }) => {
+            if (mermaidRenderId.value !== renderToken) return;
+            block.innerHTML = svg;
+            const svgEl = block.querySelector("svg");
+            if (svgEl) {
+              const defs = svgEl.querySelector("defs");
+              const refNode = defs ? defs.nextSibling : svgEl.firstChild;
+              const selectors = [
+                "g.lineWrapper", 
+                "g.edgePaths", 
+                "g[class*='arrow']", 
+                "g[class*='node-line']", 
+                "g[class*='timeline-line']"
+              ];
+              const lineGroups = Array.from(svgEl.querySelectorAll(selectors.join(", ")));
+              for (const g of lineGroups) {
+                // 确保 g 和 refNode 是 svgEl 的直接子节点
+                if (g.parentNode === svgEl && (!refNode || refNode.parentNode === svgEl)) {
+                  if (refNode) {
+                    svgEl.insertBefore(g, refNode);
+                  } else {
+                    svgEl.insertBefore(g, svgEl.firstChild);
+                  }
+                }
+              }
+            }
+          })
+          .catch((e) => {
+            console.error("Mermaid render error:", e);
+          });
+      });
     }, 100);
   });
 });
@@ -121,6 +203,11 @@ const handleLinkToFootnoteChange = (event: Event) => {
 };
 
 onMounted(() => {
+  try {
+    mermaid.initialize({ startOnLoad: false });
+  } catch (e) {
+    console.error("Mermaid initialization failed:", e);
+  }
   if (scrollContainerRef.value) {
     scrollContainerRef.value.addEventListener("scroll", handlePreviewScroll);
   }
@@ -150,7 +237,11 @@ onUnmounted(() => {
       <span class="preview-subtitle">微信排版效果</span>
     </div>
     <div class="preview-container" ref="scrollContainerRef">
-      <div class="preview-content">
+      <div 
+        class="preview-content"
+        :class="{ 'fixed-width': editorStore.fixedWidthPreview }"
+        :style="{ maxWidth: editorStore.fixedWidthPreview ? `${editorStore.previewWidth}px` : '800px' }"
+      >
         <component is="style" v-html="themeCSS"></component>
         <div ref="previewRef" v-html="html"></div>
       </div>

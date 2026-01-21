@@ -18,6 +18,7 @@ export const defaultVariables: DesignerVariables = {
   primaryColor: primaryColorOptions[0].value,
   lineHeight: lineHeightOptions[2].value,
   pagePadding: 8,
+  globalLetterSpacing: 0,
 
   // 标题
   h1: {
@@ -101,6 +102,7 @@ export const defaultVariables: DesignerVariables = {
   markBackground: "#fff5b1",
   markColor: "inherit",
   strongStyle: "color",
+  strongColor: "inherit",
 
   // 表格
   tableHeaderBackground: "#f8f8f8",
@@ -122,6 +124,8 @@ export const defaultVariables: DesignerVariables = {
   listSpacing: 4,
   listMarkerColor: primaryColorOptions[0].value,
   listMarkerColorL2: primaryColorOptions[0].value,
+  ulFontSize: "inherit",
+  olFontSize: "inherit",
 
   // 脚注
   footnoteColor: "",
@@ -132,4 +136,7 @@ export const defaultVariables: DesignerVariables = {
 
   // 提示块
   calloutStyle: "default",
+
+  // Mermaid
+  mermaidTheme: "base",
 };

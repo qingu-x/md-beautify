@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import ColorSelector from "../ColorSelector.vue";
-import { ulStyleOptions, olStyleOptions } from "@/config/styleOptions";
+import {
+  ulStyleOptions,
+  olStyleOptions,
+  fontSizeOptions,
+} from "@/config/styleOptions";
 import type { DesignerVariables } from "../types";
 
 const props = defineProps<{
@@ -10,6 +14,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "change", updates: Partial<DesignerVariables>): void;
 }>();
+
+const listFontSizeOptions = [
+  { label: "跟随全局", value: "inherit" },
+  ...fontSizeOptions.map((opt) => ({ label: opt.label, value: opt.value })),
+];
 
 const updateVariable = <K extends keyof DesignerVariables>(
   key: K,
@@ -56,6 +65,35 @@ const updateVariable = <K extends keyof DesignerVariables>(
           )
         "
       />
+    </div>
+
+    <div class="designer-field mt-2">
+      <label>无序列表字号</label>
+      <div class="designer-options">
+        <button
+          v-for="opt in listFontSizeOptions"
+          :key="opt.value"
+          class="option-btn"
+          :class="{ active: (variables.ulFontSize ?? 'inherit') === opt.value }"
+          @click="updateVariable('ulFontSize', opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
+    </div>
+    <div class="designer-field">
+      <label>有序列表字号</label>
+      <div class="designer-options">
+        <button
+          v-for="opt in listFontSizeOptions"
+          :key="opt.value"
+          class="option-btn"
+          :class="{ active: (variables.olFontSize ?? 'inherit') === opt.value }"
+          @click="updateVariable('olFontSize', opt.value)"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
     </div>
 
     <div class="designer-field">

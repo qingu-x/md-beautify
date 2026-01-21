@@ -155,7 +155,20 @@ export const customKeymap = Prec.highest(
       },
     },
 
-    { key: "Mod-k", run: (view) => wrapSelection(view, "[", "]()") },
+    {
+      key: "Mod-k",
+      run: (view) => {
+        const { state, dispatch } = view;
+        const { from, to } = state.selection.main;
+        const selectedText = state.doc.sliceString(from, to);
+        const linkText = selectedText || "文本";
+        dispatch({
+          changes: { from, to, insert: `[${linkText}]()` },
+          selection: { anchor: from + linkText.length + 3 },
+        });
+        return true;
+      },
+    },
     {
       key: imageShortcut,
       run: (view) => {

@@ -37,7 +37,14 @@ export const createMarkdownParser = () => {
   const markdownParser: MarkdownIt = new MarkdownIt({
     html: true,
     highlight: (str: string, lang: string): string => {
-      if (lang === undefined || lang === "") {
+      const language = (lang || "").trim().toLowerCase();
+      // Mermaid 图表：输出 pre.mermaid 让前端渲染
+      if (language === "mermaid") {
+        const escaped = markdownParser.utils.escapeHtml(str);
+        return `<pre class="mermaid">\n${escaped}\n</pre>\n`;
+      }
+
+      if (language === undefined || language === "") {
         lang = "bash";
       }
       // 加上custom则表示自定义样式，而非微信专属，避免被remove pre
@@ -91,6 +98,110 @@ export const createMarkdownParser = () => {
       labelAfter: true,
     })
     .use(markdownItCheckboxEmoji);
+
+  // 自定义图片渲染：支持 ![alt](url =100x100) 或 ![alt](url "title" =100x100)
+  const defaultImageRender =
+    markdownParser.renderer.rules.image ||
+    function (tokens, idx, options, env, self) {
+      return self.renderToken(tokens, idx, options);
+    };
+
+  markdownParser.renderer.rules.image = function (
+    tokens,
+    idx,
+    options,
+    env,
+    self,
+  ) {
+    const token = tokens[idx];
+    const srcIndex = token.attrIndex("src");
+    let src = token.attrs![srcIndex][1];
+
+    // 匹配 URL 中的 wemd-size 参数（由下面的 render 拦截器注入）
+    const sizeMatch = src.match(/[?&]wemd-size=([^&]+)/);
+    if (sizeMatch) {
+      const size = decodeURIComponent(sizeMatch[1]);
+      // 移除 src 中的 wemd-size 参数
+      src = src.replace(sizeMatch[0], "");
+      // 如果移除后 URL 以 ? 或 & 结尾，也清理掉
+      src = src.replace(/[?&]$/, "");
+      token.attrs![srcIndex][1] = src;
+
+      // 移除 size 字符串开头的 '='
+      const cleanSize = size.startsWith("=") ? size.substring(1) : size;
+
+      if (cleanSize.includes("x")) {
+        const [width, height] = cleanSize.split("x");
+        if (width) token.attrPush(["width", width]);
+        if (height) token.attrPush(["height", height]);
+      } else {
+        token.attrPush(["width", cleanSize]);
+      }
+    }
+
+    // 支持 Obsidian 风格的图片尺寸语法：![alt|100](url) 或 ![alt|100x200](url)
+    const content = token.content;
+    if (content) {
+      // 匹配结尾的 |width 或 |widthxheight
+      const match = content.match(/\|(\d+)(?:x(\d+))?$/);
+      if (match) {
+        const width = match[1];
+        const height = match[2];
+
+        // 仅当之前未设置 width/height 时才设置（wemd-size 优先级更高）
+        if (width && token.attrIndex("width") === -1) {
+          token.attrPush(["width", width]);
+        }
+        if (height && token.attrIndex("height") === -1) {
+          token.attrPush(["height", height]);
+        }
+
+        // 清理 alt 文本（移除尺寸部分）
+        // token.content 是 alt 文本的主要来源
+        token.content = content.substring(0, match.index);
+
+        // 如果 attrs 中已有 alt 属性，也同步更新
+        const altIndex = token.attrIndex("alt");
+        if (altIndex >= 0) {
+          token.attrs![altIndex][1] = token.content;
+        }
+      }
+    }
+
+    return defaultImageRender(tokens, idx, options, env, self);
+  };
+
+  // 增强图片语法支持：拦截 render 方法进行预处理
+  const originalRender = markdownParser.render.bind(markdownParser);
+  markdownParser.render = (src: string, env?: unknown) => {
+    let normalizedSrc = src;
+
+    // 1. 处理带有尺寸和标题的图片：![alt](url "title" =100x100) 或 ![alt](url =100x100 "title")
+    // 将尺寸信息注入到 URL 参数中，避开 markdown-it 的原生解析限制
+    normalizedSrc = normalizedSrc.replace(
+      /(!\[.*?\]\()(.+?)(?:\s+(['"].+?['"])\s+(=(?:\d+)?x?(?:\d+)?)| \s+(=(?:\d+)?x?(?:\d+)?)\s+(['"].+?['"]))(\))/g,
+      (_match, p1, url, p3, p4, p5, p6) => {
+        const title = p3 || p6;
+        const size = p4 || p5;
+        const connector = url.includes("?") ? "&" : "?";
+        return `${p1}${url}${connector}wemd-size=${encodeURIComponent(size)} ${title})`;
+      },
+    );
+
+    // 2. 处理只有尺寸没有标题的图片：![alt](url =100x100)
+    normalizedSrc = normalizedSrc.replace(
+      /(!\[.*?\]\()(.+?)\s+(=(?:\d+)?x?(?:\d+)?)\)/g,
+      (match, p1, url, size) => {
+        const connector = url.includes("?") ? "&" : "?";
+        return `${p1}${url}${connector}wemd-size=${encodeURIComponent(size)})`;
+      },
+    );
+
+    // 3. 容错：处理 ![alt]\n(url) -> ![alt](url)
+    normalizedSrc = normalizedSrc.replace(/(!\[.*?\])\s*\n\s*(\()/g, "$1$2");
+
+    return originalRender(normalizedSrc, env);
+  };
 
   return markdownParser;
 };

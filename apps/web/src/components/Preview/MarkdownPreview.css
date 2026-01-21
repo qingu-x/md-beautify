@@ -34,6 +34,8 @@
   flex: 1;
   overflow: auto;
   padding: 24px;
+  display: flex;
+  justify-content: center;
 }
 
 .preview-content {
@@ -44,6 +46,21 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   min-height: calc(100% - 48px);
+}
+
+/* 固定宽度预览模式（模拟 iPhone 16 Pro） */
+.preview-content.fixed-width {
+  max-width: 430px;
+}
+
+/* Mermaid 图表居中 */
+#wemd .mermaid,
+#wemd pre.mermaid {
+  text-align: center;
+}
+
+#wemd .mermaid svg {
+  display: inline-block;
 }
 
 /* 响应式 */

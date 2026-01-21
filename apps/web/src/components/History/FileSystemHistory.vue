@@ -11,41 +11,39 @@
         </button>
       </div>
     </div>
+    
+    <div class="history-search">
+      <div class="search-wrapper">
+        <Search :size="14" class="search-icon" />
+        <input
+          type="text"
+          placeholder="搜索文件..."
+          v-model="searchFilter"
+        />
+      </div>
+    </div>
+
     <div class="history-body">
       <div v-if="loading" class="history-empty">正在加载...</div>
-      <div v-else-if="files.length === 0" class="history-empty">暂无文件</div>
+      <div v-else-if="visibleFiles.length === 0" class="history-empty">
+        {{ searchFilter ? '无匹配结果' : '暂无文件' }}
+      </div>
       <div v-else class="history-list">
-        <div
-          v-for="file in files"
-          :key="file.path"
-          :class="['history-item', activePath === file.path ? 'active' : '']"
-          @click="handleOpen(file)"
-        >
-          <div class="history-item-main">
-            <div class="history-title-block">
-              <span class="history-time">{{ new Date(file.updatedAt || '').toLocaleString() }}</span>
-              <div v-if="renamingPath === file.path" class="history-rename" @click.stop>
-                <input
-                  v-model="renameValue"
-                  v-focus
-                  @keydown.enter="submitRename"
-                  @keydown.esc="renamingPath = null"
-                />
-                <button @click="submitRename">确认</button>
-                <button @click="renamingPath = null">取消</button>
-              </div>
-              <span v-else class="history-title">{{ file.name }}</span>
-            </div>
-            <div class="history-actions-menu-wrapper">
-              <button
-                class="history-action-trigger"
-                @click.stop="(e: MouseEvent) => handleMenuToggle(e, file)"
-              >
-                <MoreHorizontal :size="16" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <template v-for="item in visibleFiles" :key="item.path">
+          <FileSystemTreeItem
+            :item="item"
+            :active-path="activePath"
+            :expanded-folders="expandedFolders"
+            :renaming-path="renamingPath"
+            :rename-value="renameValue"
+            @toggle-folder="toggleFolder"
+            @open-file="handleOpen"
+            @context-menu="handleMenuToggle"
+            @update-rename="renameValue = $event"
+            @submit-rename="submitRename"
+            @cancel-rename="renamingPath = null"
+          />
+        </template>
       </div>
     </div>
   </aside>
@@ -58,7 +56,7 @@
       :style="{ top: menuPosition.top + 'px', left: menuPosition.left + 'px' }"
       @click.stop
     >
-      <button @click="copyTitle(menuFile); closeActionMenu()">
+      <button v-if="!menuFile.isDirectory" @click="copyTitle(menuFile); closeActionMenu()">
         <Copy :size="14" />
         复制标题
       </button>
@@ -77,8 +75,8 @@
   <Teleport to="body">
     <div v-if="deleteTarget" class="history-confirm-backdrop" @click="!deleting && (deleteTarget = null)">
       <div class="history-confirm-modal" @click.stop>
-        <h4>删除文件</h4>
-        <p>确定要删除“{{ deleteTarget.name }}”吗？此操作不可撤销。</p>
+        <h4>删除{{ deleteTarget.isDirectory ? '文件夹' : '文件' }}</h4>
+        <p>确定要删除"{{ deleteTarget.name }}"吗？{{ deleteTarget.isDirectory ? '文件夹内的所有文件也会被删除。' : '' }}此操作不可撤销。</p>
         <div class="history-confirm-actions">
           <button class="btn-secondary" @click="deleteTarget = null" :disabled="deleting">
             取消
@@ -97,13 +95,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Plus, Save, MoreHorizontal, Copy, Edit2, Trash2 } from 'lucide-vue-next';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { Plus, Save, MoreHorizontal, Copy, Edit2, Trash2, Search, Folder, FileText, ChevronRight, ChevronDown } from 'lucide-vue-next';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { toast } from '../../hooks/useToast';
 import type { StorageAdapter } from '../../storage/StorageAdapter';
 import type { FileItem as StorageFileItem } from '../../storage/types';
+import FileSystemTreeItem from './FileSystemTreeItem.vue';
 
 const props = defineProps<{
   adapter: StorageAdapter;
@@ -120,6 +119,8 @@ const renameValue = ref('');
 const saving = ref(false);
 const deleteTarget = ref<StorageFileItem | null>(null);
 const deleting = ref(false);
+const searchFilter = ref('');
+const expandedFolders = ref<Set<string>>(new Set());
 
 const actionMenuId = ref<string | null>(null);
 const menuFile = ref<StorageFileItem | null>(null);
@@ -133,6 +134,52 @@ themeName: 默认主题
 # 新文章
 
 `;
+
+// 扁平化文件列表（用于搜索）
+const flattenedFiles = computed(() => {
+  const flatten = (items: StorageFileItem[]): StorageFileItem[] => {
+    return items.reduce((acc: StorageFileItem[], item) => {
+      acc.push(item);
+      if (item.children) {
+        acc.push(...flatten(item.children));
+      }
+      return acc;
+    }, []);
+  };
+  return flatten(files.value || []);
+});
+
+// 过滤后的文件列表
+const visibleFiles = computed(() => {
+  if (!searchFilter.value) return files.value;
+  
+  const searchLower = searchFilter.value.toLowerCase();
+  const matchedFiles = flattenedFiles.value.filter((f: StorageFileItem) => 
+    !f.isDirectory && f.name.toLowerCase().includes(searchLower)
+  );
+  
+  // 如果有搜索，返回扁平列表
+  return matchedFiles;
+});
+
+// 展开所有包含匹配文件的文件夹
+watch(searchFilter, (newFilter) => {
+  if (newFilter) {
+    // 搜索时展开所有文件夹
+    const allFolders = flattenedFiles.value.filter(f => f.isDirectory).map(f => f.path);
+    expandedFolders.value = new Set(allFolders);
+  }
+});
+
+const toggleFolder = (path: string) => {
+  if (expandedFolders.value.has(path)) {
+    expandedFolders.value.delete(path);
+  } else {
+    expandedFolders.value.add(path);
+  }
+  // 触发响应式更新
+  expandedFolders.value = new Set(expandedFolders.value);
+};
 
 const parseFsFrontmatter = (content: string) => {
   const match = content.match(/^---\n([\s\S]*?)\n---/);
@@ -155,7 +202,7 @@ const refreshFiles = async () => {
   try {
     const list = await props.adapter.listFiles();
     files.value = list;
-    if (activePath.value && !list.find((item: StorageFileItem) => item.path === activePath.value)) {
+    if (activePath.value && !flattenedFiles.value.find((item: StorageFileItem) => item.path === activePath.value)) {
       activePath.value = null;
     }
   } catch (error) {
@@ -166,6 +213,11 @@ const refreshFiles = async () => {
 };
 
 const handleOpen = async (file: StorageFileItem) => {
+  if (file.isDirectory) {
+    toggleFolder(file.path);
+    return;
+  }
+  
   try {
     const content = await props.adapter.readFile(file.path);
     const parsed = parseFsFrontmatter(content);
@@ -176,6 +228,7 @@ const handleOpen = async (file: StorageFileItem) => {
     activePath.value = file.path;
   } catch (error) {
     console.error(error);
+    toast.error('打开文件失败');
   }
 };
 
@@ -184,7 +237,7 @@ const handleCreate = async () => {
     const fileName = `文稿-${Date.now()}.md`;
     await props.adapter.writeFile(fileName, defaultFsContent);
     await refreshFiles();
-    await handleOpen({ path: fileName, name: fileName } as StorageFileItem);
+    await handleOpen({ path: fileName, name: fileName, isDirectory: false } as StorageFileItem);
     toast.success('已创建新文章');
   } catch (error) {
     console.error(error);
@@ -203,8 +256,10 @@ themeName: ${themeStore.themeName}
 `;
     await props.adapter.writeFile(activePath.value, `${frontmatter}\n${editorStore.markdown}`);
     await refreshFiles();
+    toast.success('保存成功');
   } catch (error) {
     console.error(error);
+    toast.error('保存失败');
   } finally {
     saving.value = false;
   }
@@ -239,32 +294,47 @@ const closeActionMenu = () => {
 const copyTitle = async (file: StorageFileItem) => {
   try {
     await navigator.clipboard.writeText(file.name.replace('.md', ''));
+    toast.success('标题已复制');
   } catch (error) {
     console.error(error);
+    toast.error('复制失败');
   }
 };
 
 const startRename = (file: StorageFileItem) => {
   renamingPath.value = file.path;
-  renameValue.value = file.name.replace('.md', '');
+  renameValue.value = file.isDirectory ? file.name : file.name.replace('.md', '');
   actionMenuId.value = null;
   menuFile.value = null;
 };
 
 const submitRename = async () => {
   if (!renamingPath.value || !renameValue.value.trim()) return;
-  const nextName = renameValue.value.trim().endsWith('.md') ? renameValue.value.trim() : `${renameValue.value.trim()}.md`;
+  
+  const file = flattenedFiles.value.find(f => f.path === renamingPath.value);
+  if (!file) return;
+
+  const newName = file.isDirectory 
+    ? renameValue.value.trim() 
+    : (renameValue.value.trim().endsWith('.md') ? renameValue.value.trim() : `${renameValue.value.trim()}.md`);
+  
+  const pathParts = file.path.split('/');
+  pathParts[pathParts.length - 1] = newName;
+  const newPath = pathParts.join('/');
+
   try {
-    await props.adapter.renameFile(renamingPath.value, nextName);
+    await props.adapter.renameFile(renamingPath.value, newPath);
     if (activePath.value === renamingPath.value) {
-      activePath.value = nextName;
-      editorStore.setFilePath(nextName);
+      activePath.value = newPath;
+      editorStore.setFilePath(newPath);
     }
     renamingPath.value = null;
     renameValue.value = '';
     await refreshFiles();
+    toast.success('重命名成功');
   } catch (error) {
     console.error(error);
+    toast.error('重命名失败');
   }
 };
 
@@ -279,6 +349,10 @@ const handleDeleteConfirm = async () => {
       editorStore.setMarkdown('');
     }
     await refreshFiles();
+    toast.success('删除成功');
+  } catch (error) {
+    console.error(error);
+    toast.error('删除失败');
   } finally {
     deleting.value = false;
     deleteTarget.value = null;
@@ -297,6 +371,10 @@ onMounted(() => {
     window.removeEventListener('scroll', handleWindowScroll, true);
   });
 });
+
+const vFocus = {
+  mounted: (el: HTMLInputElement) => el.focus()
+};
 </script>
 
 <style scoped>

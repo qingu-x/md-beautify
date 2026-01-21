@@ -15,6 +15,9 @@ contextBridge.exposeInMainWorld('electron', {
         deleteFile: (filePath: string) => ipcRenderer.invoke('file:delete', filePath),
         revealInFinder: (filePath: string) => ipcRenderer.invoke('file:reveal', filePath),
 
+        exportHtml: (payload: { content: string; title: string }) => ipcRenderer.invoke('export:html', payload),
+        exportPdf: (payload: { content: string; title: string }) => ipcRenderer.invoke('export:pdf', payload),
+
         onRefresh: (callback: () => void) => {
             ipcRenderer.removeAllListeners('file:refresh');
             const handler = (_event: IpcRendererEvent) => callback();

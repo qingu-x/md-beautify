@@ -24,6 +24,7 @@ export interface DesignerVariables {
   primaryColor: string;
   lineHeight: string;
   pagePadding: number;
+  globalLetterSpacing: number;
 
   // 标题
   h1: HeadingStyle;
@@ -75,6 +76,7 @@ export interface DesignerVariables {
   markBackground: string;
   markColor: string;
   strongStyle: string;
+  strongColor: string;
 
   // 表格
   tableHeaderBackground: string;
@@ -96,6 +98,8 @@ export interface DesignerVariables {
   listSpacing: number;
   listMarkerColor: string;
   listMarkerColorL2: string;
+  ulFontSize: string;
+  olFontSize: string;
 
   // 脚注
   footnoteColor: string;
@@ -106,6 +110,9 @@ export interface DesignerVariables {
 
   // 提示块
   calloutStyle: "default" | "primary";
+
+  // Mermaid
+  mermaidTheme: "base" | "forest" | "dark" | "neutral" | "default";
 }
 
 /**

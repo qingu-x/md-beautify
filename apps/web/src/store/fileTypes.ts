@@ -5,6 +5,10 @@ export interface FileItem {
   updatedAt: Date;
   size: number;
   themeName?: string;
+  isDirectory?: boolean;
+  children?: FileItem[];
+  level?: number;
+  parentPath?: string;
 }
 
 export interface FileStoreState {

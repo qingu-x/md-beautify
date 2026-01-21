@@ -1,7 +1,10 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { useThemeStore } from './themeStore';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import { useThemeStore } from "./themeStore";
+// import { createMarkdownParser } from "@wemd/core";
 import { copyToWechat as execCopyToWechat } from "../services/wechatCopyService";
+
+// const parser = createMarkdownParser();
 
 export interface ResetOptions {
   markdown?: string;
@@ -71,12 +74,15 @@ export const defaultMarkdown = `# 欢迎使用 WeMD
 > 这是一个重要信息提示块
 `;
 
-export const useEditorStore = defineStore('editor', () => {
+export const useEditorStore = defineStore("editor", () => {
   const markdown = ref(defaultMarkdown);
+  // const html = computed(() => parser.render(markdown.value));
   const lastAutoSavedAt = ref<Date | null>(null);
   const isEditing = ref(false);
   const currentFilePath = ref<string | undefined>(undefined);
   const workspaceDir = ref<string | undefined>(undefined);
+  const fixedWidthPreview = ref(true);
+  const previewWidth = ref(430);
 
   function setMarkdown(val: string) {
     markdown.value = val;
@@ -112,12 +118,20 @@ export const useEditorStore = defineStore('editor', () => {
     if (options?.customCSS !== undefined) {
       themeStore.setCustomCSS(options.customCSS);
     } else {
-      themeStore.setCustomCSS('');
+      themeStore.setCustomCSS("");
     }
   }
 
   async function copyToWechat(css: string) {
     await execCopyToWechat(markdown.value, css);
+  }
+
+  function setFixedWidthPreview(value: boolean) {
+    fixedWidthPreview.value = value;
+  }
+
+  function setPreviewWidth(width: number) {
+    previewWidth.value = Math.max(200, Math.min(width, 1200));
   }
 
   return {
@@ -126,11 +140,15 @@ export const useEditorStore = defineStore('editor', () => {
     isEditing,
     currentFilePath,
     workspaceDir,
+    fixedWidthPreview,
+    previewWidth,
     setMarkdown,
     setLastAutoSavedAt,
     setIsEditing,
     setFilePath,
     setWorkspaceDir,
+    setFixedWidthPreview,
+    setPreviewWidth,
     resetDocument,
     copyToWechat,
   };

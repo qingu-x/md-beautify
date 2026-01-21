@@ -35,53 +35,28 @@
 
     <div class="fs-body">
       <div class="fs-list">
-        <div
-          v-for="file in visibleFiles"
-          :key="file.path"
-          :class="['fs-item', currentFile?.path === file.path ? 'active' : '']"
-          @click="openFile(file)"
-          @contextmenu.prevent="handleContextMenu($event, file)"
-        >
-          <div class="fs-item-main">
-            <div class="fs-title-block">
-              <span class="fs-time">
-                {{ new Date(file.updatedAt).toLocaleString() }}
-              </span>
-              <div
-                v-if="renamingPath === file.path"
-                class="fs-rename"
-                @click.stop
-              >
-                <input
-                  v-model="renameValue"
-                  @keydown.enter="submitRename"
-                  @keydown.esc="renamingPath = null"
-                  v-focus
-                />
-                <button @click="submitRename">确认</button>
-                <button @click="renamingPath = null">取消</button>
-              </div>
-              <span v-else class="fs-title" :title="file.name">
-                {{ file.name }}
-              </span>
-              <span v-if="renamingPath !== file.path" class="fs-theme-info">
-                {{ currentFile?.path === file.path ? currentThemeName : (file.themeName || "默认主题") }}
-              </span>
-            </div>
-            <button
-              class="fs-action-trigger"
-              @click.stop="handleContextMenu($event, file)"
-            >
-              <MoreHorizontal :size="16" />
-            </button>
-          </div>
-        </div>
+        <template v-for="item in visibleItems" :key="item.path">
+          <FileTreeItem
+            :item="item"
+            :current-file="currentFile"
+            :current-theme-name="currentThemeName"
+            :expanded-folders="expandedFolders"
+            :renaming-path="renamingPath"
+            :rename-value="renameValue"
+            @toggle-folder="toggleFolder"
+            @open-file="openFile"
+            @context-menu="handleContextMenu"
+            @update-rename="renameValue = $event"
+            @submit-rename="submitRename"
+            @cancel-rename="renamingPath = null"
+          />
+        </template>
 
         <!-- 无限滚动触发器 -->
         <div v-if="hasMore" ref="loadMoreRef" class="fs-load-more">
           <span>加载更多...</span>
         </div>
-        <div v-if="filteredFiles.length === 0" class="fs-empty">暂无文件</div>
+        <div v-if="flattenedFiles.length === 0" class="fs-empty">暂无文件</div>
       </div>
     </div>
 
@@ -92,7 +67,7 @@
           class="fs-context-menu"
           :style="{ top: menuPos.y + 'px', left: menuPos.x + 'px' }"
         >
-          <button @click="copyTitleAction">
+          <button v-if="!menuTarget?.isDirectory" @click="copyTitleAction">
             <Copy :size="14" /> 复制标题
           </button>
           <button @click="startRenameAction">
@@ -109,8 +84,8 @@
     <Teleport to="body">
       <div v-if="deleteTarget" class="history-confirm-backdrop" @click="!deleting && (deleteTarget = null)">
         <div class="history-confirm-modal" @click.stop>
-          <h4>删除文件</h4>
-          <p>确定要删除“{{ deleteTarget.name }}”吗？此操作不可撤销。</p>
+          <h4>删除{{ deleteTarget.isDirectory ? '文件夹' : '文件' }}</h4>
+          <p>确定要删除"{{ deleteTarget.name }}"吗？{{ deleteTarget.isDirectory ? '文件夹内的所有文件也会被删除。' : '' }}此操作不可撤销。</p>
           <div class="history-confirm-actions">
             <button class="btn-secondary" @click="deleteTarget = null" :disabled="deleting">取消</button>
             <button class="btn-danger" @click="handleDelete" :disabled="deleting">
@@ -136,10 +111,15 @@ import {
   Edit2,
   MoreHorizontal,
   Copy,
+  ChevronRight,
+  ChevronDown,
+  Folder,
+  FileText,
 } from "lucide-vue-next";
 import type { FileItem } from "../../store/fileTypes";
+import FileTreeItem from "./FileTreeItem.vue";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
 
 const {
   files,
@@ -160,6 +140,7 @@ const renamingPath = ref<string | null>(null);
 const renameValue = ref("");
 const visibleCount = ref(PAGE_SIZE);
 const loadMoreRef = ref<HTMLElement | null>(null);
+const expandedFolders = ref<Set<string>>(new Set());
 
 const menuOpen = ref(false);
 const menuPos = ref({ x: 0, y: 0 });
@@ -167,24 +148,56 @@ const menuTarget = ref<FileItem | null>(null);
 const deleteTarget = ref<FileItem | null>(null);
 const deleting = ref(false);
 
-const filteredFiles = computed(() => {
-  if (!filter.value) return files.value;
-  return (files.value || []).filter((f: FileItem) =>
-    f.name.toLowerCase().includes(filter.value.toLowerCase())
-  );
+// 扁平化文件列表（用于搜索）
+const flattenedFiles = computed(() => {
+  const flatten = (items: FileItem[]): FileItem[] => {
+    return items.reduce((acc: FileItem[], item) => {
+      acc.push(item);
+      if (item.children) {
+        acc.push(...flatten(item.children));
+      }
+      return acc;
+    }, []);
+  };
+  return flatten(files.value || []);
 });
 
-const visibleFiles = computed(() => {
-  return filteredFiles.value.slice(0, visibleCount.value);
+// 过滤后的文件列表
+const filteredItems = computed(() => {
+  if (!filter.value) return files.value;
+  
+  const searchLower = filter.value.toLowerCase();
+  const matchedFiles = flattenedFiles.value.filter((f: FileItem) => 
+    !f.isDirectory && f.name.toLowerCase().includes(searchLower)
+  );
+  
+  // 如果有搜索，返回扁平列表
+  return matchedFiles;
+});
+
+// 展开所有包含匹配文件的文件夹
+watch(filter, (newFilter) => {
+  if (newFilter) {
+    // 搜索时展开所有文件夹
+    const allFolders = flattenedFiles.value.filter(f => f.isDirectory).map(f => f.path);
+    expandedFolders.value = new Set(allFolders);
+  } else {
+    // 清空搜索时保持当前展开状态
+  }
+});
+
+// 可见的项（分页）
+const visibleItems = computed(() => {
+  return filteredItems.value.slice(0, visibleCount.value);
 });
 
 const hasMore = computed(() => {
-  return visibleCount.value < filteredFiles.value.length;
+  return visibleCount.value < filteredItems.value.length;
 });
 
 const loadMore = () => {
   if (hasMore.value) {
-    visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, filteredFiles.value.length);
+    visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, filteredItems.value.length);
   }
 };
 
@@ -213,6 +226,16 @@ watch(filter, () => {
   visibleCount.value = PAGE_SIZE;
 });
 
+const toggleFolder = (path: string) => {
+  if (expandedFolders.value.has(path)) {
+    expandedFolders.value.delete(path);
+  } else {
+    expandedFolders.value.add(path);
+  }
+  // 触发响应式更新
+  expandedFolders.value = new Set(expandedFolders.value);
+};
+
 const handleContextMenu = (e: MouseEvent, file: FileItem) => {
   menuTarget.value = file;
   menuPos.value = { x: e.clientX, y: e.clientY };
@@ -239,15 +262,21 @@ const copyTitleAction = async () => {
 const startRenameAction = () => {
   if (!menuTarget.value) return;
   renamingPath.value = menuTarget.value.path;
-  renameValue.value = menuTarget.value.name.replace(".md", "");
+  renameValue.value = menuTarget.value.isDirectory 
+    ? menuTarget.value.name 
+    : menuTarget.value.name.replace(".md", "");
   closeMenu();
 };
 
 const submitRename = async () => {
   if (renamingPath.value && renameValue.value) {
-    const file = files.value.find((f: FileItem) => f.path === renamingPath.value);
+    const file = flattenedFiles.value.find((f: FileItem) => f.path === renamingPath.value);
     if (file) {
-      await renameFile(file.path, renameValue.value);
+      const newName = file.isDirectory ? renameValue.value : `${renameValue.value}.md`;
+      const pathParts = file.path.split('/');
+      pathParts[pathParts.length - 1] = newName;
+      const newPath = pathParts.join('/');
+      await renameFile(file.path, newPath);
     }
   }
   renamingPath.value = null;

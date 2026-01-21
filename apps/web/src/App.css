@@ -113,7 +113,33 @@
   transform: translateY(-4px);
   box-shadow: var(--shadow-premium);
   border: var(--border-width) solid rgba(var(--border-color-rgb), 0.6);
-  border: var(--border-width) solid color-mix(in srgb, var(--border-color) 60%, transparent);
+}
+
+@supports (color: color-mix(in srgb, white, black)) {
+  .editor-pane:hover,
+  .preview-pane:hover {
+    border: var(--border-width) solid
+      color-mix(in srgb, var(--border-color) 60%, transparent);
+  }
+
+  .history-toggle {
+    border: var(--border-width) solid
+      color-mix(in srgb, var(--accent-primary) 60%, transparent);
+    background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
+  }
+
+  .history-toggle:hover {
+    background: color-mix(in srgb, var(--bg-primary) 95%, transparent);
+    border-color: color-mix(in srgb, var(--accent-primary) 85%, transparent);
+  }
+
+  .history-toggle.is-collapsed {
+    border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  }
+
+  .main-content {
+    border-color: color-mix(in srgb, var(--border-color) 60%, transparent);
+  }
 }
 
 /* 响应式布局 */
@@ -214,15 +240,13 @@
 .history-toggle {
   position: absolute;
   top: 50%;
-  right: -18px;
+  left: -18px;
   transform: translateY(-50%);
   width: 36px;
   height: 36px;
   border-radius: 50%;
   border: var(--border-width) solid rgba(var(--accent-primary-rgb), 0.6);
-  border: var(--border-width) solid color-mix(in srgb, var(--accent-primary) 60%, transparent);
   background: rgba(var(--bg-primary-rgb), 0.85);
-  background: color-mix(in srgb, var(--bg-primary) 85%, transparent);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   color: var(--text-secondary);
@@ -246,11 +270,9 @@
 
 .history-toggle:hover {
   background: rgba(var(--bg-primary-rgb), 0.95);
-  background: color-mix(in srgb, var(--bg-primary) 95%, transparent);
   border-color: rgba(var(--accent-primary-rgb), 0.85);
-  border-color: color-mix(in srgb, var(--accent-primary) 85%, transparent);
   color: var(--accent-primary);
-  transform: translateY(-50%) translateX(2px);
+  transform: translateY(-50%) translateX(20px);
   box-shadow: var(--shadow-lg);
 }
 
@@ -262,7 +284,6 @@
 
 .history-toggle.active:hover {
   background: var(--accent-gradient);
-  transform: translateY(-50%) translateX(2px);
   box-shadow: var(--shadow-lg);
 }
 
@@ -270,8 +291,6 @@
   background: var(--text-primary);
   color: var(--bg-primary);
   border-color: rgba(var(--accent-primary-rgb), 0.35);
-  border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
-  transform: translateY(-50%) translateX(-1px);
   box-shadow: var(--shadow-lg);
 }
 
@@ -282,7 +301,6 @@
   position: relative;
   background: var(--bg-page);
   border-color: rgba(var(--border-color-rgb), 0.6);
-  border-color: color-mix(in srgb, var(--border-color) 60%, transparent);
 }
 
 .history-toggle.is-collapsed::before {

@@ -15,17 +15,24 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import mermaid from "mermaid";
 import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode } from "@wemd/core";
 import { useUIThemeStore } from "../../store/uiThemeStore";
+import type { DesignerVariables } from "./ThemeDesigner/types";
+import {
+  getMermaidConfig,
+  getThemedMermaidDiagram,
+} from "../../utils/mermaidConfig";
 
 const props = defineProps<{
   css: string;
+  designerVariables?: DesignerVariables;
 }>();
 
 // 主题预览用的示例 Markdown
 const PREVIEW_MARKDOWN = `# 一级标题示例
 
-这是一段**加粗文本**、*斜体文本*、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/qingu-x/md-editor)。
+这是一段**加粗文本**、*斜体文本*、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/tenngoxars/WeMD)。
 正文段落通常需要设置行高和间距，以保证阅读体验。
 
 ---
@@ -41,7 +48,7 @@ const PREVIEW_MARKDOWN = `# 一级标题示例
 
 ### 三级标题
 
-这里演示脚注的使用：[WeChat Markdown](https://github.com/qingu-x/md-editor "WeMD 是一款专为公众号设计的编辑器") 可以极大提升排版效率。
+这里演示脚注的使用：[WeChat Markdown](https://github.com/tenngoxars/WeMD "WeMD 是一款专为公众号设计的编辑器") 可以极大提升排版效率。
 
 > [!TIP]
 > 这是一个提示块示例。支持切换“默认彩色”或“跟随主题色”风格，让排版更统一。
@@ -67,12 +74,22 @@ function hello() {
 }
 \`\`\`
 
+\`\`\`mermaid
+flowchart TD
+  Start([Start]) --> Check{Is valid?}
+  Check -- Yes --> Process[Process]
+  Check -- No --> Reject[Reject]
+  Process --> End([End])
+  Reject --> End
+\`\`\`
+
 ![WeMD 示例图片：不仅支持常规排版，更可以深度定制每一个细节。](https://img.wemd.app/example.jpg)
 `;
 
 const uiThemeStore = useUIThemeStore();
 const isDarkMode = computed(() => uiThemeStore.theme === "dark");
 const iframeRef = ref<HTMLIFrameElement | null>(null);
+const mermaidRenderId = ref(0);
 
 const parser = createMarkdownParser();
 
@@ -107,6 +124,74 @@ const html = computed(() => {
   return processHtml(rawHtml.value, finalCss.value, false);
 });
 
+const renderMermaid = async (doc: Document) => {
+  const blocks = Array.from(
+    doc.querySelectorAll<HTMLElement>("pre.mermaid"),
+  );
+  if (blocks.length === 0) return;
+
+  if (!(window as any).__wemdMermaidInitialized) {
+    try {
+      mermaid.initialize({ startOnLoad: false });
+      (window as any).__wemdMermaidInitialized = true;
+    } catch (e) {
+      console.error("Mermaid initialization failed in preview:", e);
+      return;
+    }
+  }
+
+  const initConfig = getMermaidConfig(
+    props.designerVariables,
+    isDarkMode.value,
+  );
+
+  const renderToken = ++mermaidRenderId.value;
+  for (const [index, block] of blocks.entries()) {
+    if (!block.dataset.mermaidRaw) {
+      block.dataset.mermaidRaw = block.textContent ?? "";
+    }
+    const diagram = block.dataset.mermaidRaw ?? "";
+    if (!diagram.trim()) continue;
+
+    const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+    try {
+      const { svg } = await mermaid.render(
+        `theme-preview-${renderToken}-${index}`,
+        themedDiagram,
+      );
+      if (mermaidRenderId.value !== renderToken) {
+        return;
+      }
+      block.innerHTML = svg;
+      const svgEl = block.querySelector("svg");
+      if (svgEl) {
+        const defs = svgEl.querySelector("defs");
+        const refNode = defs ? defs.nextSibling : svgEl.firstChild;
+        const selectors = [
+          "g.lineWrapper", 
+          "g.edgePaths", 
+          "g[class*='arrow']", 
+          "g[class*='node-line']", 
+          "g[class*='timeline-line']"
+        ];
+        const lineGroups = Array.from(svgEl.querySelectorAll(selectors.join(", ")));
+        for (const g of lineGroups) {
+          // 确保 g 和 refNode 是 svgEl 的直接子节点
+          if (g.parentNode === svgEl && (!refNode || refNode.parentNode === svgEl)) {
+            if (refNode) {
+              svgEl.insertBefore(g, refNode);
+            } else {
+              svgEl.insertBefore(g, svgEl.firstChild);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Mermaid render error:", e);
+    }
+  }
+};
+
 const updateContent = (() => {
   let timer: any = null;
   return () => {
@@ -135,12 +220,15 @@ const updateContent = (() => {
 
         // 恢复滚动位置
         iframe.contentWindow?.scrollTo(0, scrollY);
+        
+        // 渲染 Mermaid
+        void renderMermaid(doc);
       }
     }, 100);
   };
 })();
 
-watch([html, finalCss, isDarkMode], () => {
+watch([html, finalCss, isDarkMode, () => props.designerVariables?.mermaidTheme], () => {
   updateContent();
 }, { immediate: true });
 

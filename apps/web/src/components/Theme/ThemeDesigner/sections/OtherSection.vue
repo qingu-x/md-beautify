@@ -65,6 +65,14 @@ const updateVariable = <K extends keyof DesignerVariables>(
         @change="updateVariable('delColor', $event)"
       />
     </div>
+    <div class="designer-field">
+      <label>加粗颜色</label>
+      <ColorSelector
+        :value="variables.strongColor || 'inherit'"
+        :presets="['inherit', variables.primaryColor, '#333']"
+        @change="updateVariable('strongColor', $event)"
+      />
+    </div>
     <div class="designer-row">
       <div class="designer-field half">
         <label>高亮背景</label>

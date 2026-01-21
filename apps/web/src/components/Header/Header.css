@@ -41,6 +41,121 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 8px;
+  margin: -8px;
+}
+
+.floating-more-wrapper {
+  transition: max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 0 4px;
+  margin: 0 -4px;
+}
+
+/* 仅在展开时允许溢出显示 tooltip */
+.floating-toolbar.expanded .floating-more-wrapper {
+  overflow: visible;
+}
+
+/* 在折叠过程中保持隐藏，防止内容溢出 */
+.floating-toolbar:not(.expanded) .floating-more-wrapper {
+  overflow: hidden;
+}
+
+.floating-more-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+/* 悬浮工具栏二级菜单 */
+.floating-submenu-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.floating-submenu {
+  position: absolute;
+  right: calc(100% + 16px);
+  top: 0;
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  z-index: 1001;
+  animation: submenuIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes submenuIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.submenu-item:hover {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+}
+
+.submenu-item svg {
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+
+.submenu-item:hover svg {
+  color: var(--accent-primary);
+}
+
+/* Vue Transition: toolbar-expand (用于整个工具栏的入场/出场) */
+.toolbar-expand-enter-active,
+.toolbar-expand-leave-active {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toolbar-expand-enter-from,
+.toolbar-expand-leave-to {
+  opacity: 0;
+  transform: scale(0.5) translateY(-20px);
+}
+
+/* 移除旧的 slide-fade 动画 */
+
+.floating-more-btn .floating-btn-icon {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-more-btn.active .floating-btn-icon {
+  transform: rotate(90deg);
 }
 
 /* 弹跳入场动画 */
@@ -101,24 +216,37 @@
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  border: var(--border-width) solid var(--glass-border);
+  border: 1.5px solid var(--border-light);
   border-radius: var(--radius-pill);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: var(--glass-shadow);
+  box-shadow: var(--shadow-sm), var(--glass-shadow);
+}
+
+.floating-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .floating-btn:hover {
   background: var(--bg-hover);
   color: var(--accent-primary);
   border-color: var(--accent-primary);
-  transform: translateY(-1px);
+  border-width: 1.5px;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-md), var(--glass-shadow);
 }
 
-.floating-btn-show {
+.floating-btn-show,
+.floating-btn.active {
   border-color: var(--accent-primary);
+  border-width: 1.5px;
   color: var(--accent-primary);
+  background: var(--bg-hover);
 }
 
 .floating-btn-primary {
@@ -130,7 +258,6 @@
 .floating-btn-primary:hover {
   background: var(--accent-gradient) !important;
   transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 24px rgba(7, 193, 96, 0.45);
   color: white !important;
 }
 
@@ -142,7 +269,7 @@
 .floating-btn[data-tooltip]::before {
   content: attr(data-tooltip);
   position: absolute;
-  right: calc(100% + 10px);
+  right: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%) translateX(10px);
   padding: 6px 12px;
@@ -153,10 +280,11 @@
   white-space: nowrap;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  border: var(--border-width) solid var(--glass-border);
+  border: var(--border-width) solid var(--border-light);
   opacity: 0;
   pointer-events: none;
   transition: all 0.2s ease;
+  z-index: 1000;
 }
 
 .floating-btn[data-tooltip]:hover::before {
@@ -196,6 +324,93 @@
 
 .btn-ghost:hover {
   color: var(--accent-primary);
+}
+
+/* Dropdown Styles */
+.dropdown-container {
+  position: relative;
+  -webkit-app-region: no-drag;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--bg-primary);
+  border: var(--border-width) solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  min-width: 220px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1000;
+  animation: dropdownIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+.dropdown-item span:first-child {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  color: var(--text-primary);
+}
+
+.item-title svg {
+  color: var(--text-secondary);
+}
+
+.dropdown-item:hover .item-title svg {
+  color: var(--accent-primary);
+}
+
+.item-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.chevron-icon {
+  margin-left: 4px;
+  opacity: 0.7;
 }
 
 .header-left {
@@ -549,21 +764,15 @@
     height: 36px;
   }
 
-  /* 移动端隐藏存储模式、图床设置、主题管理按钮(由底部工具栏提供) */
-  .header-right .btn-secondary {
+  /* 移动端隐藏主要操作按钮，由底部工具栏提供 */
+  .header-right .btn-primary,
+  .header-right .btn-secondary,
+  .header-right .dropdown-container:has(.btn-secondary) {
     display: none;
   }
 
-  /* 移动端隐藏复制到公众号按钮(由底部工具栏提供) */
-  .header-right .btn-primary {
-    display: none;
-  }
-
-  /* 移动端隐藏隐藏标题栏按钮 */
-  .header-right .btn-ghost {
-    display: none;
-  }
-
+  /* 移动端隐藏设置按钮中的某些项，或者整个设置按钮 */
+  /* 如果保留设置按钮，确保它在小屏幕下不会太靠边 */
   .header-right {
     gap: 8px;
   }
@@ -577,8 +786,17 @@
     min-height: 400px;
   }
 
-  /* 移动端隐藏浮动工具栏 */
+  /* 移动端调整浮动工具栏位置，避开可能的系统 UI */
   .floating-toolbar {
+    top: max(env(safe-area-inset-top, 0px), 16px);
+    right: 16px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding: 0 8px 8px;
+    margin-right: -8px;
+  }
+
+  .floating-toolbar::-webkit-scrollbar {
     display: none;
   }
 }

@@ -84,14 +84,9 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 #wemd ul {
   list-style-type: disc;
 }
-#wemd ul ul {
-  list-style-type: square;
-}
-
 #wemd ol {
   list-style-type: decimal;
 }
-
 #wemd li section {
   margin-top: 5px;
   margin-bottom: 5px;
@@ -99,6 +94,35 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   text-align: left;
   color: #010101; /* 使用接近黑色的 HEX，避免微信吞掉纯黑色 */
   font-weight: 500;
+}
+
+/* 术语列表 (Definition List) */
+#wemd dl {
+  margin: 20px 0;
+  padding: 0;
+}
+
+#wemd dt {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-top: 16px;
+  color: #000000;
+}
+
+#wemd dt::after {
+  content: "：";
+  display: inline;
+}
+
+#wemd dd {
+  margin-left: 0;
+  margin-top: 4px;
+  color: #333333;
+  line-height: 1.6;
+}
+
+#wemd dd p {
+  margin: 4px 0;
 }
 
 /* 引用 */
@@ -201,17 +225,24 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 
 /* 代码块容器 */
 #wemd pre {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-#wemd pre.custom {
+  margin: 10px 0;
+  position: relative;
   padding: 0;
   border-radius: 6px;
   overflow: hidden;
-  overflow-x: auto;
+}
+
+#wemd pre.custom::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f;
+  z-index: 10;
 }
 
 #wemd pre code {
@@ -220,12 +251,63 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   border-radius: 0px;
   font-size: 12px;
   white-space: pre;
-  min-width: max-content;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  padding: 36px 16px 16px !important;
 }
 
 #wemd pre code span {
   line-height: 26px;
+}
+
+/* Mermaid */
+#wemd .mermaid {
+  background: #f8f8f8;
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 6px;
+  white-space: pre;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+#wemd .mermaid svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+#wemd .mermaid svg line,
+#wemd .mermaid svg path {
+  vector-effect: non-scaling-stroke;
+}
+
+#wemd .mermaid svg text {
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  font-kerning: normal;
+}
+
+#wemd .mermaid svg .eventWrapper {
+  filter: none !important;
+}
+
+#wemd .mermaid .label {
+  text-align: left;
+  white-space: normal;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  font-kerning: normal;
+}
+#wemd .mermaid .label * {
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
 }
 
 /* 行内代码 */
