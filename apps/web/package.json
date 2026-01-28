@@ -1,7 +1,7 @@
 {
-  "name": "@wemd/web",
+  "name": "@mdb/web",
   "private": true,
-  "version": "1.2.3",
+  "version": "1.2.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,7 +18,7 @@
     "@codemirror/view": "^6.38.8",
     "@lezer/highlight": "^1.2.3",
     "@uiw/codemirror-theme-github": "^4.25.3",
-    "@wemd/core": "workspace:*",
+    "@mdb/core": "workspace:*",
     "codemirror": "^6.0.2",
     "cos-js-sdk-v5": "^1.10.1",
     "crypto-js": "^4.2.0",

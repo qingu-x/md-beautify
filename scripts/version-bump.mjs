@@ -6,10 +6,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
 const APPS_MAP = {
-  web: '@wemd/web',
+  web: '@mdb/web',
   electron: 'md-beautify-electron',
-  server: '@wemd/server',
-  obsidian: 'md-beautify-obsidian'
+  server: '@mdb/server',
+  obsidian: 'md-beautify-obsidian',
+  core: "@mdb/core"
 };
 
 const args = process.argv.slice(2);

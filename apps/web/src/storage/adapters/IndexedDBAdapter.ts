@@ -1,10 +1,10 @@
-import type { StorageAdapter } from '../StorageAdapter';
-import type { FileItem, StorageInitResult } from '../types';
+import type { StorageAdapter } from "../StorageAdapter";
+import type { FileItem, StorageInitResult } from "../types";
 
-const DB_NAME = 'wemd-files';
+const DB_NAME = "mdb-files";
 const DB_VERSION = 2; // 升级版本以触发迁移
-const META_STORE = 'meta';
-const CONTENT_STORE = 'content';
+const META_STORE = "meta";
+const CONTENT_STORE = "content";
 
 interface MetaRecord {
   path: string;
@@ -24,15 +24,15 @@ interface LegacyRecord {
 }
 
 export class IndexedDBAdapter implements StorageAdapter {
-  readonly type = 'indexeddb' as const;
-  readonly name = 'IndexedDB';
+  readonly type = "indexeddb" as const;
+  readonly name = "IndexedDB";
   ready = false;
   private db: IDBDatabase | null = null;
 
   async init(): Promise<StorageInitResult> {
     this.db = await this.openDb();
     this.ready = true;
-    return { ready: true, message: 'IndexedDB ready' };
+    return { ready: true, message: "IndexedDB ready" };
   }
 
   private openDb(): Promise<IDBDatabase> {
@@ -46,16 +46,16 @@ export class IndexedDBAdapter implements StorageAdapter {
 
         // 创建新的存储
         if (!db.objectStoreNames.contains(META_STORE)) {
-          db.createObjectStore(META_STORE, { keyPath: 'path' });
+          db.createObjectStore(META_STORE, { keyPath: "path" });
         }
         if (!db.objectStoreNames.contains(CONTENT_STORE)) {
-          db.createObjectStore(CONTENT_STORE, { keyPath: 'path' });
+          db.createObjectStore(CONTENT_STORE, { keyPath: "path" });
         }
 
         // 从旧版本迁移数据
-        if (oldVersion === 1 && db.objectStoreNames.contains('files')) {
+        if (oldVersion === 1 && db.objectStoreNames.contains("files")) {
           const tx = (event.target as IDBOpenDBRequest).transaction!;
-          const oldStore = tx.objectStore('files');
+          const oldStore = tx.objectStore("files");
           const metaStore = tx.objectStore(META_STORE);
           const contentStore = tx.objectStore(CONTENT_STORE);
 
@@ -74,7 +74,7 @@ export class IndexedDBAdapter implements StorageAdapter {
   }
 
   private getStore(storeName: string, mode: IDBTransactionMode) {
-    if (!this.db) throw new Error('IndexedDB not initialized');
+    if (!this.db) throw new Error("IndexedDB not initialized");
     return this.db.transaction(storeName, mode).objectStore(storeName);
   }
 
@@ -82,16 +82,18 @@ export class IndexedDBAdapter implements StorageAdapter {
    * 只读取元数据，不读取内容，减少内存占用
    */
   async listFiles(): Promise<FileItem[]> {
-    const store = this.getStore(META_STORE, 'readonly');
+    const store = this.getStore(META_STORE, "readonly");
     return new Promise((resolve, reject) => {
       const request = store.getAll();
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        const files: FileItem[] = (request.result as MetaRecord[]).map((item) => ({
-          path: item.path,
-          name: item.path.split('/').pop() ?? item.path,
-          updatedAt: item.updatedAt,
-        }));
+        const files: FileItem[] = (request.result as MetaRecord[]).map(
+          (item) => ({
+            path: item.path,
+            name: item.path.split("/").pop() ?? item.path,
+            updatedAt: item.updatedAt,
+          }),
+        );
         // 按编辑时间降序排序
         files.sort((a, b) => {
           const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -104,22 +106,22 @@ export class IndexedDBAdapter implements StorageAdapter {
   }
 
   async readFile(path: string): Promise<string> {
-    const store = this.getStore(CONTENT_STORE, 'readonly');
+    const store = this.getStore(CONTENT_STORE, "readonly");
     return new Promise((resolve, reject) => {
       const request = store.get(path);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const record = request.result as ContentRecord | undefined;
-        if (!record) reject(new Error('File not found'));
+        if (!record) reject(new Error("File not found"));
         else resolve(record.content);
       };
     });
   }
 
   async writeFile(path: string, content: string): Promise<void> {
-    if (!this.db) throw new Error('IndexedDB not initialized');
+    if (!this.db) throw new Error("IndexedDB not initialized");
 
-    const tx = this.db.transaction([META_STORE, CONTENT_STORE], 'readwrite');
+    const tx = this.db.transaction([META_STORE, CONTENT_STORE], "readwrite");
     const metaStore = tx.objectStore(META_STORE);
     const contentStore = tx.objectStore(CONTENT_STORE);
 
@@ -134,9 +136,9 @@ export class IndexedDBAdapter implements StorageAdapter {
   }
 
   async deleteFile(path: string): Promise<void> {
-    if (!this.db) throw new Error('IndexedDB not initialized');
+    if (!this.db) throw new Error("IndexedDB not initialized");
 
-    const tx = this.db.transaction([META_STORE, CONTENT_STORE], 'readwrite');
+    const tx = this.db.transaction([META_STORE, CONTENT_STORE], "readwrite");
     tx.objectStore(META_STORE).delete(path);
     tx.objectStore(CONTENT_STORE).delete(path);
 
@@ -153,7 +155,7 @@ export class IndexedDBAdapter implements StorageAdapter {
   }
 
   async exists(path: string): Promise<boolean> {
-    const store = this.getStore(META_STORE, 'readonly');
+    const store = this.getStore(META_STORE, "readonly");
     return new Promise((resolve, reject) => {
       const request = store.getKey(path);
       request.onerror = () => reject(request.error);

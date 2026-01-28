@@ -1,4 +1,4 @@
-// 可视化主题设计器 - CSS 生成函数
+// 可视化主题设计器 - CSS 生成函数 | Visual Theme Designer - CSS Generation Functions
 import type { DesignerVariables } from "./types";
 import {
   headingStylePresets,
@@ -8,7 +8,7 @@ import {
 } from "@/config/styleOptions";
 
 /**
- * 获取标题预设 CSS 模板
+ * 获取标题预设 CSS 模板 | Get heading preset CSS template
  */
 export function getHeadingPresetCSS(
   presetId: string,
@@ -24,7 +24,7 @@ export function getHeadingPresetCSS(
 }
 
 /**
- * 获取引用预设 CSS
+ * 获取引用预设 CSS | Get quote preset CSS
  */
 export function getQuotePresetCSS(
   presetId: string,
@@ -51,123 +51,123 @@ export function getQuotePresetCSS(
 }
 
 /**
- * 获取代码主题 CSS
+ * 获取代码主题 CSS | Get code theme CSS
  */
 export function getCodeThemeCSS(themeId: string): string {
   const themes: Record<string, string> = {
     github: `
-            #wemd .hljs-comment, #wemd .hljs-quote { color: #998; font-style: italic; }
-            #wemd .hljs-keyword, #wemd .hljs-selector-tag, #wemd .hljs-subst { color: #333; font-weight: bold; }
-            #wemd .hljs-string, #wemd .hljs-doctag { color: #d14; }
-            #wemd .hljs-title, #wemd .hljs-section, #wemd .hljs-selector-id { color: #900; font-weight: bold; }
-            #wemd .hljs-type, #wemd .hljs-class .hljs-title { color: #458; font-weight: bold; }
-            #wemd .hljs-variable, #wemd .hljs-template-variable { color: #008080; }
-            #wemd .hljs-attr { color: #000080; }
+            #mdb .hljs-comment, #mdb .hljs-quote { color: #998; font-style: italic; }
+            #mdb .hljs-keyword, #mdb .hljs-selector-tag, #mdb .hljs-subst { color: #333; font-weight: bold; }
+            #mdb .hljs-string, #mdb .hljs-doctag { color: #d14; }
+            #mdb .hljs-title, #mdb .hljs-section, #mdb .hljs-selector-id { color: #900; font-weight: bold; }
+            #mdb .hljs-type, #mdb .hljs-class .hljs-title { color: #458; font-weight: bold; }
+            #mdb .hljs-variable, #mdb .hljs-template-variable { color: #008080; }
+            #mdb .hljs-attr { color: #000080; }
         `,
     monokai: `
-            #wemd .hljs { color: #f8f8f2; }
-            #wemd .hljs-comment, #wemd .hljs-quote { color: #75715e; }
-            #wemd .hljs-keyword, #wemd .hljs-selector-tag, #wemd .hljs-literal { color: #f92672; }
-            #wemd .hljs-string, #wemd .hljs-attr { color: #e6db74; }
-            #wemd .hljs-title, #wemd .hljs-section { color: #a6e22e; }
-            #wemd .hljs-type, #wemd .hljs-class .hljs-title { color: #66d9ef; font-style: italic; }
-            #wemd .hljs-built_in, #wemd .hljs-selector-attr { color: #ae81ff; }
+            #mdb .hljs { color: #f8f8f2; }
+            #mdb .hljs-comment, #mdb .hljs-quote { color: #75715e; }
+            #mdb .hljs-keyword, #mdb .hljs-selector-tag, #mdb .hljs-literal { color: #f92672; }
+            #mdb .hljs-string, #mdb .hljs-attr { color: #e6db74; }
+            #mdb .hljs-title, #mdb .hljs-section { color: #a6e22e; }
+            #mdb .hljs-type, #mdb .hljs-class .hljs-title { color: #66d9ef; font-style: italic; }
+            #mdb .hljs-built_in, #mdb .hljs-selector-attr { color: #ae81ff; }
         `,
     vscode: `
-            #wemd .hljs { color: #d4d4d4; }
-            #wemd .hljs-comment { color: #6a9955; }
-            #wemd .hljs-keyword { color: #569cd6; }
-            #wemd .hljs-string { color: #ce9178; }
-            #wemd .hljs-literal { color: #569cd6; }
-            #wemd .hljs-number { color: #b5cea8; }
-            #wemd .hljs-function { color: #dcdcaa; }
-            #wemd .hljs-class { color: #4ec9b0; }
-            #wemd .hljs-attr { color: #9cdcfe; }
+            #mdb .hljs { color: #d4d4d4; }
+            #mdb .hljs-comment { color: #6a9955; }
+            #mdb .hljs-keyword { color: #569cd6; }
+            #mdb .hljs-string { color: #ce9178; }
+            #mdb .hljs-literal { color: #569cd6; }
+            #mdb .hljs-number { color: #b5cea8; }
+            #mdb .hljs-function { color: #dcdcaa; }
+            #mdb .hljs-class { color: #4ec9b0; }
+            #mdb .hljs-attr { color: #9cdcfe; }
         `,
     dracula: `
-            #wemd .hljs { color: #f8f8f2; }
-            #wemd .hljs-comment { color: #6272a4; }
-            #wemd .hljs-quote { color: #6272a4; }
-            #wemd .hljs-keyword { color: #ff79c6; }
-            #wemd .hljs-selector-tag { color: #ff79c6; }
-            #wemd .hljs-literal { color: #bd93f9; }
-            #wemd .hljs-string { color: #f1fa8c; }
-            #wemd .hljs-variable { color: #50fa7b; }
-            #wemd .hljs-number { color: #bd93f9; }
-            #wemd .hljs-function { color: #50fa7b; }
-            #wemd .hljs-class { color: #8be9fd; }
-            #wemd .hljs-attr { color: #50fa7b; }
+            #mdb .hljs { color: #f8f8f2; }
+            #mdb .hljs-comment { color: #6272a4; }
+            #mdb .hljs-quote { color: #6272a4; }
+            #mdb .hljs-keyword { color: #ff79c6; }
+            #mdb .hljs-selector-tag { color: #ff79c6; }
+            #mdb .hljs-literal { color: #bd93f9; }
+            #mdb .hljs-string { color: #f1fa8c; }
+            #mdb .hljs-variable { color: #50fa7b; }
+            #mdb .hljs-number { color: #bd93f9; }
+            #mdb .hljs-function { color: #50fa7b; }
+            #mdb .hljs-class { color: #8be9fd; }
+            #mdb .hljs-attr { color: #50fa7b; }
         `,
     "solarized-dark": `
-            #wemd .hljs { color: #839496; }
-            #wemd .hljs-comment { color: #586e75; font-style: italic; }
-            #wemd .hljs-keyword { color: #859900; }
-            #wemd .hljs-selector-tag { color: #859900; }
-            #wemd .hljs-string { color: #2aa198; }
-            #wemd .hljs-variable { color: #b58900; }
-            #wemd .hljs-number { color: #d33682; }
-            #wemd .hljs-function { color: #268bd2; }
-            #wemd .hljs-attr { color: #b58900; }
+            #mdb .hljs { color: #839496; }
+            #mdb .hljs-comment { color: #586e75; font-style: italic; }
+            #mdb .hljs-keyword { color: #859900; }
+            #mdb .hljs-selector-tag { color: #859900; }
+            #mdb .hljs-string { color: #2aa198; }
+            #mdb .hljs-variable { color: #b58900; }
+            #mdb .hljs-number { color: #d33682; }
+            #mdb .hljs-function { color: #268bd2; }
+            #mdb .hljs-attr { color: #b58900; }
         `,
     "solarized-light": `
-            #wemd .hljs { color: #657b83; }
-            #wemd .hljs-comment { color: #93a1a1; font-style: italic; }
-            #wemd .hljs-keyword { color: #859900; }
-            #wemd .hljs-selector-tag { color: #859900; }
-            #wemd .hljs-string { color: #2aa198; }
-            #wemd .hljs-variable { color: #b58900; }
-            #wemd .hljs-number { color: #d33682; }
-            #wemd .hljs-function { color: #268bd2; }
-            #wemd .hljs-attr { color: #b58900; }
+            #mdb .hljs { color: #657b83; }
+            #mdb .hljs-comment { color: #93a1a1; font-style: italic; }
+            #mdb .hljs-keyword { color: #859900; }
+            #mdb .hljs-selector-tag { color: #859900; }
+            #mdb .hljs-string { color: #2aa198; }
+            #mdb .hljs-variable { color: #b58900; }
+            #mdb .hljs-number { color: #d33682; }
+            #mdb .hljs-function { color: #268bd2; }
+            #mdb .hljs-attr { color: #b58900; }
         `,
     xcode: `
-            #wemd .hljs { color: #000000; }
-            #wemd .hljs-comment { color: #007400; }
-            #wemd .hljs-quote { color: #007400; }
-            #wemd .hljs-keyword { color: #aa0d91; }
-            #wemd .hljs-selector-tag { color: #aa0d91; }
-            #wemd .hljs-literal { color: #aa0d91; }
-            #wemd .hljs-string { color: #c41a16; }
-            #wemd .hljs-attr { color: #836C28; }
-            #wemd .hljs-title { color: #1c00cf; }
-            #wemd .hljs-section { color: #1c00cf; }
-            #wemd .hljs-type { color: #5c2699; }
-            #wemd .hljs-class .hljs-title { color: #5c2699; }
-            #wemd .hljs-variable { color: #3f6e74; }
-            #wemd .hljs-built_in { color: #5c2699; }
-            #wemd .hljs-number { color: #1c00cf; }
+            #mdb .hljs { color: #000000; }
+            #mdb .hljs-comment { color: #007400; }
+            #mdb .hljs-quote { color: #007400; }
+            #mdb .hljs-keyword { color: #aa0d91; }
+            #mdb .hljs-selector-tag { color: #aa0d91; }
+            #mdb .hljs-literal { color: #aa0d91; }
+            #mdb .hljs-string { color: #c41a16; }
+            #mdb .hljs-attr { color: #836C28; }
+            #mdb .hljs-title { color: #1c00cf; }
+            #mdb .hljs-section { color: #1c00cf; }
+            #mdb .hljs-type { color: #5c2699; }
+            #mdb .hljs-class .hljs-title { color: #5c2699; }
+            #mdb .hljs-variable { color: #3f6e74; }
+            #mdb .hljs-built_in { color: #5c2699; }
+            #mdb .hljs-number { color: #1c00cf; }
         `,
     "atom-one-light": `
-            #wemd .hljs { color: #383a42; }
-            #wemd .hljs-comment { color: #a0a1a7; font-style: italic; }
-            #wemd .hljs-keyword { color: #a626a4; }
-            #wemd .hljs-selector-tag { color: #e45649; }
-            #wemd .hljs-string { color: #50a14f; }
-            #wemd .hljs-variable { color: #986801; }
-            #wemd .hljs-number { color: #986801; }
-            #wemd .hljs-function { color: #4078f2; }
-            #wemd .hljs-attr { color: #986801; }
-            #wemd .hljs-class .hljs-title { color: #c18401; }
-            #wemd .hljs-type { color: #986801; }
-            #wemd .hljs-built_in { color: #c18401; }
+            #mdb .hljs { color: #383a42; }
+            #mdb .hljs-comment { color: #a0a1a7; font-style: italic; }
+            #mdb .hljs-keyword { color: #a626a4; }
+            #mdb .hljs-selector-tag { color: #e45649; }
+            #mdb .hljs-string { color: #50a14f; }
+            #mdb .hljs-variable { color: #986801; }
+            #mdb .hljs-number { color: #986801; }
+            #mdb .hljs-function { color: #4078f2; }
+            #mdb .hljs-attr { color: #986801; }
+            #mdb .hljs-class .hljs-title { color: #c18401; }
+            #mdb .hljs-type { color: #986801; }
+            #mdb .hljs-built_in { color: #c18401; }
         `,
     "night-owl": `
-            #wemd .hljs { color: #d6deeb; }
-            #wemd .hljs-comment { color: #637777; font-style: italic; }
-            #wemd .hljs-keyword { color: #c792ea; }
-            #wemd .hljs-selector-tag { color: #ff5874; }
-            #wemd .hljs-string { color: #ecc48d; }
-            #wemd .hljs-variable { color: #addb67; }
-            #wemd .hljs-number { color: #f78c6c; }
-            #wemd .hljs-function { color: #82aaff; }
-            #wemd .hljs-attr { color: #7fdbca; }
+            #mdb .hljs { color: #d6deeb; }
+            #mdb .hljs-comment { color: #637777; font-style: italic; }
+            #mdb .hljs-keyword { color: #c792ea; }
+            #mdb .hljs-selector-tag { color: #ff5874; }
+            #mdb .hljs-string { color: #ecc48d; }
+            #mdb .hljs-variable { color: #addb67; }
+            #mdb .hljs-number { color: #f78c6c; }
+            #mdb .hljs-function { color: #82aaff; }
+            #mdb .hljs-attr { color: #7fdbca; }
         `,
   };
   return themes[themeId] || "";
 }
 
 /**
- * 从变量生成完整 CSS
+ * 从变量生成完整 CSS | Generate full CSS from variables
  */
 export function generateCSS(v: DesignerVariables): string {
   const h1Preset = getHeadingPresetCSS(
@@ -210,14 +210,14 @@ export function generateCSS(v: DesignerVariables): string {
     .join("\n");
 
   return `/* 可视化设计器生成 */
-#wemd {
+#mdb {
   font-family: ${v.fontFamily};
   padding: 0 ${v.pagePadding ?? 8}px;
   color: ${v.paragraphColor};
   overflow-wrap: break-word;
   letter-spacing: ${v.globalLetterSpacing ?? 0}px;
 }
-#wemd figcaption {
+#mdb figcaption {
   color: ${v.imageCaptionColor};
   font-size: ${v.imageCaptionFontSize}px;
   text-align: ${v.imageCaptionTextAlign};
@@ -225,7 +225,7 @@ export function generateCSS(v: DesignerVariables): string {
   line-height: ${v.lineHeight};
 }
 
-#wemd strong { 
+#mdb strong { 
   font-weight: bold;
   ${
     v.strongColor && v.strongColor !== "inherit"
@@ -240,7 +240,7 @@ export function generateCSS(v: DesignerVariables): string {
   ${v.strongStyle === "dot" ? `-webkit-text-emphasis: dot; -webkit-text-emphasis-position: under; text-emphasis: dot; text-emphasis-position: under;` : ""}
 }
 
-#wemd p {
+#mdb p {
   font-size: ${v.fontSize};
   line-height: ${v.lineHeight};
   margin: ${v.paragraphMargin}px 0;
@@ -249,79 +249,79 @@ export function generateCSS(v: DesignerVariables): string {
   ${v.textJustify ? "text-align: justify;" : ""}
 }
 
-#wemd dt {
+#mdb dt {
   font-weight: bold;
   font-size: 1.1em;
   margin-top: 16px;
   color: #000000;
 }
 
-#wemd dt::after {
+#mdb dt::after {
   content: "：";
   display: inline;
 }
 
-#wemd dd {
+#mdb dd {
   margin-left: 0;
   margin-top: 4px;
   color: #333333;
   line-height: ${v.lineHeight};
 }
 
-#wemd dd p {
+#mdb dd p {
   margin: 4px 0;
 }
 
-#wemd h1 .content {
+#mdb h1 .content {
   font-size: ${v.h1.fontSize}px;
   color: ${v.h1.color};
   font-weight: ${v.h1.fontWeight || "bold"};
   letter-spacing: ${v.h1.letterSpacing || 0}px;
   ${h1Preset.content}
 }
-#wemd h1 { margin: ${v.h1.marginTop}px 0 ${v.h1.marginBottom}px; ${v.h1.centered ? "text-align: center;" : ""} }
+#mdb h1 { margin: ${v.h1.marginTop}px 0 ${v.h1.marginBottom}px; ${v.h1.centered ? "text-align: center;" : ""} }
 
-#wemd h2 .content {
+#mdb h2 .content {
   font-size: ${v.h2.fontSize}px;
   color: ${v.h2.color};
   font-weight: ${v.h2.fontWeight || "bold"};
   letter-spacing: ${v.h2.letterSpacing || 0}px;
   ${h2Preset.content}
 }
-#wemd h2 { margin: ${v.h2.marginTop}px 0 ${v.h2.marginBottom}px; ${v.h2.centered ? "text-align: center;" : ""} }
+#mdb h2 { margin: ${v.h2.marginTop}px 0 ${v.h2.marginBottom}px; ${v.h2.centered ? "text-align: center;" : ""} }
 
-#wemd h3 .content {
+#mdb h3 .content {
   font-size: ${v.h3.fontSize}px;
   color: ${v.h3.color};
   font-weight: ${v.h3.fontWeight || "bold"};
   letter-spacing: ${v.h3.letterSpacing || 0}px;
   ${h3Preset.content}
 }
-#wemd h3 { margin: ${v.h3.marginTop}px 0 ${v.h3.marginBottom}px; ${v.h3.centered ? "text-align: center;" : ""} }
+#mdb h3 { margin: ${v.h3.marginTop}px 0 ${v.h3.marginBottom}px; ${v.h3.centered ? "text-align: center;" : ""} }
 
-#wemd h4 .content {
+#mdb h4 .content {
   font-size: ${v.h4.fontSize}px;
   color: ${v.h4.color};
   font-weight: ${v.h4.fontWeight || "bold"};
   letter-spacing: ${v.h4.letterSpacing || 0}px;
   ${h4Preset.content}
 }
-#wemd h4 { margin: ${v.h4.marginTop}px 0 ${v.h4.marginBottom}px; ${v.h4.centered ? "text-align: center;" : ""} }
+#mdb h4 { margin: ${v.h4.marginTop}px 0 ${v.h4.marginBottom}px; ${v.h4.centered ? "text-align: center;" : ""} }
 
-#wemd blockquote, 
-#wemd .multiquote-1, 
-#wemd .multiquote-2, 
-#wemd .multiquote-3 {
+#mdb blockquote, 
+#mdb .multiquote-1, 
+#mdb .multiquote-2, 
+#mdb .multiquote-3 {
   ${quotePreset.base}
   margin: ${v.paragraphMargin}px 0 !important;
   border-left-color: ${v.quoteBorderColor};
   border-left-style: ${v.quoteBorderStyle};
   padding: ${v.quotePaddingY}px ${v.quotePaddingX}px;
 }
-#wemd blockquote p,
-#wemd .multiquote-1 p,
-#wemd .multiquote-2 p,
-#wemd .multiquote-3 p { 
+#mdb blockquote p,
+#mdb .multiquote-1 p,
+#mdb .multiquote-2 p,
+#mdb .multiquote-3 p { 
   color: ${v.quoteTextColor}; 
   margin: 0 !important;
   font-size: ${v.quoteFontSize}px;
@@ -329,7 +329,7 @@ export function generateCSS(v: DesignerVariables): string {
   ${v.quoteTextCentered ? "text-align: center !important;" : ""}
 }
 
-#wemd pre {
+#mdb pre {
   margin: ${v.paragraphMargin}px 0;
   position: relative;
   padding: 0;
@@ -337,7 +337,7 @@ export function generateCSS(v: DesignerVariables): string {
   overflow: hidden;
 }
 
-#wemd pre code {
+#mdb pre code {
   display: block;
   background: ${v.codeBackground};
   font-size: ${v.codeFontSize}px;
@@ -356,12 +356,12 @@ export function generateCSS(v: DesignerVariables): string {
   -webkit-overflow-scrolling: touch;
 }
 
-#wemd pre.custom {
+#mdb pre.custom {
   position: relative;
   margin: ${v.paragraphMargin}px 0;
 }
 
-#wemd .mermaid {
+#mdb .mermaid {
   background: #f8f8f8;
   display: flex;
   justify-content: center;
@@ -374,32 +374,32 @@ export function generateCSS(v: DesignerVariables): string {
   font-size: inherit;
 }
 
-#wemd .mermaid svg {
+#mdb .mermaid svg {
   display: block;
   width: 100%;
   max-width: 100%;
   height: auto;
 }
 
-#wemd .mermaid svg line,
-#wemd .mermaid svg path {
+#mdb .mermaid svg line,
+#mdb .mermaid svg path {
   vector-effect: non-scaling-stroke;
 }
 
-#wemd .mermaid svg text {
+#mdb .mermaid svg text {
   letter-spacing: 0 !important;
   word-spacing: 0 !important;
   font-kerning: normal;
 }
 
-#wemd .mermaid svg .eventWrapper {
+#mdb .mermaid svg .eventWrapper {
   filter: none !important;
 }
 
 ${
   v.showMacBar
     ? `
-#wemd pre.custom::before {
+#mdb pre.custom::before {
   content: "";
   display: block;
   position: absolute;
@@ -417,7 +417,7 @@ ${
 
 ${getCodeThemeCSS(v.codeTheme)}
 
-#wemd code {
+#mdb code {
   color: ${v.inlineCodeColor};
   background: ${v.inlineCodeBackground};
   padding: 2px 4px;
@@ -430,8 +430,8 @@ ${getCodeThemeCSS(v.codeTheme)}
 }
 
 /* 代码块样式需要更高优先级覆盖行内代码样式 */
-#wemd pre code,
-#wemd pre code.hljs {
+#mdb pre code,
+#mdb pre code.hljs {
   padding: ${v.showMacBar ? "36px 16px 16px" : "16px"} !important;
   white-space: pre;
   text-align: left;
@@ -439,31 +439,31 @@ ${getCodeThemeCSS(v.codeTheme)}
   word-spacing: 0;
 }
 
-#wemd a {
+#mdb a {
   color: ${v.linkColor || v.primaryColor};
   text-decoration: none;
   border-bottom: ${v.linkUnderline ? `1px solid ${v.linkColor || v.primaryColor}` : "none"};
   word-break: break-all;
 }
 
-#wemd em {
+#mdb em {
   font-style: italic;
   color: ${v.italicColor};
 }
 
-#wemd del {
+#mdb del {
   text-decoration: line-through;
   color: ${v.delColor};
 }
 
-#wemd mark {
+#mdb mark {
   background: ${v.markBackground};
   color: ${v.markColor};
   padding: 0 2px;
   border-radius: 2px;
 }
 
-#wemd hr {
+#mdb hr {
   margin: ${v.hrMargin}px 0;
   border: 0;
   ${(() => {
@@ -487,19 +487,19 @@ ${getCodeThemeCSS(v.codeTheme)}
     `;
   })()}
 }
-#wemd table {
+#mdb table {
   width: 100%;
   border-collapse: collapse;
   margin: ${v.paragraphMargin}px 0;
 }
 
-#wemd th {
+#mdb th {
   background: ${v.tableHeaderBackground};
   color: ${v.tableHeaderColor};
   font-weight: bold;
 }
 
-#wemd th, #wemd td {
+#mdb th, #mdb td {
   border: 1px solid ${v.tableBorderColor};
   padding: 8px 12px;
   text-align: left;
@@ -508,33 +508,33 @@ ${getCodeThemeCSS(v.codeTheme)}
 ${
   v.tableZebra
     ? `
-#wemd tr:nth-child(even) {
+#mdb tr:nth-child(even) {
   background: #fcfcfc;
 }`
     : ""
 }
 
-#wemd .footnote-word {
+#mdb .footnote-word {
   color: ${v.footnoteHeaderColor || v.primaryColor};
   font-weight: bold;
 }
 
-#wemd .footnote-ref {
+#mdb .footnote-ref {
   color: ${v.footnoteHeaderColor || v.primaryColor};
   font-weight: bold;
 }
 
-#wemd .footnote-ref a {
+#mdb .footnote-ref a {
   color: ${v.footnoteHeaderColor || v.primaryColor} !important;
   text-decoration: none;
   border-bottom: none !important;
 }
 
-#wemd .footnote-item {
+#mdb .footnote-item {
   display: flex;
 }
 
-#wemd .footnote-num {
+#mdb .footnote-num {
   display: inline;
   width: 32px;
   flex-shrink: 0;
@@ -545,14 +545,14 @@ ${
   font-family: Optima-Regular, Optima, PingFangSC-light, PingFangTC-light, 'PingFang SC', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
-#wemd .footnote-num a,
-#wemd .footnote-item a.footnote-backref {
+#mdb .footnote-num a,
+#mdb .footnote-item a.footnote-backref {
   color: ${v.footnoteHeaderColor || v.primaryColor} !important;
   text-decoration: none;
   border-bottom: none !important;
 }
 
-#wemd .footnote-item p {
+#mdb .footnote-item p {
   display: inline;
   font-size: ${v.footnoteFontSize}px;
   flex: 1;
@@ -563,7 +563,7 @@ ${
   color: ${v.footnoteColor || "#666"};
 }
 
-#wemd .footnotes-sep:before {
+#mdb .footnotes-sep:before {
   content: "${v.footnoteHeader}";
   display: ${v.footnoteHeader ? "block" : "none"};
   ${
@@ -625,7 +625,7 @@ ${
   }
 }
 
-#wemd .callout {
+#mdb .callout {
   border-left-width: 4px;
   border-left-style: solid;
   border-radius: 4px;
@@ -633,7 +633,7 @@ ${
   padding: 12px 16px;
 }
 
-#wemd img {
+#mdb img {
   display: block;
   max-width: 100%;
   height: auto;
@@ -641,28 +641,28 @@ ${
   border-radius: ${v.imageBorderRadius}px;
 }
 
-#wemd ul { list-style-type: ${v.ulStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.ulFontSize || v.ulFontSize === "inherit" ? v.fontSize : v.ulFontSize}; }
-#wemd ul ul { list-style-type: ${v.ulStyleL2}; margin: 4px 0; }
-#wemd ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.olFontSize || v.olFontSize === "inherit" ? v.fontSize : v.olFontSize}; }
-#wemd ol ol { list-style-type: ${v.olStyleL2}; margin: 4px 0; }
-#wemd li { margin: ${v.listSpacing}px 0; line-height: ${v.lineHeight}; }
+#mdb ul { list-style-type: ${v.ulStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.ulFontSize || v.ulFontSize === "inherit" ? v.fontSize : v.ulFontSize}; }
+#mdb ul ul { list-style-type: ${v.ulStyleL2}; margin: 4px 0; }
+#mdb ol { list-style-type: ${v.olStyle}; padding-left: 20px; margin: ${v.paragraphMargin}px 0; font-size: ${!v.olFontSize || v.olFontSize === "inherit" ? v.fontSize : v.olFontSize}; }
+#mdb ol ol { list-style-type: ${v.olStyleL2}; margin: 4px 0; }
+#mdb li { margin: ${v.listSpacing}px 0; line-height: ${v.lineHeight}; }
 
 /* 列表符号颜色 */
-#wemd ul li::marker,
-#wemd ol li::marker {
+#mdb ul li::marker,
+#mdb ol li::marker {
   color: ${v.listMarkerColor};
 }
-#wemd ul ul li::marker,
-#wemd ol ol li::marker,
-#wemd ul ol li::marker,
-#wemd ol ul li::marker {
+#mdb ul ul li::marker,
+#mdb ol ol li::marker,
+#mdb ul ol li::marker,
+#mdb ol ul li::marker {
   color: ${v.listMarkerColorL2};
 }
 ${headingExtras}
 ${quotePreset.extra}
 
 /* 横向滑动图片 */
-#wemd .imageflow-layer1 {
+#mdb .imageflow-layer1 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   white-space: normal;
@@ -671,13 +671,13 @@ ${quotePreset.extra}
   overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
+#mdb .imageflow-layer2 {
   white-space: nowrap;
   width: 100%;
   overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
+#mdb .imageflow-layer3 {
   display: inline-block;
   word-wrap: break-word;
   white-space: normal;
@@ -687,7 +687,7 @@ ${quotePreset.extra}
   flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
+#mdb .imageflow-img {
   display: block;
   width: 100%;
   height: auto;
@@ -696,7 +696,7 @@ ${quotePreset.extra}
   border-radius: ${v.imageBorderRadius}px;
 }
 
-#wemd .imageflow-caption {
+#mdb .imageflow-caption {
   text-align: center;
   margin-top: 0px;
   padding-top: 0px;
@@ -705,7 +705,7 @@ ${quotePreset.extra}
 }
 
 /* 提示块默认样式 */
-#wemd .callout-title {
+#mdb .callout-title {
   font-weight: 600;
   margin-bottom: 8px;
   display: flex;
@@ -714,49 +714,56 @@ ${quotePreset.extra}
   letter-spacing: 0.05em;
 }
 
-#wemd .callout-icon {
+#mdb .callout-icon {
   font-size: 18px;
   margin-right: 8px;
 }
 
-#wemd .callout p {
+#mdb .callout p {
   margin: 0 !important;
 }
 
-#wemd .callout-note { border-left: 4px solid #6366f1; background: #f5f5ff; }
-#wemd .callout-tip { border-left: 4px solid #10b981; background: #ecfdf5; }
-#wemd .callout-important { border-left: 4px solid #8b5cf6; background: #f5f3ff; }
-#wemd .callout-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
-#wemd .callout-caution { border-left: 4px solid #ef4444; background: #fff5f5; }
+#mdb .callout-note { border-left: 4px solid #6366f1; background: #f5f5ff; }
+#mdb .callout-tip { border-left: 4px solid #10b981; background: #ecfdf5; }
+#mdb .callout-important { border-left: 4px solid #8b5cf6; background: #f5f3ff; }
+#mdb .callout-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
+#mdb .callout-caution { border-left: 4px solid #ef4444; background: #fff5f5; }
 
 /* Mermaid 样式覆盖 */
-#wemd .mermaid foreignObject { overflow: visible; }
-#wemd .mermaid .label {
-  color: ${v.paragraphColor};
-  font-family: ${v.fontFamily};
-  display: block;
-  width: 100%;
-  height: 100%;
-  text-align: left;
-  line-height: 1.2;
-  white-space: normal;
-  letter-spacing: 0 !important;
-  word-spacing: 0 !important;
-  font-kerning: normal;
-}
-#wemd .mermaid .label * {
-  margin: 0;
-  padding: 0;
-  letter-spacing: 0 !important;
-  word-spacing: 0 !important;
-}
-#wemd .mermaid .edgeLabel .label {
-  display: block;
-  white-space: normal;
-  text-align: left;
-  letter-spacing: 0 !important;
-  word-spacing: 0 !important;
-  font-kerning: normal;
-}
+  #mdb .mermaid foreignObject { overflow: visible; }
+  #mdb .mermaid .label {
+    color: ${v.paragraphColor};
+    font-family: ${v.fontFamily};
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    line-height: 1.2;
+    white-space: normal;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    font-kerning: normal;
+  }
+  #mdb .mermaid .label * {
+    margin: 0;
+    padding: 0;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+  }
+  #mdb .mermaid .edgeLabel .label {
+    display: block;
+    white-space: normal;
+    text-align: left;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    font-kerning: normal;
+  }
+
+  /* 适配微信暗黑模式的标记 */
+  @media (prefers-color-scheme: dark) {
+    #mdb .mermaid {
+      background: #1a1a1a;
+    }
+  }
 `;
 }

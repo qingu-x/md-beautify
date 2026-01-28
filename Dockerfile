@@ -11,7 +11,7 @@ COPY apps/web/ ./apps/web/
 # 安装 pnpm 并构建
 RUN npm install -g pnpm@latest && \
     pnpm install --frozen-lockfile && \
-    pnpm --filter @wemd/web build
+    pnpm --filter @mdb/web build
 
 # 运行阶段 - 使用 nginx 提供静态文件服务
 FROM nginx:alpine

@@ -1,11 +1,11 @@
-export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实时缓存 */
+export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实时缓存 | Custom style, takes effect in real-time, browser real-time cache */
 
-/* 全局属性
- * 页边距 padding: 30px;
- * 全文字体 font-family: ptima-Regular;
- * 英文换行 word-break: break-all;
+/* 全局属性 | Global Attributes
+ * 页边距 | Padding: 30px;
+ * 全文字体 | Global Font: ptima-Regular;
+ * 英文换行 | English Line Break: break-all;
  */
-#wemd {
+#mdb {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   color: #2c3e50;
   line-height: 1.8;
@@ -13,18 +13,18 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.3px;
 }
 
-/* 段落,下方未标注标签参数均同此处
- * 上边距 margin-top: 5px;
- * 下边距 margin-bottom: 5px;
- * 行高 line-height: 26px;
- * 词间距 word-spacing: 3px;
- * 字间距 letter-spacing: 3px;
- * 对齐 text-align: left;
- * 颜色 color: #3e3e3e;
- * 字体大小 font-size: 16px;
- * 首行缩进 text-indent: 2em;
+/* 段落,下方未标注标签参数均同此处 | Paragraph, parameters for unlabeled tags below are the same as here
+ * 上边距 | Margin Top: 5px;
+ * 下边距 | Margin Bottom: 5px;
+ * 行高 | Line Height: 26px;
+ * 词间距 | Word Spacing: 3px;
+ * 字间距 | Letter Spacing: 3px;
+ * 对齐 | Alignment: left;
+ * 颜色 | Color: #3e3e3e;
+ * 字体大小 | Font Size: 16px;
+ * 首行缩进 | First Line Indent: 2em;
  */
-#wemd p {
+#mdb p {
   margin: 20px 0;
   font-size: 16px;
   color: #34495e;
@@ -32,8 +32,8 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.5px;
 }
 
-/* 一级标题 */
-#wemd h1 {
+/* 一级标题 | Level 1 Heading */
+#mdb h1 {
   font-size: 28px;
   font-weight: 700;
   color: #1a1a1a;
@@ -44,20 +44,20 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 1px;
 }
 
-/* 一级标题内容 */
-#wemd h1 .content {
+/* 一级标题内容 | Level 1 Heading Content */
+#mdb h1 .content {
 }
 
-/* 一级标题前缀 */
-#wemd h1 .prefix {
+/* 一级标题前缀 | Level 1 Heading Prefix */
+#mdb h1 .prefix {
 }
 
-/* 一级标题后缀 */
-#wemd h1 .suffix {
+/* 一级标题后缀 | Level 1 Heading Suffix */
+#mdb h1 .suffix {
 }
 
-/* 二级标题 */
-#wemd h2 {
+/* 二级标题 | Level 2 Heading */
+#mdb h2 {
   font-size: 22px;
   font-weight: 600;
   color: #2c3e50;
@@ -68,20 +68,20 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.5px;
 }
 
-/* 二级标题内容 */
-#wemd h2 .content {
+/* 二级标题内容 | Level 2 Heading Content */
+#mdb h2 .content {
 }
 
-/* 二级标题前缀 */
-#wemd h2 .prefix {
+/* 二级标题前缀 | Level 2 Heading Prefix */
+#mdb h2 .prefix {
 }
 
-/* 二级标题后缀 */
-#wemd h2 .suffix {
+/* 二级标题后缀 | Level 2 Heading Suffix */
+#mdb h2 .suffix {
 }
 
-/* 三级标题 */
-#wemd h3 {
+/* 三级标题 | Level 3 Heading */
+#mdb h3 {
   font-size: 19px;
   font-weight: 600;
   color: #34495e;
@@ -91,20 +91,20 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.3px;
 }
 
-/* 三级标题内容 */
-#wemd h3 .content {
+/* 三级标题内容 | Level 3 Heading Content */
+#mdb h3 .content {
 }
 
-/* 三级标题前缀 */
-#wemd h3 .prefix {
+/* 三级标题前缀 | Level 3 Heading Prefix */
+#mdb h3 .prefix {
 }
 
-/* 三级标题后缀 */
-#wemd h3 .suffix {
+/* 三级标题后缀 | Level 3 Heading Suffix */
+#mdb h3 .suffix {
 }
 
-/* 四级标题 */
-#wemd h4 {
+/* 四级标题 | Level 4 Heading */
+#mdb h4 {
   font-size: 17px;
   font-weight: 600;
   color: #07c160;
@@ -112,88 +112,88 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.3px;
 }
 
-/* 四级标题内容 */
-#wemd h4 .content {
+/* 四级标题内容 | Level 4 Heading Content */
+#mdb h4 .content {
 }
 
-/* 四级标题前缀 */
-#wemd h4 .prefix {
+/* 四级标题前缀 | Level 4 Heading Prefix */
+#mdb h4 .prefix {
 }
 
-/* 四级标题后缀 */
-#wemd h4 .suffix {
+/* 四级标题后缀 | Level 4 Heading Suffix */
+#mdb h4 .suffix {
 }
 
-/* 五级标题 */
-#wemd h5 {
+/* 五级标题 | Level 5 Heading */
+#mdb h5 {
   font-size: 16px;
   font-weight: 600;
   color: #5a6c7d;
   margin: 18px 0 8px;
 }
 
-/* 六级标题 */
-#wemd h6 {
+/* 六级标题 | Level 6 Heading */
+#mdb h6 {
   font-size: 15px;
   font-weight: 600;
   color: #7f8c8d;
   margin: 16px 0 8px;
 }
 
-/* 无序列表整体样式
+/* 无序列表整体样式 | Unordered List Overall Style
  * list-style-type: square|circle|disc;
  */
-#wemd ul {
+#mdb ul {
   padding-left: 24px;
   list-style-type: disc;
   color: #34495e;
 }
 
-#wemd ul li {
+#mdb ul li {
   padding-left: 4px;
   color: #07c160;
 }
 
-#wemd ul li section {
+#mdb ul li section {
   color: #34495e;
 }
 
-/* 嵌套列表 */
-#wemd ul ul {
+/* 嵌套列表 | Nested Lists */
+#mdb ul ul {
   list-style-type: circle;
 }
 
-#wemd ul ul ul {
+#mdb ul ul ul {
   list-style-type: square;
 }
 
-/* 有序列表整体样式
+/* 有序列表整体样式 | Ordered List Overall Style
  * list-style-type: upper-roman|lower-greek|lower-alpha;
  */
-#wemd ol {
+#mdb ol {
   padding-left: 24px;
   list-style-type: decimal;
   color: #34495e;
 }
 
-#wemd ol li {
+#mdb ol li {
   padding-left: 4px;
 }
 
-/* 列表内容,不要设置li
+/* 列表内容,不要设置li | List content, do not set li
  */
-#wemd li section {
+#mdb li section {
   margin: 8px 0;
   line-height: 1.8;
   font-size: 16px;
   color: #34495e;
 }
 
-/* 一级引用
- * 左边缘颜色 border-left-color: black;
- * 背景色 background: gray;
+/* 一级引用 | Level 1 Blockquote
+ * 左边缘颜色 | Border Left Color: black;
+ * 背景色 | Background Color: gray;
  */
-#wemd .multiquote-1 {
+#mdb .multiquote-1 {
   border-left: 4px solid #07c160;
   background: #f6f8fa;
   padding: 16px 20px;
@@ -202,17 +202,17 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   border-radius: 2px;
 }
 
-/* 一级引用文字 */
-#wemd .multiquote-1 p {
+/* 一级引用文字 | Level 1 Blockquote Text */
+#mdb .multiquote-1 p {
   margin: 0;
   font-size: 15px;
   color: #475569;
   line-height: 1.8;
 }
 
-/* 二级引用
+/* 二级引用 | Level 2 Blockquote
  */
-#wemd .multiquote-2 {
+#mdb .multiquote-2 {
   border-left: 3px solid #00a854;
   background: #fafafa;
   padding: 14px 18px;
@@ -220,17 +220,17 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   border-radius: 2px;
 }
 
-/* 二级引用文字 */
-#wemd .multiquote-2 p {
+/* 二级引用文字 | Level 2 Blockquote Text */
+#mdb .multiquote-2 p {
   margin: 0;
   font-size: 15px;
   color: #64748b;
   line-height: 1.7;
 }
 
-/* 三级引用
+/* 三级引用 | Level 3 Blockquote
  */
-#wemd .multiquote-3 {
+#mdb .multiquote-3 {
   border-left: 2px solid #07c160;
   background: #fafafa;
   padding: 12px 16px;
@@ -238,76 +238,76 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   border-radius: 2px;
 }
 
-/* 三级引用文字 */
-#wemd .multiquote-3 p {
+/* 三级引用文字 | Level 3 Blockquote Text */
+#mdb .multiquote-3 p {
   margin: 0;
   font-size: 14px;
   color: #64748b;
 }
 
-/* 链接 
+/* 链接 | Links 
  * border-bottom: 1px solid #009688;
  */
-#wemd a {
+#mdb a {
   color: #07c160;
   text-decoration: none;
   border-bottom: 1px solid #07c160;
   font-weight: 500;
 }
 
-/* 加粗 */
-#wemd strong {
+/* 加粗 | Bold */
+#mdb strong {
   font-weight: 600;
   color: #07c160;
   letter-spacing: 0.2px;
 }
 
-/* 斜体 */
-#wemd em {
+/* 斜体 | Italic */
+#mdb em {
   font-style: italic;
   color: #07c160;
   font-weight: 500;
 }
 
-/* 加粗斜体 */
-#wemd em strong {
+/* 加粗斜体 | Bold Italic */
+#mdb em strong {
   font-weight: 700;
   font-style: italic;
   color: #00a854;
 }
 
-/* 删除线 */
-#wemd del {
+/* 删除线 | Strikethrough */
+#mdb del {
   text-decoration: line-through;
   color: #94a3b8;
   opacity: 0.7;
 }
 
-/* 分隔线
-* 粗细、样式和颜色
+/* 分隔线 | Horizontal Rule
+* 粗细、样式和颜色 | Thickness, style and color
 * border-top: 1px solid #3e3e3e;
 */
-#wemd hr {
+#mdb hr {
   border: none;
   height: 1px;
   background: #e2e8f0;
   margin: 28px 0;
 }
 
-/* 图片
-* 宽度 width: 80%;
-* 居中 margin: 0 auto;
-* 居左 margin: 0 0;
+/* 图片 | Image
+* 宽度 | Width: 80%;
+* 居中 | Center: margin: 0 auto;
+* 居左 | Left: margin: 0 0;
 */
-#wemd img {
+#mdb img {
   display: block;
   margin: 24px auto;
   max-width: 100%;
   border-radius: 4px;
 }
 
-/* 图片描述文字 */
-#wemd figcaption {
+/* 图片描述文字 | Image Caption Text */
+#mdb figcaption {
   text-align: center;
   font-size: 14px;
   color: #94a3b8;
@@ -315,8 +315,8 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.2px;
 }
 
-/* 行内代码 */
-#wemd p code, #wemd li code {
+/* 行内代码 | Inline Code */
+#mdb p code, #mdb li code {
   background: #f0fdf4;
   padding: 3px 6px;
   border-radius: 3px;
@@ -328,10 +328,10 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
 }
 
 /* 
- * 代码块不换行 display: -webkit-box !important;
- * 代码块换行 display: block;
+ * 代码块不换行 | Code block no wrap: display: -webkit-box !important;
+ * 代码块换行 | Code block wrap: display: block;
  */
-#wemd pre code {
+#mdb pre code {
   display: block;
   background: #f8fafc;
   padding: 16px;
@@ -345,13 +345,13 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
 }
 
 /*
- * 表格内的单元格
- * 字体大小 font-size: 16px;
- * 边框 border: 1px solid #ccc;
- * 内边距 padding: 5px 10px;
+ * 表格内的单元格 | Cells within Table
+ * 字体大小 | Font Size: 16px;
+ * 边框 | Border: 1px solid #ccc;
+ * 内边距 | Padding: 5px 10px;
  */
-#wemd table tr th,
-#wemd table tr td {
+#mdb table tr th,
+#mdb table tr td {
   border: 1px solid #e2e8f0;
   padding: 10px 14px;
   font-size: 15px;
@@ -359,44 +359,44 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   line-height: 1.6;
 }
 
-#wemd table tr th {
+#mdb table tr th {
   background: #f0fdf4;
   color: #065f46;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 
-#wemd table tr:nth-child(2n) {
+#mdb table tr:nth-child(2n) {
   background-color: #f8fafc;
 }
 
 /* 
- * 某一列表格列宽控制
- * n 可以修改为具体数字,不修改时表示所有列
- * 最小列宽 min-width: 85px;
+ * 某一列表格列宽控制 | Specific Table Column Width Control
+ * n 可以修改为具体数字,不修改时表示所有列 | n can be modified to a specific number, if not modified it represents all columns
+ * 最小列宽 | Minimum Column Width: 85px;
  */
-#wemd table tr th:nth-of-type(n),
-#wemd table tr td:nth-of-type(n){
+#mdb table tr th:nth-of-type(n),
+#mdb table tr td:nth-of-type(n){
   min-width: 100px;
 }
 
-/* 脚注文字 */
-#wemd .footnote-word {
+/* 脚注文字 | Footnote Text */
+#mdb .footnote-word {
   color: #07c160;
   font-weight: 500;
   border-bottom: 1px dashed #07c160;
 }
 
-/* 脚注上标 */
-#wemd .footnote-ref {
+/* 脚注上标 | Footnote Superscript */
+#mdb .footnote-ref {
   color: #07c160;
   font-weight: 600;
 }
 
-/* "参考资料"四个字 
- * 内容 content: "参考资料";
+/* "参考资料"四个字 | "References" Title
+ * 内容 | Content: "参考资料";
  */
-#wemd .footnotes-sep:before {
+#mdb .footnotes-sep:before {
   content: "参考资料";
   font-weight: 600;
   margin-top: 36px;
@@ -407,8 +407,8 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.5px;
 }
 
-/* 参考资料编号 */
-#wemd .footnote-num {
+/* 参考资料编号 | Reference Number */
+#mdb .footnote-num {
   display: inline-block;
   width: 24px;
   text-align: right;
@@ -417,38 +417,38 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   font-weight: 500;
 }
 
-/* 参考资料文字 */
-#wemd .footnote-item p { 
+/* 参考资料文字 | Reference Text */
+#mdb .footnote-item p { 
   display: inline;
   font-size: 14px;
   color: #64748b;
   line-height: 1.8;
 }
 
-/* 参考资料解释 */
-#wemd .footnote-item p em {
+/* 参考资料解释 | Reference Explanation */
+#mdb .footnote-item p em {
   font-style: normal;
   color: #94a3b8;
   margin-left: 6px;
 }
 
-/* 行间公式
- * 最大宽度 max-width: 300% !important;
+/* 行间公式 | Block Equation
+ * 最大宽度 | Max Width: 300% !important;
  */
-#wemd .block-equation svg {
+#mdb .block-equation svg {
   display: block;
   margin: 20px auto;
-  max-width: 300% !important;
+  max-width: 300%;
 }
 
-/* 行内公式
+/* 行内公式 | Inline Equation
  */
-#wemd .inline-equation svg { 
+#mdb .inline-equation svg { 
   vertical-align: middle;
 }
 
-/* Callout 提示块 */
-#wemd .callout {
+/* Callout 提示块 | Callout Block */
+#mdb .callout {
   margin: 28px 0;
   padding: 22px 24px;
   border-radius: 22px;
@@ -459,7 +459,7 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   overflow: hidden;
 }
 
-#wemd .callout::after {
+#mdb .callout::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -468,7 +468,7 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   background: linear-gradient(120deg, rgba(7,193,96,0.05), rgba(7,89,193,0.03));
 }
 
-#wemd .callout-title {
+#mdb .callout-title {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -479,38 +479,38 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   letter-spacing: 0.05em;
 }
 
-#wemd .callout-icon {
+#mdb .callout-icon {
   font-size: 20px;
 }
 
-#wemd .callout-note {
+#mdb .callout-note {
   border-color: rgba(100, 116, 255, 0.25);
   background: linear-gradient(135deg, #f7f9ff, #edf2ff);
 }
 
-#wemd .callout-tip {
+#mdb .callout-tip {
   border-color: rgba(139, 92, 246, 0.25);
   background: linear-gradient(135deg, #f5f3ff, #ede9fe);
 }
 
-#wemd .callout-important {
+#mdb .callout-important {
   border-color: rgba(14, 165, 233, 0.25);
   background: linear-gradient(135deg, #f0f9ff, #e0f2ff);
 }
 
-#wemd .callout-warning {
+#mdb .callout-warning {
   border-color: rgba(249, 158, 0, 0.25);
   background: linear-gradient(135deg, #fff8ed, #fff3dc);
 }
 
-#wemd .callout-caution {
+#mdb .callout-caution {
   border-color: rgba(239, 68, 68, 0.25);
   background: linear-gradient(135deg, #fff5f5, #ffe7e7);
 }
 
 
-/* 高亮文本 */
-#wemd mark {
+/* 高亮文本 | Highlighted Text */
+#mdb mark {
   background: linear-gradient(135deg, #fff9c4, #fff59d);
   color: #1a1a1a;
   padding: 2px 4px;
@@ -518,22 +518,22 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   font-weight: 500;
 }
 
-/* 上标 */
-#wemd sup {
+/* 上标 | Superscript */
+#mdb sup {
   font-size: 0.75em;
   vertical-align: super;
   color: #059669;
 }
 
-/* 下标 */
-#wemd sub {
+/* 下标 | Subscript */
+#mdb sub {
   font-size: 0.75em;
   vertical-align: sub;
   color: #059669;
 }
 
 /* Imageflow CSS */
-#wemd .imageflow-layer1 {
+#mdb .imageflow-layer1 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   /* white-space: normal; */
@@ -542,13 +542,13 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
+#mdb .imageflow-layer2 {
   white-space: nowrap;
   width: 100%;
   overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
+#mdb .imageflow-layer3 {
   display: inline-block;
   word-wrap: break-word;
   white-space: normal;
@@ -558,7 +558,7 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
+#mdb .imageflow-img {
   display: block;
   width: 100%;
   height: auto;
@@ -567,7 +567,7 @@ export const customDefaultTheme = `/* 自定义样式,实时生效,浏览器实�
   border-radius: 4px;
 }
 
-#wemd .imageflow-caption {
+#mdb .imageflow-caption {
   text-align: center;
   margin-top: 0px;
   padding-top: 0px;

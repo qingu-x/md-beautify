@@ -1,11 +1,13 @@
 {
-  "name": "@wemd/core",
-  "version": "1.1.9",
+  "name": "@mdb/core",
+  "version": "1.2.4",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "prebuild": "node scripts/inline-katex-fonts.js",
     "build": "tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "prepare": "node scripts/inline-katex-fonts.js"
   },
   "dependencies": {
     "highlight.js": "^11.11.1",

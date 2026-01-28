@@ -1,72 +1,193 @@
-import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, View, TFile, setIcon, requestUrl } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, TFile, setIcon, requestUrl, Menu } from 'obsidian';
 import mermaid from 'mermaid';
-import { t } from './i18n';
+import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, hasMathFormula, renderMathInElement, katexInlineCss, basicTheme, customDefaultTheme, codeGithubTheme, academicPaperTheme, auroraGlassTheme, bauhausTheme, cyberpunkNeonTheme, knowledgeBaseTheme, luxuryGoldTheme, morandiForestTheme, neoBrutalismTheme, receiptTheme, sunsetFilmTheme, templateTheme, generateExportHtml, exportToPdfNative, getDefaultMarkdown } from '@mdb/core';
+import { t, getLocaleKey } from './i18n';
+
+const scopeCss = (css: string): string => {
+	return css.replace(/(^|\n)(?!@)([^{}@]+)\{/g, (match, prefix, selector) => {
+		const trimmed = selector.trim();
+		
+		// 跳过空选择器
+		if (!trimmed) {
+			return match;
+		}
+		
+		// 跳过已经包含 #mdb 的选择器
+		if (trimmed.includes("#mdb")) {
+			return match;
+		}
+		
+		// 处理逗号分隔的多个选择器
+		if (trimmed.includes(',')) {
+			const selectors = trimmed.split(',').map((s: string) => {
+				const st = s.trim();
+				
+				// 跳过已包含 #mdb 的选择器
+				if (st.includes('#mdb')) {
+					return st;
+				}
+				
+				// 转换全局选择器
+				if (st === '*') {
+					return '#mdb *';
+				}
+				if (st === 'body' || st === 'html') {
+					return '#mdb';
+				}
+				if (st.startsWith('body ')) {
+					return '#mdb ' + st.substring(5);
+				}
+				if (st.startsWith('html ')) {
+					return '#mdb ' + st.substring(5);
+				}
+				// 移除 :root 选择器（CSS 变量会污染全局）
+				if (st.startsWith(':root')) {
+					return ''; // 返回空字符串，后续会被过滤
+				}
+				
+				return `#mdb ${st}`;
+			});
+			
+			// 过滤空字符串
+			const filtered = selectors.filter((s: string) => s.trim() !== '');
+			if (filtered.length === 0) {
+				return ''; // 整个规则被移除
+			}
+			return `${prefix}${filtered.join(', ')}{`;
+		}
+		
+		// 单个选择器处理
+		if (trimmed === '*') {
+			return `${prefix}#mdb *{`;
+		}
+		if (trimmed === 'body' || trimmed === 'html') {
+			return `${prefix}#mdb{`;
+		}
+		if (trimmed.startsWith('body ')) {
+			return `${prefix}#mdb ${trimmed.substring(5)}{`;
+		}
+		if (trimmed.startsWith('html ')) {
+			return `${prefix}#mdb ${trimmed.substring(5)}{`;
+		}
+		// 移除 :root 选择器
+		if (trimmed.startsWith(':root')) {
+			return ''; // 返回空字符串，规则被移除
+		}
+		
+		return `${prefix}#mdb ${trimmed}{`;
+	});
+};
+
+// 移除 html2pdf.js 不支持的现代 CSS 颜色函数
+const sanitizeModernColorFunctions = (css: string): string => {
+	// 移除包含 oklch, oklab, lch, lab, color() 等现代颜色函数的属性
+	// 需要处理嵌套函数（如 color-mix）和多行属性
+	let result = css;
+	
+	// 处理可能包含现代颜色函数的所有情况
+	// 包括单独使用和在 color-mix 等函数中嵌套使用
+	const modernColorFunctions = [
+		'oklch', 'oklab', 'lch', 'lab', 
+		'color\\(', // color() 函数
+		'color-mix\\([^)]*(?:oklch|oklab|lch|lab)', // color-mix 中包含现代颜色
+	];
+	
+	modernColorFunctions.forEach(fn => {
+		// 移除包含这些函数的整个属性声明
+		// 匹配 property: value; 包括可能的多行和嵌套括号
+		const regex = new RegExp(
+			`([a-z-][a-z0-9-]*)\\s*:\\s*[^;{]*${fn}[^;{]*;?`,
+			'gi'
+		);
+		result = result.replace(regex, '');
+	});
+	
+	// 清理空规则和多余的空白
+	result = result
+		.replace(/[^{}]+\{\s*\}/g, '') // 空规则
+		.replace(/\n\s*\n/g, '\n'); // 多余空行
+	
+	return result;
+};
 
 
-// Use defaultMarkdown from web apps store
-const defaultMarkdown = `# Welcome to MD Beautify
+const defaultMarkdown = getDefaultMarkdown(getLocaleKey());
 
-This is a modern Markdown editor designed for **beautiful layout and presentation**.
+const VIEW_TYPE_MDBEAUTIFY_PREVIEW = 'mdb-preview-view';
 
-## 1. Basic Syntax
-**Bold text**
+// 导出时需要的额外 CSS 样式（mermaid, katex 等）
+const EXPORT_EXTRA_CSS = `
+/* KaTeX 数学公式样式 */
+#mdb .katex {
+  font-size: 1.1em;
+}
 
-*Italic text*
+#mdb .katex-display {
+  margin: 1em 0;
+  text-align: center;
+}
 
-***Bold and italic text***
+/* Mermaid 图表样式 */
+#mdb .mermaid-wrapper {
+  margin: 1em 0;
+  text-align: center;
+}
 
-~~Strikethrough text~~
+#mdb .mermaid-wrapper .mdb-mermaid-svg {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+}
 
-==Highlighted text==
+/* Mermaid 亮色主题样式 */
+#mdb .mdb-mermaid-light {
+  color-scheme: light;
+}
 
-This is a [link](https://github.com/qingu-x/md-editor)
+#mdb .mdb-mermaid-light * {
+  color-scheme: light;
+}
 
-## 2. Special Formats
-### Subscript and Superscript
+#mdb .mdb-mermaid-light .node rect,
+#mdb .mdb-mermaid-light .node circle,
+#mdb .mdb-mermaid-light .node ellipse,
+#mdb .mdb-mermaid-light .node polygon,
+#mdb .mdb-mermaid-light .node path {
+  fill: #fff4dd;
+  stroke: #000;
+}
 
-Water: H~2~O
+#mdb .mdb-mermaid-light .label text,
+#mdb .mdb-mermaid-light .label span,
+#mdb .mdb-mermaid-light .nodeLabel,
+#mdb .mdb-mermaid-light .edgeLabel {
+  fill: #000;
+  color: #000;
+}
 
-Einstein's equation: E=mc^2^
+#mdb .mdb-mermaid-light .flowchart-link,
+#mdb .mdb-mermaid-light .edgePath .path {
+  stroke: #000;
+}
 
-### Emojis
-The weather is great today :sunny: 
+#mdb .mdb-mermaid-light .marker {
+  fill: #000;
+  stroke: #000;
+}
 
-Let's learn together :books: 
+#mdb .mdb-mermaid-light .cluster rect {
+  fill: #fff9ed;
+  stroke: #000;
+}
 
-Go for it :rocket:
-
-## 3. Lists
-### Unordered List
-- Item 1
-- Item 2
-  - Sub-item 2.1
-  - Sub-item 2.2
-
-### Ordered List
-1. Step 1
-2. Step 2
-3. Step 3
-
-## 4. Blockquotes
-> This is a level 1 blockquote
-> 
-> > This is a level 2 blockquote
-> > 
-> > > This is a level 3 blockquote
-> 
-
-> [!TIP]
-> This is a tip callout
-
-> [!NOTE]
-> This is a note callout
-
-> [!IMPORTANT]
-> This is an important callout
+/* Mermaid 错误提示 */
+#mdb .mermaid-error {
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.08);
+  padding: 12px;
+  border-radius: 6px;
+}
 `;
-
-const VIEW_TYPE_MDBEAUTIFY_PREVIEW = 'md-beautify-preview-view';
-import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, basicTheme, customDefaultTheme, codeGithubTheme, academicPaperTheme, auroraGlassTheme, bauhausTheme, cyberpunkNeonTheme, knowledgeBaseTheme, luxuryGoldTheme, morandiForestTheme, neoBrutalismTheme, receiptTheme, sunsetFilmTheme, templateTheme, generateExportHtml, exportToPdfImage, exportToPdfNative } from '@wemd/core';
 
 const allThemes: Record<string, string> = {
 	basic: basicTheme + '\n' + customDefaultTheme + '\n' + codeGithubTheme,
@@ -151,6 +272,33 @@ const getMermaidConfig = (
 			titleColor: '#000',
 			edgeLabelColor: '#000',
 		});
+	} else {
+		// 深色模式：使用浅色的节点和文字，深色的背景
+		Object.assign(themeVariables, {
+			primaryColor: '#2d3748',
+			primaryTextColor: '#fff',
+			primaryBorderColor: '#fff',
+			lineColor: '#cbd5e0',
+			secondaryColor: '#4a5568',
+			tertiaryColor: '#1a202c',
+			background: '#1a202c',
+			mainBkg: '#2d3748',
+			secondBkg: '#4a5568',
+			tertiaryBkg: '#1a202c',
+			edgeLabelBackground: '#2d3748',
+			nodeBorder: '#cbd5e0',
+			clusterBkg: '#4a5568',
+			clusterBorder: '#cbd5e0',
+			defaultLinkColor: '#cbd5e0',
+			titleColor: '#fff',
+			edgeLabelColor: '#fff',
+			// 时间线图表专用颜色
+			cScale0: '#2d3748',
+			cScale1: '#4a5568',
+			cScale2: '#718096',
+			cScale3: '#a0aec0',
+			cScale4: '#cbd5e0',
+		});
 	}
 	
 	return {
@@ -158,15 +306,15 @@ const getMermaidConfig = (
 		darkMode: isDarkMode,
 		themeCSS: `
 			foreignObject {
-				overflow: visible !important;
+				overflow: visible;
 			}
 			.labelBkg {
-				overflow: visible !important;
+				overflow: visible;
 			}
 			.labelBkg p {
-				margin: 0 !important;
-				padding: 0 !important;
-				line-height: 1.2 !important;
+				margin: 0;
+				padding: 0;
+				line-height: 1.2;
 			}
 		`,
 		flowchart: {
@@ -314,7 +462,111 @@ const svgMarkupToPng = async (svgMarkup: string): Promise<string> => {
 	return canvas.toDataURL("image/png");
 };
 
-const renderMermaidBlocksForCopy = async (container: HTMLElement): Promise<void> => {
+const renderMermaid = async (
+	container: HTMLElement,
+	isDarkMode: boolean,
+	renderIdBase: string,
+	checkToken?: () => boolean
+): Promise<void> => {
+	const mermaidNodes = Array.from(
+		container.querySelectorAll<HTMLElement>(
+			".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
+		),
+	);
+	console.log("renderMermaid starting", { nodeCount: mermaidNodes.length, isDarkMode, renderIdBase });
+	if (mermaidNodes.length === 0) return;
+
+	ensureMermaidInitialized();
+	const initConfig = getMermaidConfig(undefined, isDarkMode);
+
+	const targets: { container: HTMLElement; diagram: string }[] = [];
+	const visited = new Set<HTMLElement>();
+	mermaidNodes.forEach((node) => {
+		const isCode = node.tagName === "CODE";
+		const containerEl = (isCode ? node.parentElement : node) as HTMLElement | null;
+		if (!containerEl || visited.has(containerEl)) return;
+		visited.add(containerEl);
+		const diagramSource = isCode ? node.textContent : containerEl.dataset.mermaidRaw || node.textContent;
+		const diagram = normalizeMermaidText(diagramSource ?? "");
+		const shouldRender =
+			containerEl.classList.contains("mermaid") ||
+			node.classList.contains("language-mermaid") ||
+			node.classList.contains("lang-mermaid") ||
+			node.classList.contains("mermaid") ||
+			isMermaidDiagramText(diagram);
+		
+		console.log("Checking node", { 
+			tagName: node.tagName, 
+			classes: Array.from(node.classList),
+			shouldRender,
+			diagramPrefix: diagram.substring(0, 20)
+		});
+
+		if (!diagram.trim() || !shouldRender) return;
+		containerEl.classList.add("mermaid");
+		if (!containerEl.dataset.mermaidRaw) {
+			containerEl.dataset.mermaidRaw = diagram;
+		}
+		targets.push({ container: containerEl, diagram });
+	});
+
+	console.log("Targets found", targets.length);
+
+	for (const [index, target] of targets.entries()) {
+		const block = target.container;
+		const diagram = target.diagram;
+		if (!diagram.trim()) continue;
+		const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+		try {
+			const { svg } = await mermaid.render(
+				`${renderIdBase}-${index}`,
+				themedDiagram,
+			);
+			
+			if (checkToken && !checkToken()) {
+				return;
+			}
+
+			const normalizedSvg = normalizeMermaidSvg(svg);
+			
+			const wrapper = document.createElement('div');
+			wrapper.className = 'mermaid-wrapper';
+			if (!isDarkMode) {
+				wrapper.setAttribute('data-ui-theme', 'light');
+			}
+			wrapper.innerHTML = normalizedSvg;
+			
+			const svgEl = wrapper.querySelector('svg');
+			if (svgEl) {
+				svgEl.classList.add('mdb-mermaid-svg');
+				if (!isDarkMode) {
+					svgEl.classList.add('mdb-mermaid-light');
+				}
+			}
+			
+			// 替换整个容器，而不是仅仅替换 innerHTML
+			// 避免 pre 标签的默认样式干扰 Mermaid 渲染
+			if (block.parentNode) {
+				block.parentNode.replaceChild(wrapper, block);
+			} else {
+				block.innerHTML = '';
+				block.appendChild(wrapper);
+			}
+
+		} catch (error: any) {
+			const errorEl = document.createElement('div');
+			errorEl.className = 'mermaid-error';
+			errorEl.textContent = `${t('mermaid_render_failed')}${error?.message || String(error)}`;
+			block.innerHTML = '';
+			block.appendChild(errorEl);
+		}
+	}
+};
+
+const renderMermaidBlocksForCopy = async (
+	container: HTMLElement,
+	onProgress?: (current: number, total: number) => void
+): Promise<void> => {
 	const mermaidNodes = Array.from(
 		container.querySelectorAll<HTMLElement>(
 			".mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
@@ -325,7 +577,7 @@ const renderMermaidBlocksForCopy = async (container: HTMLElement): Promise<void>
 	ensureMermaidInitialized();
 	const designerVariables: MermaidDesignerVariables = { mermaidTheme: "base" };
 	const initConfig = getMermaidConfig(designerVariables, false);
-	const renderIdBase = `wemd-mermaid-${Date.now()}`;
+	const renderIdBase = `mdb-mermaid-${Date.now()}`;
 
 	const targets: { container: HTMLElement; diagram: string }[] = [];
 	const visited = new Set<HTMLElement>();
@@ -348,22 +600,37 @@ const renderMermaidBlocksForCopy = async (container: HTMLElement): Promise<void>
 		targets.push({ container: containerEl, diagram });
 	});
 
+	const total = targets.length;
+	
 	for (const [index, target] of targets.entries()) {
 		const diagram = target.diagram;
 		if (!diagram.trim()) continue;
 
 		try {
-			const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
-			const { svg } = await mermaid.render(
-				`${renderIdBase}-${index}`,
-				themedDiagram,
+			onProgress?.(index + 1, total);
+			
+			// 添加超时机制防止卡住
+			const renderTimeout = 30000; // 30秒超时
+			const renderPromise = (async () => {
+				const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
+				const { svg } = await mermaid.render(
+					`${renderIdBase}-${index}`,
+					themedDiagram,
+				);
+				const normalizedSvg = normalizeMermaidSvg(svg);
+				const pngDataUrl = await svgMarkupToPng(normalizedSvg);
+				return pngDataUrl;
+			})();
+
+			const timeoutPromise = new Promise<string>((_, reject) => 
+				setTimeout(() => reject(new Error('Mermaid render timeout')), renderTimeout)
 			);
-			const normalizedSvg = normalizeMermaidSvg(svg);
-			const pngDataUrl = await svgMarkupToPng(normalizedSvg);
+
+			const pngDataUrl = await Promise.race([renderPromise, timeoutPromise]);
 
 			const figure = document.createElement("div");
 			figure.style.cssText = "margin: 1em 0; text-align: center;";
-			figure.setAttribute('data-tool', 'WeMD编辑器');
+			figure.setAttribute('data-tool', 'MD Beautify');
 
 			const img = document.createElement("img");
 			img.src = pngDataUrl;
@@ -372,15 +639,15 @@ const renderMermaidBlocksForCopy = async (container: HTMLElement): Promise<void>
 			figure.appendChild(img);
 			target.container.parentNode?.replaceChild(figure, target.container);
 		} catch (error) {
-			console.error("[Obsidian MD Beautify] Mermaid render failed:", error);
+			console.error(`[Obsidian MD Beautify] Mermaid render failed (${index + 1}/${total}):`, error);
+			// 渲染失败时，保留原始代码块
+			const errorDiv = document.createElement("div");
+			errorDiv.style.cssText = "color: #c62828; background: rgba(198, 40, 40, 0.08); padding: 12px; border-radius: 6px; margin: 1em 0;";
+			errorDiv.textContent = `图表渲染失败: ${error instanceof Error ? error.message : String(error)}`;
+			target.container.parentNode?.insertBefore(errorDiv, target.container);
 		}
 	}
 };
-
-interface ImageHostConfig {
-	type: 'official' | 'qiniu' | 'aliyun' | 'tencent' | 's3';
-	config: any;
-}
 
 interface MDBeautifySettings {
 	defaultTheme: string;
@@ -395,6 +662,13 @@ interface MDBeautifySettings {
 	themeMode: 'auto' | 'light' | 'dark';
 	fixedWidthPreview: boolean;
 	previewWidth: number;
+	previewDevice: string;
+	customPreviewWidth: string;
+	customPreviewHeight: string;
+	previewRotated: boolean;
+	previewAutoScale: boolean;
+	previewManualScale: number;
+	syncScroll: boolean;
 }
 
 const DEFAULT_SETTINGS: MDBeautifySettings = {
@@ -415,7 +689,14 @@ const DEFAULT_SETTINGS: MDBeautifySettings = {
 	controlsVisible: false,
 	themeMode: 'auto',
 	fixedWidthPreview: true,
-	previewWidth: 430
+	previewWidth: 430,
+	previewDevice: 'custom',
+	customPreviewWidth: '100%',
+	customPreviewHeight: '100%',
+	previewRotated: false,
+	previewAutoScale: true,
+	previewManualScale: 100,
+	syncScroll: true
 }
 
 export default class MDBeautifyPlugin extends Plugin {
@@ -433,10 +714,10 @@ export default class MDBeautifyPlugin extends Plugin {
 		);
 
 		// Add ribbon icons
-		const ribbonIconEl = this.addRibbonIcon('eye', t('preview_ribbon_tooltip'), (evt: MouseEvent) => {
+		const ribbonIconEl = this.addRibbonIcon('eye', t('preview_ribbon_tooltip'), (_evt: MouseEvent) => {
 			this.activateView();
 		});
-		ribbonIconEl.addClass('md-beautify-ribbon-class');
+		ribbonIconEl.addClass('mdb-ribbon-class');
 
 		// Add commands
 		this.addCommand({
@@ -472,20 +753,14 @@ export default class MDBeautifyPlugin extends Plugin {
 		});
 
 		this.addCommand({
-			id: 'export-pdf-image',
-			name: t('export_pdf_image_command'),
-			callback: () => this.exportToPdf('image'),
-		});
-
-		this.addCommand({
-			id: 'export-pdf-vector',
-			name: t('export_pdf_vector_command'),
-			callback: () => this.exportToPdf('vector'),
+			id: 'export-pdf',
+			name: t('export_pdf_command'),
+			callback: () => this.exportToPdf(),
 		});
 
 		// Add event listener for paste and drop events
 		this.registerEvent(
-			this.app.workspace.on('editor-paste', (evt, editor, view) => {
+			this.app.workspace.on('editor-paste', (evt, editor, _view) => {
 				if (this.settings.autoUploadImages) {
 					this.onPaste(evt, editor);
 				}
@@ -493,7 +768,7 @@ export default class MDBeautifyPlugin extends Plugin {
 		);
 
 		this.registerEvent(
-			this.app.workspace.on('editor-drop', (evt, editor, view) => {
+			this.app.workspace.on('editor-drop', (evt, editor, _view) => {
 				if (this.settings.autoUploadImages) {
 					this.onPaste(evt as any, editor);
 				}
@@ -502,7 +777,7 @@ export default class MDBeautifyPlugin extends Plugin {
 
 		// Add context menu item for manual image upload
 		this.registerEvent(
-			this.app.workspace.on('editor-menu', (menu, editor, view) => {
+			this.app.workspace.on('editor-menu', (menu, editor, _view) => {
 				const line = editor.getLine(editor.getCursor().line);
 				// Support both Markdown links and WikiLinks
 				const mdRegex = /!\[(.*?)\]\((.*?)\)/g;
@@ -711,16 +986,8 @@ export default class MDBeautifyPlugin extends Plugin {
 	}
 
 	async uploadAllImagesInActiveView() {
-		let view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		const view = this.getActiveOrFirstMarkdownView();
 		
-		if (!view) {
-			const leaves = this.app.workspace.getLeavesOfType("markdown");
-			if (leaves.length > 0) {
-				const visibleLeaf = leaves.find(l => (l.view as any).isShowing && (l.view as any).isShowing());
-				view = (visibleLeaf?.view || leaves[0].view) as MarkdownView;
-			}
-		}
-
 		if (!view || !view.file) {
 			new Notice(t('no_active_view'));
 			return;
@@ -810,222 +1077,234 @@ export default class MDBeautifyPlugin extends Plugin {
 		}
 	}
 
-	async exportToHtml() {
-		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView || !activeView.file) {
-			new Notice(t('no_active_view'));
-			return;
+	getActiveOrFirstMarkdownView(): MarkdownView | null {
+		let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		
+		if (!activeView) {
+			const leaves = this.app.workspace.getLeavesOfType("markdown");
+			if (leaves.length > 0) {
+				activeView = leaves[0].view as MarkdownView;
+			}
 		}
+		
+		return activeView;
+	}
 
-		let content = activeView.editor.getValue();
-		const title = activeView.file.basename;
-		
-		// Remove frontmatter/properties
-		content = content.replace(/^---[\s\S]*?---/, '').trim();
-		const isDarkMode = this.isDarkMode();
-		// For export, we force the current theme mode without media query wrapping
-		const themeCss = this.getThemeCss(undefined, isDarkMode, false);
-		
+	async exportToHtml() {
+		const loadingNotice = new Notice(t('exporting'), 0);
 		try {
-			const html = this.parser.render(content);
-			const fullHtml = generateExportHtml(html, {
-				title: title,
-				themeCss: themeCss
-			});
-
-			// Use a simple download approach for HTML
-			const blob = new Blob([fullHtml], { type: 'text/html' });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `${title}.html`;
-			a.click();
-			URL.revokeObjectURL(url);
+			const activeView = this.getActiveOrFirstMarkdownView();
 			
-			new Notice(t('export_success'));
+			if (!activeView || !activeView.file) {
+				loadingNotice.hide();
+				new Notice(t('no_active_view'));
+				return;
+			}
+
+			let content = activeView.editor.getValue();
+			const title = activeView.file.basename;
+			
+			content = content.replace(/^---[\s\S]*?---/, '').trim();
+			// 导出时强制使用浅色模式
+			const isDarkMode = false;
+			let themeCss = this.getThemeCss(undefined, isDarkMode, false);
+			
+			themeCss = sanitizeModernColorFunctions(themeCss);
+			
+			const html = this.parser.render(content);
+			
+		const tempContainer = document.createElement('div');
+		tempContainer.innerHTML = html;
+		tempContainer.style.display = 'none';
+		document.body.appendChild(tempContainer);
+		
+		// 渲染 Mermaid 图表
+		const mermaidCount = tempContainer.querySelectorAll('.mermaid, pre.language-mermaid, code.language-mermaid').length;
+		if (mermaidCount > 0) {
+			loadingNotice.setMessage(`${t('exporting')} - 渲染图表 0/${mermaidCount}...`);
+			await renderMermaidBlocksForCopy(tempContainer, (current, total) => {
+				loadingNotice.setMessage(`${t('exporting')} - 渲染图表 ${current}/${total}...`);
+			});
+		} else {
+			await renderMermaidBlocksForCopy(tempContainer);
+		}
+		
+	const renderedHtml = tempContainer.innerHTML;
+	document.body.removeChild(tempContainer);
+	
+	loadingNotice.setMessage(`${t('exporting')} - 生成 HTML...`);
+	
+	// 注意：不要在整个 HTML 上运行 sanitizeModernColorFunctions（太慢）
+	// CSS 已经在之前清理过了
+	let fullHtml = generateExportHtml(renderedHtml, {
+		title: title,
+		themeCss: themeCss,
+		extraCss: EXPORT_EXTRA_CSS
+	});
+	
+	loadingNotice.setMessage(`${t('exporting')} - 保存文件...`);
+	const blob = new Blob([fullHtml], { type: 'text/html' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${title}.html`;
+		a.click();
+		URL.revokeObjectURL(url);
+		
+		loadingNotice.hide();
+		new Notice(t('export_success'));
 		} catch (err: any) {
+			loadingNotice.hide();
 			new Notice(t('export_failed') + err.message);
 		}
 	}
 
-	async exportToPdf(mode: 'image' | 'vector' = 'image') {
-		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView || !activeView.file) {
-			new Notice(t('no_active_view'));
-			return;
-		}
-
-		let content = activeView.editor.getValue();
-		const title = activeView.file.basename;
-		
-		// Remove frontmatter/properties
-		content = content.replace(/^---[\s\S]*?---/, '').trim();
-		const isDarkMode = document.body.classList.contains('theme-dark');
-		const themeCss = this.getThemeCss(undefined, isDarkMode);
-
+	async exportToPdf() {
+		const loadingNotice = new Notice(t('exporting'), 0);
 		try {
-			const html = this.parser.render(content);
-			const fullHtml = generateExportHtml(html, {
-				title: title,
-				themeCss: themeCss
-			});
-
-			if (mode === 'vector') {
-				// 在 Obsidian (Electron) 环境中，尝试使用无弹窗的打印方式
-				try {
-					// @ts-ignore
-					const electron = require('electron');
-					if (electron && electron.remote) {
-						const webContents = electron.remote.getCurrentWebContents();
-						const data = await webContents.printToPDF({
-							printBackground: true,
-							pageSize: 'A4'
-						});
-						
-						// 使用 Obsidian API 保存文件
-						const fileName = `${title}.pdf`;
-						await this.app.vault.adapter.writeBinary(fileName, data);
-						new Notice(`已导出到库根目录: ${fileName}`);
-						return;
-					}
-				} catch (e) {
-					// 降级方案：调用原生打印窗口
-					exportToPdfNative(fullHtml);
-					new Notice('正在调用打印机...');
-					console.log('Native printToPDF failed, falling back to window.print()');
-				}
-			} else {
-				await exportToPdfImage(fullHtml, `${title}.pdf`);
-				new Notice(t('export_success'));
+			const activeView = this.getActiveOrFirstMarkdownView();
+			
+			if (!activeView || !activeView.file) {
+				loadingNotice.hide();
+				new Notice(t('no_active_view'));
+				return;
 			}
+
+			let content = activeView.editor.getValue();
+			const title = activeView.file.basename;
+			
+			content = content.replace(/^---[\s\S]*?---/, '').trim();
+			const isDarkMode = false;
+			let themeCss = this.getThemeCss(undefined, isDarkMode);
+			
+			themeCss = sanitizeModernColorFunctions(themeCss);
+
+			const html = this.parser.render(content);
+			
+		const tempContainer = document.createElement('div');
+		tempContainer.innerHTML = html;
+		tempContainer.style.display = 'none';
+		document.body.appendChild(tempContainer);
+		
+		const mermaidCount = tempContainer.querySelectorAll('.mermaid, pre.language-mermaid, code.language-mermaid').length;
+		if (mermaidCount > 0) {
+			loadingNotice.setMessage(`${t('exporting')} - 渲染图表 0/${mermaidCount}...`);
+			await renderMermaidBlocksForCopy(tempContainer, (current, total) => {
+				loadingNotice.setMessage(`${t('exporting')} - 渲染图表 ${current}/${total}...`);
+			});
+		} else {
+			await renderMermaidBlocksForCopy(tempContainer);
+		}
+		
+		const renderedHtml = tempContainer.innerHTML;
+		document.body.removeChild(tempContainer);
+		
+		loadingNotice.setMessage(`${t('exporting')} - 生成 HTML...`);
+		
+		let fullHtml = generateExportHtml(renderedHtml, {
+			title: title,
+			themeCss: themeCss,
+			extraCss: EXPORT_EXTRA_CSS
+		});
+
+		loadingNotice.hide();
+		exportToPdfNative(fullHtml);
+		new Notice(t('msg_vector_print_instruction'));
 		} catch (err: any) {
+			loadingNotice.hide();
 			new Notice(t('export_failed') + err.message);
 		}
 	}
 
 	getThemeCss(themeId?: string, isDark?: boolean, wrapInMedia = false) {
 		const id = themeId || this.settings.defaultTheme;
-		// If user has customized this theme, return the custom version
 		let css = this.settings.customThemeStyles[id] || allThemes[id] || allThemes['basic'];
 		
-		// 添加防止长文本溢出的额外 CSS（参考 commit 1b5a93ec）
-		const overflowFixCss = `
-#wemd {
-	overflow-wrap: break-word;
-}
-#wemd a {
-	word-break: break-all;
-}
-`;
-		css = overflowFixCss + css;
-		
+		const DARK_MARK = "/* mdb-wechat-dark-converted */";
+
 		if (isDark) {
-			const DARK_MARK = "/* wemd-wechat-dark-converted */";
-			if (!css.includes(DARK_MARK)) {
-				let darkCss = convertCssToWeChatDarkMode(css);
-				if (wrapInMedia) {
-					darkCss = `@media (prefers-color-scheme: dark) {\n${darkCss}\n}`;
+			if (css.includes(DARK_MARK)) {
+				if (!wrapInMedia) {
+					// 预览模式下提取转换后的暗色样式，减少冗余
+					const parts = css.split(DARK_MARK);
+					if (parts.length > 1) {
+						return `${DARK_MARK}\n${parts[parts.length - 1].trim()}`;
+					}
 				}
-				css = `${css}\n${DARK_MARK}\n${darkCss}`;
+				return css;
+			}
+			
+			let darkCss = convertCssToWeChatDarkMode(css);
+			// convertCssToWeChatDarkMode 已经包含了 DARK_MARK
+			if (wrapInMedia) {
+				darkCss = `@media (prefers-color-scheme: dark) {\n${darkCss}\n}`;
+				css = `${css}\n${darkCss}`;
+			} else {
+				// 预览模式下只保留转换后的暗色样式，减少冗余
+				css = darkCss;
+			}
+		} else {
+			// 浅色模式下，如果包含转换标记，只提取浅色部分
+			if (css.includes(DARK_MARK)) {
+				return css.split(DARK_MARK)[0].trim();
 			}
 		}
 		
 		return css;
 	}
 
-	injectMacStyleIndicators(container: HTMLElement) {
-		const preTags = container.querySelectorAll<HTMLPreElement>('pre.custom');
-		preTags.forEach(pre => {
-			// 避免重复注入
-			if (pre.querySelector('.mac-indicator')) return;
-
-			const code = pre.querySelector('code');
-			if (code) {
-				// 确保 pre 标签有足够的 padding
-				const currentPadding = window.getComputedStyle(pre).paddingTop;
-				const paddingValue = parseFloat(currentPadding) || 16;
-				
-				// 设置 pre 标签样式，确保有足够空间容纳指示器
-				pre.style.paddingTop = `${Math.max(paddingValue, 40)}px`;
-				pre.style.position = 'relative';
-				
-				const div = document.createElement('div');
-				div.className = 'mac-indicator';
-				// 使用绝对定位，放在代码块内部的左上角
-				div.style.cssText = 'position:absolute;top:12px;left:16px;display:flex;flex-direction:row;align-items:center;gap:8px;z-index:1;';
-				div.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ff5f56;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffbd2e;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#27c93f;"></span>';
-				
-				// 插入到 pre 标签内部
-				pre.insertBefore(div, pre.firstChild);
-			}
-		});
-	}
 
 
 
 
 
 	async copyBeautified() {
-		let content = '';
-		let sourceViewName = '';
-
-		// 1. Try to get content from active preview view first
-		const previewLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_MDBEAUTIFY_PREVIEW);
-		const activeLeaf = this.app.workspace.activeLeaf;
-		
-		let activePreviewView: MDBeautifyPreviewView | null = null;
-		if (activeLeaf && activeLeaf.view instanceof MDBeautifyPreviewView) {
-			activePreviewView = activeLeaf.view;
-		} else if (previewLeaves.length > 0) {
-			activePreviewView = previewLeaves[0].view as MDBeautifyPreviewView;
-		}
-
-			// 2. Try to get content from the preview view's current source
-		const activeMarkdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		
-		if (activeMarkdownView) {
-			content = activeMarkdownView.editor.getValue();
-			sourceViewName = activeMarkdownView.getDisplayText();
-		} else {
-			// If no active markdown view, check if we have any markdown leaves
-			const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
-			if (markdownLeaves.length > 0) {
-				const mostRecentMarkdownView = markdownLeaves[0].view as MarkdownView;
-				content = mostRecentMarkdownView.editor.getValue();
-				sourceViewName = mostRecentMarkdownView.getDisplayText();
-			}
-		}
-
-		if (!content) {
-			new Notice(t('no_active_view'));
-			return;
-		}
-
-		const rawMarkdown = content;
-		content = content.replace(/^---[\s\S]*?---/, '').trim();
-		const themeCss = this.getThemeCss(undefined, true, true);
-		const sanitizedCss = `${themeCss}\n#wemd pre.custom::before{display:none !important;}`;
-		
+		const loadingNotice = new Notice(t('copying'), 0);
 		try {
+			let content = '';
+			let sourceViewName = '';
+
+			const activeMarkdownView = this.getActiveOrFirstMarkdownView();
+			
+			if (activeMarkdownView) {
+				content = activeMarkdownView.editor.getValue();
+				sourceViewName = activeMarkdownView.getDisplayText();
+			}
+
+			if (!content) {
+				loadingNotice.hide();
+				new Notice(t('no_active_view'));
+				return;
+			}
+
+			const rawMarkdown = content;
+			content = content.replace(/^---[\s\S]*?---/, '').trim();
+			const themeCss = this.getThemeCss(undefined, true, true);
+			const scopedCss = scopeCss(themeCss);
+			const sanitizedCss = `${scopedCss}\n#mdb pre.custom::before{display:none;}`;
+			
 			const parser = this.parser;
 			const html = parser.render(content);
 			const styledHtml = processHtml(html, sanitizedCss, true, true);
 			
-			const finalHtml = this.convertCheckboxesToEmoji(styledHtml);
-			const copyContainer = document.body.createDiv();
-			copyContainer.style.position = 'absolute';
-			copyContainer.style.left = '-9999px';
-			copyContainer.style.top = '-9999px';
-			copyContainer.style.width = '800px';
-			copyContainer.innerHTML = finalHtml;
-			
-			// Inject Mac-style indicators for code blocks in copy
-			this.injectMacStyleIndicators(copyContainer);
+		const finalHtml = this.convertCheckboxesToEmoji(styledHtml);
+		const copyContainer = document.body.createDiv({ cls: 'mdb-copy-temp' });
+		copyContainer.innerHTML = finalHtml;
 
+		// 渲染 Mermaid 图表
+		const mermaidCount = copyContainer.querySelectorAll('.mermaid, pre.language-mermaid, code.language-mermaid').length;
+		if (mermaidCount > 0) {
+			loadingNotice.setMessage(`${t('copying')} - 渲染图表 0/${mermaidCount}...`);
+			await renderMermaidBlocksForCopy(copyContainer, (current, total) => {
+				loadingNotice.setMessage(`${t('copying')} - 渲染图表 ${current}/${total}...`);
+			});
+			loadingNotice.setMessage(t('copying'));
+		} else {
 			await renderMermaidBlocksForCopy(copyContainer);
-			
-			const htmlContent = `<meta charset="utf-8">${copyContainer.innerHTML}`;
-			const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+		}
+		
+		const htmlContent = `<meta charset="utf-8">${copyContainer.innerHTML}`;
+		const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
 			const textBlob = new Blob([rawMarkdown], { type: 'text/plain' });
 			
 			const data = [new ClipboardItem({ 
@@ -1035,8 +1314,10 @@ export default class MDBeautifyPlugin extends Plugin {
 			
 			await navigator.clipboard.write(data);
 			copyContainer.remove();
+			loadingNotice.hide();
 			new Notice(t('copy_success') + (sourceViewName ? `: ${sourceViewName}` : ''));
 		} catch (err: any) {
+			loadingNotice.hide();
 			console.error('MD Beautify copy error:', err);
 			new Notice(t('copy_failed') + (err.message || String(err)));
 			const tempDiv = document.querySelector('body > div[style*="-9999px"]');
@@ -1076,7 +1357,8 @@ export default class MDBeautifyPlugin extends Plugin {
 		leaves.forEach(leaf => {
 			if (leaf.view instanceof MDBeautifyPreviewView) {
 				leaf.view.updatePreviewWidth();
-				leaf.view.updatePreview(force);
+				leaf.view.updatePreviewScale();
+				leaf.view.schedulePreviewUpdate(force);
 			}
 		});
 	}
@@ -1098,7 +1380,8 @@ class MDBeautifyPreviewView extends ItemView {
 	private lastActiveView: MarkdownView | null = null;
 	private isRestoringScroll = false;
 	private mermaidRenderId = 0;
-
+	private previewUpdateTimer: number | null = null;
+	private pendingForceUpdate = false;
 	constructor(leaf: WorkspaceLeaf, plugin: MDBeautifyPlugin) {
 		super(leaf);
 		this.plugin = plugin;
@@ -1119,32 +1402,15 @@ class MDBeautifyPreviewView extends ItemView {
 	async onOpen() {
 		const container = this.containerEl.children[1] as HTMLElement;
 		container.empty();
-		container.classList.add('md-beautify-preview-view');
-		container.style.display = 'flex';
-		container.style.flexDirection = 'column';
-		container.style.height = '100%';
+		container.classList.add('mdb-preview-view');
 
-		// Add scoped style element
 		this.styleEl = container.createEl('style');
 
-		// Main Controls Container
-		const controlsEl = container.createDiv({ cls: 'md-beautify-view-controls' });
-		controlsEl.style.padding = '8px';
-		controlsEl.style.borderBottom = '1px solid var(--background-modifier-border)';
-		controlsEl.style.display = 'flex';
-		controlsEl.style.flexDirection = 'column';
-		controlsEl.style.gap = '8px';
-		controlsEl.style.alignItems = 'center';
+		const controlsEl = container.createDiv({ cls: 'mdb-view-controls' });
 
-		// Top Row: Actions
-		const actionsRow = controlsEl.createDiv();
-		actionsRow.style.display = 'flex';
-		actionsRow.style.gap = '8px';
-		actionsRow.style.alignItems = 'center';
-		actionsRow.style.width = '100%';
+		const actionsRow = controlsEl.createDiv({ cls: 'mdb-controls-row' });
 
 		const copyBtn = actionsRow.createEl('button', { text: t('btn_copy'), cls: 'mod-cta' });
-		copyBtn.style.flex = '1';
 		copyBtn.onclick = () => this.plugin.copyBeautified();
 
 		const uploadBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
@@ -1152,15 +1418,48 @@ class MDBeautifyPreviewView extends ItemView {
 		uploadBtn.setAttribute('aria-label', t('command_upload_all_images'));
 		uploadBtn.onclick = () => this.plugin.uploadAllImagesInActiveView();
 
-		const htmlBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
-		setIcon(htmlBtn, 'code');
-		htmlBtn.setAttribute('aria-label', t('export_html_command'));
-		htmlBtn.onclick = () => this.plugin.exportToHtml();
+		const exportBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
+		setIcon(exportBtn, 'download');
+		exportBtn.setAttribute('aria-label', t('btn_export'));
+		exportBtn.onclick = (e) => {
+			const menu = new Menu();
+			
+			// HTML 导出
+			menu.addItem((item) => {
+				item.setTitle(t('export_html_command'))
+					.setIcon('code')
+					.onClick(() => this.plugin.exportToHtml());
+			});
+			
+			// PDF 导出
+			menu.addItem((item) => {
+				item.setTitle(t('export_pdf_command'))
+					.setIcon('file-text')
+					.onClick(() => this.plugin.exportToPdf());
+			});
+			
+			menu.showAtMouseEvent(e);
+		};
 
-		const pdfBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
-		setIcon(pdfBtn, 'file-text');
-		pdfBtn.setAttribute('aria-label', t('export_pdf_command'));
-		pdfBtn.onclick = () => this.plugin.exportToPdf();
+		const syncScrollBtn = actionsRow.createEl('button', { cls: 'clickable-icon mdb-sync-scroll-btn' });
+		setIcon(syncScrollBtn, 'refresh-cw');
+		
+		const updateSyncScrollIcon = () => {
+			syncScrollBtn.setAttribute('aria-label', this.plugin.settings.syncScroll ? t('btn_sync_scroll_on') : t('btn_sync_scroll_off'));
+
+			if (this.plugin.settings.syncScroll) {
+				syncScrollBtn.classList.add('active');
+			} else {
+				syncScrollBtn.classList.remove('active');
+			}
+		};
+		updateSyncScrollIcon();
+
+		syncScrollBtn.onclick = async () => {
+			this.plugin.settings.syncScroll = !this.plugin.settings.syncScroll;
+			await this.plugin.saveSettings();
+			updateSyncScrollIcon();
+		};
 
 		const toggleBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
 		const updateToggleIcon = () => {
@@ -1172,25 +1471,17 @@ class MDBeautifyPreviewView extends ItemView {
 		toggleBtn.onclick = async () => {
 			this.plugin.settings.controlsVisible = !this.plugin.settings.controlsVisible;
 			await this.plugin.saveSettings();
-			selectorsRow.style.display = this.plugin.settings.controlsVisible ? 'flex' : 'none';
+			selectorsRow.classList.toggle('mdb-hidden', !this.plugin.settings.controlsVisible);
 			updateToggleIcon();
 		};
 
-		// Bottom Row: Selectors (Initially hidden or shown based on settings)
-		const selectorsRow = controlsEl.createDiv();
-		selectorsRow.style.display = this.plugin.settings.controlsVisible ? 'flex' : 'none';
-		selectorsRow.style.gap = '12px';
-		selectorsRow.style.alignItems = 'center';
-		selectorsRow.style.paddingTop = '4px';
-		selectorsRow.style.width = '100%';
+		const selectorsRow = controlsEl.createDiv({ cls: 'mdb-controls-selectors-row' });
+		if (!this.plugin.settings.controlsVisible) {
+			selectorsRow.classList.add('mdb-hidden');
+		}
 
-		// Theme Selector with Label
-		const themeContainer = selectorsRow.createDiv();
-		themeContainer.style.display = 'flex';
-		themeContainer.style.alignItems = 'center';
-		themeContainer.style.gap = '4px';
-		themeContainer.style.flex = '1';
-		themeContainer.createSpan({ text: t('label_theme') + ':' }).style.fontSize = '12px';
+		const themeContainer = selectorsRow.createDiv({ cls: 'mdb-control-container' });
+		themeContainer.createSpan({ text: t('label_theme') + ':' });
 		
 		const themeSetting = new Setting(themeContainer)
 			.addDropdown(dropdown => {
@@ -1204,7 +1495,6 @@ class MDBeautifyPreviewView extends ItemView {
 					dropdown.addOption(themeName, themeName);
 				});
 
-				dropdown.selectEl.style.width = '100%';
 				dropdown.setValue(this.plugin.settings.defaultTheme)
 					.onChange(async (value) => {
 						this.plugin.settings.defaultTheme = value;
@@ -1213,18 +1503,9 @@ class MDBeautifyPreviewView extends ItemView {
 					});
 			});
 	themeSetting.infoEl.remove();
-	themeSetting.controlEl.style.width = '100%';
-	themeSetting.settingEl.style.border = 'none';
-	themeSetting.settingEl.style.padding = '0';
-	themeSetting.settingEl.style.flex = '1';
 
-		// Host Selector with Label
-		const hostContainer = selectorsRow.createDiv();
-		hostContainer.style.display = 'flex';
-		hostContainer.style.alignItems = 'center';
-		hostContainer.style.gap = '4px';
-		hostContainer.style.flex = '1';
-		hostContainer.createSpan({ text: t('label_host') + ':' }).style.fontSize = '12px';
+		const hostContainer = selectorsRow.createDiv({ cls: 'mdb-control-container' });
+		hostContainer.createSpan({ text: t('label_host') + ':' });
 
 		const hostSetting = new Setting(hostContainer)
 			.addDropdown(dropdown => {
@@ -1233,7 +1514,6 @@ class MDBeautifyPreviewView extends ItemView {
 					const label = t(`host_${host}` as any) || host;
 					dropdown.addOption(host, label);
 				});
-				dropdown.selectEl.style.width = '100%';
 				dropdown.setValue(this.plugin.settings.activeImageHost)
 					.onChange(async (value) => {
 						this.plugin.settings.activeImageHost = value;
@@ -1241,26 +1521,16 @@ class MDBeautifyPreviewView extends ItemView {
 					});
 			});
 		hostSetting.infoEl.remove();
-		hostSetting.controlEl.style.width = '100%';
-		hostSetting.settingEl.style.border = 'none';
-		hostSetting.settingEl.style.padding = '0';
-		hostSetting.settingEl.style.flex = '1';
 
-		// Theme Mode Selector
-		const modeContainer = selectorsRow.createDiv();
-		modeContainer.style.display = 'flex';
-		modeContainer.style.alignItems = 'center';
-		modeContainer.style.gap = '4px';
-		modeContainer.style.flex = '1';
-		modeContainer.createSpan({ text: '外观:' }).style.fontSize = '12px';
+		const modeContainer = selectorsRow.createDiv({ cls: 'mdb-control-container' });
+		modeContainer.createSpan({ text: t('label_appearance') + ':' });
 
 		const modeSetting = new Setting(modeContainer)
 			.addDropdown(dropdown => {
-				dropdown.selectEl.style.width = '100%';
 				dropdown
-					.addOption('auto', '跟随')
-					.addOption('light', '浅色')
-					.addOption('dark', '深色')
+					.addOption('auto', t('theme_mode_auto'))
+					.addOption('light', t('theme_mode_light'))
+					.addOption('dark', t('theme_mode_dark'))
 					.setValue(this.plugin.settings.themeMode)
 					.onChange(async (value) => {
 						this.plugin.settings.themeMode = value as 'auto' | 'light' | 'dark';
@@ -1269,20 +1539,127 @@ class MDBeautifyPreviewView extends ItemView {
 					});
 			});
 		modeSetting.infoEl.remove();
-		modeSetting.controlEl.style.width = '100%';
-		modeSetting.settingEl.style.border = 'none';
-		modeSetting.settingEl.style.padding = '0';
-		modeSetting.settingEl.style.flex = '1';
 
-		this.scrollContainer = container.createDiv({ cls: 'md-beautify-view-preview-scroll' });
-		this.scrollContainer.style.flex = '1';
-		this.scrollContainer.style.overflowY = 'auto';
-		this.scrollContainer.style.backgroundColor = 'var(--background-primary)';
-		this.scrollContainer.style.padding = '20px';
-		this.scrollContainer.style.display = 'flex';
-		this.scrollContainer.style.justifyContent = 'center';
+		const deviceRow = controlsEl.createDiv({ cls: 'mdb-controls-device-row' });
+		if (!this.plugin.settings.controlsVisible) {
+			deviceRow.classList.add('mdb-hidden');
+		}
 
-		this.scrollContainer.addEventListener('scroll', () => {
+		const deviceContainer = deviceRow.createDiv({ cls: 'mdb-control-container' });
+		deviceContainer.createSpan({ text: t('label_device') });
+
+		let rotateBtn: HTMLElement;
+		
+		const deviceSetting = new Setting(deviceContainer)
+			.addDropdown(dropdown => {
+				dropdown
+					.addOption('custom', t('device_custom'))
+					.addOption('iphone16pro', t('device_iphone16pro'))
+					.addOption('iphone16', t('device_iphone16'))
+					.addOption('ipad', t('device_ipad'))
+					.addOption('desktop', t('device_desktop'))
+					.setValue(this.plugin.settings.previewDevice)
+					.onChange(async (value) => {
+						this.plugin.settings.previewDevice = value;
+						if (value === 'custom') {
+							this.plugin.settings.previewRotated = false;
+							if (rotateBtn) {
+								rotateBtn.classList.add('mdb-hidden');
+							}
+						} else {
+							if (rotateBtn) {
+								rotateBtn.classList.toggle('mdb-hidden', !this.plugin.settings.controlsVisible);
+							}
+						}
+						await this.plugin.saveSettings();
+						this.updatePreviewWidth();
+						this.updatePreviewScale();
+					});
+			});
+		deviceSetting.infoEl.remove();
+
+		// Rotate Button (only for non-custom devices)
+		rotateBtn = deviceRow.createEl('button', { cls: 'clickable-icon mdb-rotate-btn' });
+		setIcon(rotateBtn, 'rotate-cw');
+		rotateBtn.setAttribute('aria-label', t('btn_rotate_device'));
+		rotateBtn.setAttribute('title', t('btn_rotate_device'));
+		if (this.plugin.settings.previewDevice === 'custom') {
+			rotateBtn.classList.add('mdb-hidden');
+		}
+		
+		const updateRotateBtn = () => {
+			if (this.plugin.settings.previewRotated) {
+				rotateBtn.classList.add('active');
+			} else {
+				rotateBtn.classList.remove('active');
+			}
+		};
+		
+		updateRotateBtn();
+		
+		rotateBtn.onclick = async () => {
+			this.plugin.settings.previewRotated = !this.plugin.settings.previewRotated;
+			await this.plugin.saveSettings();
+			updateRotateBtn();
+			this.updatePreviewWidth();
+			this.updatePreviewScale();
+		};
+
+		const scaleContainer = deviceRow.createDiv({ cls: 'mdb-control-container mdb-scale-control' });
+		scaleContainer.createSpan({ text: t('label_scale') });
+
+		const scaleSetting = new Setting(scaleContainer)
+			.addDropdown(dropdown => {
+				dropdown
+					.addOption('auto', t('scale_auto'))
+					.addOption('manual', t('scale_manual'))
+					.setValue(this.plugin.settings.previewAutoScale ? 'auto' : 'manual')
+					.onChange(async (value) => {
+						this.plugin.settings.previewAutoScale = value === 'auto';
+						await this.plugin.saveSettings();
+						scaleSlider.classList.toggle('mdb-hidden', value !== 'manual');
+						this.updatePreviewScale();
+					});
+			});
+		scaleSetting.infoEl.remove();
+
+		const scaleSlider = deviceRow.createDiv({ cls: 'mdb-scale-slider' });
+		if (this.plugin.settings.previewAutoScale) {
+			scaleSlider.classList.add('mdb-hidden');
+		}
+
+		const scaleInput = scaleSlider.createEl('input', { type: 'range' });
+		scaleInput.min = '10';
+		scaleInput.max = '200';
+		scaleInput.value = String(this.plugin.settings.previewManualScale);
+		scaleInput.oninput = async () => {
+			const value = parseInt(scaleInput.value);
+			this.plugin.settings.previewManualScale = value;
+			scaleLabel.textContent = `${value}%`;
+			await this.plugin.saveSettings();
+			this.updatePreviewScale();
+		};
+
+		const scaleLabel = scaleSlider.createSpan({ text: `${this.plugin.settings.previewManualScale}%`, cls: 'mdb-scale-label' });
+
+		// Update device row visibility with controls
+		const originalToggleOnclick = toggleBtn.onclick;
+		toggleBtn.onclick = async (e) => {
+			if (originalToggleOnclick) {
+				const result = originalToggleOnclick.call(toggleBtn, e);
+				if (result instanceof Promise) await result;
+			}
+			deviceRow.classList.toggle('mdb-hidden', !this.plugin.settings.controlsVisible);
+			const shouldShowRotate = this.plugin.settings.previewDevice !== 'custom' && this.plugin.settings.controlsVisible;
+			rotateBtn.classList.toggle('mdb-hidden', !shouldShowRotate);
+		};
+
+		this.scrollContainer = container.createDiv({ cls: 'mdb-view-preview-scroll' });
+
+		this.previewEl = this.scrollContainer.createDiv({ cls: 'mdb-view-preview-content' });
+		
+		// 监听 previewEl 的滚动事件（内容容器）
+		this.previewEl.addEventListener('scroll', () => {
 			if (this.isRestoringScroll) return;
 			if (this.lastScrollSource === 'editor' && Date.now() - this.lastScrollTime < 100) return;
 			
@@ -1290,11 +1667,21 @@ class MDBeautifyPreviewView extends ItemView {
 			this.lastScrollTime = Date.now();
 			this.syncPreviewToEditor();
 		});
-
-		this.previewEl = this.scrollContainer.createDiv({ cls: 'md-beautify-view-preview-content' });
 		
 		// 应用固定宽度设置
 		this.updatePreviewWidth();
+		
+		// 初始化缩放
+		setTimeout(() => this.updatePreviewScale(), 100);
+		
+		// 监听窗口大小变化
+		const resizeObserver = new ResizeObserver(() => {
+			if (this.plugin.settings.previewAutoScale) {
+				this.updatePreviewScale();
+			}
+		});
+		resizeObserver.observe(this.scrollContainer);
+		this.register(() => resizeObserver.disconnect());
 		
 		// Set initial active view
 		this.lastActiveView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -1305,20 +1692,20 @@ class MDBeautifyPreviewView extends ItemView {
 		// Listen for changes in active file
 		this.registerEvent(
 			this.app.workspace.on('editor-change', () => {
-				this.updatePreview();
+				this.schedulePreviewUpdate();
 			})
 		);
 		
 		this.registerEvent(
 			this.app.workspace.on('active-leaf-change', () => {
-				this.updatePreview();
+				this.schedulePreviewUpdate();
 				this.setupEditorScrollListener();
 			})
 		);
 
 		this.registerEvent(
 			this.app.workspace.on('css-change', () => {
-				this.updatePreview(true);
+				this.schedulePreviewUpdate(true);
 			})
 		);
 
@@ -1351,7 +1738,7 @@ class MDBeautifyPreviewView extends ItemView {
 	}
 
 	private syncScroll() {
-		if (!this.scrollContainer) return;
+		if (!this.plugin.settings.syncScroll || !this.previewEl) return;
 
 		// If we recently scrolled the preview, don't let the editor sync back immediately
 		if (this.lastScrollSource === 'preview' && Date.now() - this.lastScrollTime < 150) {
@@ -1359,16 +1746,7 @@ class MDBeautifyPreviewView extends ItemView {
 		}
 
 		// Try to find the active or most recent markdown view
-		let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		
-		if (!activeView) {
-			const leaves = this.app.workspace.getLeavesOfType("markdown");
-			if (leaves.length > 0) {
-				const visibleLeaf = leaves.find(l => (l.view as any).isShowing && (l.view as any).isShowing());
-				activeView = (visibleLeaf?.view || leaves[0].view) as MarkdownView;
-			}
-		}
-
+		const activeView = this.plugin.getActiveOrFirstMarkdownView();
 		if (!activeView || !activeView.editor) return;
 
 		const editor = activeView.editor;
@@ -1400,14 +1778,14 @@ class MDBeautifyPreviewView extends ItemView {
 
 			if (!hasRatio) return;
 
-			const previewTotalHeight = this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight;
+			const previewTotalHeight = this.previewEl.scrollHeight - this.previewEl.clientHeight;
 			if (previewTotalHeight <= 0) return;
 
 			const newScrollTop = ratio * previewTotalHeight;
-			if (Math.abs(this.scrollContainer.scrollTop - newScrollTop) > 1) {
+			if (Math.abs(this.previewEl.scrollTop - newScrollTop) > 1) {
 				this.lastScrollSource = 'editor';
 				this.lastScrollTime = Date.now();
-				this.scrollContainer.scrollTop = newScrollTop;
+				this.previewEl.scrollTop = newScrollTop;
 			}
 		} catch (e) {
 			// Ignore
@@ -1417,31 +1795,82 @@ class MDBeautifyPreviewView extends ItemView {
 	updatePreviewWidth() {
 		if (!this.previewEl) return;
 		
-		if (this.plugin.settings.fixedWidthPreview) {
-			this.previewEl.style.maxWidth = `${this.plugin.settings.previewWidth}px`;
-			this.previewEl.style.width = '100%';
+		const { width, height, isCustom } = this.getPreviewSize();
+
+		this.previewEl.style.width = width;
+		if (!isCustom || !height.includes('%')) {
+			this.previewEl.style.height = height;
 		} else {
-			this.previewEl.style.maxWidth = 'none';
-			this.previewEl.style.width = '100%';
+			this.previewEl.style.height = 'auto';
+			this.previewEl.style.minHeight = '100%';
 		}
 	}
 
-	private syncPreviewToEditor() {
-		if (!this.scrollContainer) return;
+	updatePreviewScale() {
+		if (!this.previewEl || !this.scrollContainer) return;
 
-		const previewTotalHeight = this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight;
+		if (this.plugin.settings.previewAutoScale) {
+			const containerWidth = this.scrollContainer.clientWidth - 40;
+			const containerHeight = this.scrollContainer.clientHeight - 40;
+
+			const { width, height } = this.getPreviewSize();
+			const previewWidth = parseFloat(width || '0');
+			const previewHeight = parseFloat(height || '0');
+
+			if (previewWidth > 0) {
+				const scaleX = containerWidth / previewWidth;
+				const scaleY = previewHeight > 0 ? containerHeight / previewHeight : 1;
+				const scale = Math.min(scaleX, scaleY, 1);
+				this.previewEl.style.transform = `scale(${scale})`;
+			} else {
+				this.previewEl.style.transform = 'scale(1)';
+			}
+		} else {
+			const scale = this.plugin.settings.previewManualScale / 100;
+			this.previewEl.style.transform = `scale(${scale})`;
+		}
+	}
+
+	private getPreviewSize() {
+		const devices: Record<string, { width: string; height: string }> = {
+			custom: { width: this.plugin.settings.customPreviewWidth, height: this.plugin.settings.customPreviewHeight },
+			iphone16pro: { width: '430px', height: '932px' },
+			iphone16: { width: '390px', height: '844px' },
+			ipad: { width: '768px', height: '1024px' },
+			desktop: { width: '1280px', height: '720px' }
+		};
+
+		const isCustom = this.plugin.settings.previewDevice === 'custom';
+		const device = devices[this.plugin.settings.previewDevice] || devices.custom;
+		const isRotated = this.plugin.settings.previewRotated && !isCustom;
+		const width = isRotated ? device.height : device.width;
+		const height = isRotated ? device.width : device.height;
+
+		return { width, height, isCustom };
+	}
+
+	schedulePreviewUpdate(force = false) {
+		this.pendingForceUpdate = this.pendingForceUpdate || force;
+		if (this.previewUpdateTimer !== null) {
+			window.clearTimeout(this.previewUpdateTimer);
+		}
+		this.previewUpdateTimer = window.setTimeout(() => {
+			const shouldForce = this.pendingForceUpdate;
+			this.previewUpdateTimer = null;
+			this.pendingForceUpdate = false;
+			this.updatePreview(shouldForce);
+		}, 200);
+	}
+
+	private syncPreviewToEditor() {
+		if (!this.plugin.settings.syncScroll || !this.previewEl) return;
+
+		const previewTotalHeight = this.previewEl.scrollHeight - this.previewEl.clientHeight;
 		if (previewTotalHeight <= 0) return;
 
-		const ratio = this.scrollContainer.scrollTop / previewTotalHeight;
+		const ratio = this.previewEl.scrollTop / previewTotalHeight;
 
-		let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView) {
-			const leaves = this.app.workspace.getLeavesOfType("markdown");
-			if (leaves.length > 0) {
-				activeView = leaves[0].view as MarkdownView;
-			}
-		}
-
+		const activeView = this.plugin.getActiveOrFirstMarkdownView();
 		if (!activeView || !activeView.editor) return;
 
 		const editor = activeView.editor;
@@ -1480,24 +1909,20 @@ class MDBeautifyPreviewView extends ItemView {
 		if (this.scrollContainer) {
 			this.scrollContainer.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
 			if (isDarkMode) {
-				this.scrollContainer.classList.add('wemd-dark-mode');
-				this.scrollContainer.style.backgroundColor = '#0f1113';
-				this.scrollContainer.style.colorScheme = 'dark';
+				this.scrollContainer.classList.add('mdb-dark-mode');
 			} else {
-				this.scrollContainer.classList.remove('wemd-dark-mode');
-				this.scrollContainer.style.backgroundColor = '#ffffff';
-				this.scrollContainer.style.colorScheme = 'light';
+				this.scrollContainer.classList.remove('mdb-dark-mode');
 			}
 		}
 
 		if (this.previewEl) {
 			this.previewEl.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
 			if (isDarkMode) {
-				this.previewEl.classList.add('wemd-dark-mode');
-				this.previewEl.style.colorScheme = 'dark';
+				this.previewEl.classList.add('mdb-dark-mode');
+				this.previewEl.style.setProperty('color-scheme', 'dark', 'important');
 			} else {
-				this.previewEl.classList.remove('wemd-dark-mode');
-				this.previewEl.style.colorScheme = 'light';
+				this.previewEl.classList.remove('mdb-dark-mode');
+				this.previewEl.style.setProperty('color-scheme', 'light', 'important');
 			}
 		}
 
@@ -1532,7 +1957,7 @@ class MDBeautifyPreviewView extends ItemView {
 		// 如果没有活跃的 Markdown 视图，检查工作区是否还有任何 Markdown 叶子节点
 		const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
 		if (markdownLeaves.length === 0) {
-			this.previewEl.innerHTML = `<p style="color: #666; text-align: center; padding: 20px;">${t('no_active_markdown')}</p>`;
+			this.previewEl.innerHTML = `<p class="mdb-preview-empty">${t('no_active_markdown')}</p>`;
 		}
 		// 如果还有 Markdown 视图只是失去了焦点（例如点击了预览视图或侧边栏），则保留当前预览内容
 	}
@@ -1541,10 +1966,10 @@ class MDBeautifyPreviewView extends ItemView {
 		try {
 			// Record current scroll ratio before update
 			let scrollRatio = 0;
-			if (this.scrollContainer) {
-				const total = this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight;
+			if (this.previewEl) {
+				const total = this.previewEl.scrollHeight - this.previewEl.clientHeight;
 				if (total > 0) {
-					scrollRatio = this.scrollContainer.scrollTop / total;
+					scrollRatio = this.previewEl.scrollTop / total;
 				}
 			}
 
@@ -1553,11 +1978,21 @@ class MDBeautifyPreviewView extends ItemView {
 			// Remove frontmatter/properties
 			content = content.replace(/^---[\s\S]*?---/, '').trim();
 
-			// 检查深色模式
 			const isDarkMode = this.plugin.isDarkMode();
-			// Preview should NOT use media query, but force dark mode CSS if isDarkMode is true
 			const themeCss = this.plugin.getThemeCss(undefined, isDarkMode, false);
-			const sanitizedCss = `${themeCss}\n#wemd pre.custom::before{display:none !important;}`;
+			const scopedCss = scopeCss(themeCss);
+			const sanitizedCss = `${scopedCss}
+#mdb {
+	color-scheme: ${isDarkMode ? 'dark' : 'light'};
+}
+#mdb * {
+	color-scheme: ${isDarkMode ? 'dark' : 'light'};
+}
+.mdb-view-controls,
+.mdb-view-controls * {
+	color-scheme: unset;
+	color: var(--text-normal);
+}`;
 			
 			// Update style element for live preview (non-inlined)
 			this.styleEl.innerHTML = sanitizedCss;
@@ -1567,58 +2002,58 @@ class MDBeautifyPreviewView extends ItemView {
 			const finalHtml = processHtml(html, sanitizedCss, false, false, true);
 			this.previewEl.innerHTML = finalHtml;
 			
-			// Inject Mac-style indicators for code blocks
-			this.plugin.injectMacStyleIndicators(this.previewEl);
-			
 			void this.renderMermaidBlocks(isDarkMode);
 
 			// 参考 web 端的实现方式，同步 data-ui-theme 属性和暗色模式类
 			this.previewEl.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
 			if (isDarkMode) {
-				this.previewEl.classList.add('wemd-dark-mode');
+				this.previewEl.classList.add('mdb-dark-mode');
 				this.previewEl.style.colorScheme = 'dark';
 			} else {
-				this.previewEl.classList.remove('wemd-dark-mode');
+				this.previewEl.classList.remove('mdb-dark-mode');
 				this.previewEl.style.colorScheme = 'light';
 			}
-			// 预览内容背景透明，使用父容器背景
-			this.previewEl.style.backgroundColor = 'transparent';
 
-			// 处理 KaTeX 显示问题 (Obsidian 环境)
-			// KaTeX 默认会同时生成 MathML (katex-mathml) 和 HTML (katex-html)
-			// MathML 用于辅助阅读，HTML 用于视觉显示
-			// 在 Obsidian 预览中，默认样式可能没有正确隐藏 MathML，导致公式重复显示
-			// 我们需要强制隐藏 .katex-mathml，只显示 .katex-html
-			const style = document.createElement('style');
-			style.innerHTML = `
-				.katex-html {
-					clip: rect(1px, 1px, 1px, 1px);
-					border: 0;
-					height: 1px;
-					width: 1px;
-					overflow: hidden;
-					padding: 0;
-					position: absolute;
+			// 合并所有样式到一个 style 标签中，减少重复标签
+			// 包含内联字体的 KaTeX CSS、主题 CSS 以及 KaTeX 修正样式
+			const combinedCss = `
+				${katexInlineCss}
+				${scopedCss}
+				#mdb .katex-mathml {
+					display: none !important;
 				}
-				.katex-mathml {
-					display: inline-block; /* 恢复显示 */
+				#mdb .katex-html {
+					display: inline-block !important;
 				}
-				.katex-display .katex-mathml {
-					display: block;
+				#mdb .katex-display .katex-html {
+					display: block !important;
+				}
+				/* 修复公式颜色在深色模式下的显示 */
+				.mdb-dark-mode .katex {
+					color: var(--text-normal);
 				}
 			`;
-			this.previewEl.appendChild(style);
+			
+			// Update style element for live preview
+			this.styleEl.innerHTML = combinedCss;
 
-
+			// 参考 web 端实现，添加 KaTeX 文本节点后处理
+			if (hasMathFormula(content)) {
+				setTimeout(() => {
+					if (this.previewEl) {
+						renderMathInElement(this.previewEl);
+					}
+				}, 100);
+			}
 
 			// Restore scroll ratio after content update (with multiple checks for images/rendering)
 			if (scrollRatio > 0) {
 				this.isRestoringScroll = true;
 				const restoreScroll = () => {
-					if (!this.scrollContainer) return;
-					const newTotal = this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight;
+					if (!this.previewEl) return;
+					const newTotal = this.previewEl.scrollHeight - this.previewEl.clientHeight;
 					if (newTotal > 0) {
-						this.scrollContainer.scrollTop = scrollRatio * newTotal;
+						this.previewEl.scrollTop = scrollRatio * newTotal;
 					}
 				};
 
@@ -1634,135 +2069,21 @@ class MDBeautifyPreviewView extends ItemView {
 				}, 1000);
 			}
 		} catch (err: any) {
-			this.previewEl.innerHTML = `<p style="color: red; padding: 20px;">Preview Error: ${err.message || String(err)}</p>`;
+			this.previewEl.innerHTML = `<p class="mdb-preview-error">Preview Error: ${err.message || String(err)}</p>`;
 		}
 	}
 
 	private async renderMermaidBlocks(isDarkMode: boolean) {
 		if (!this.previewEl) return;
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-		const mermaidNodes = Array.from(
-			this.previewEl.querySelectorAll<HTMLElement>(
-				".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
-			),
-		);
-		if (mermaidNodes.length === 0) return;
-
-		ensureMermaidInitialized();
-		const initConfig = getMermaidConfig(undefined, isDarkMode);
+		
 		const renderToken = ++this.mermaidRenderId;
-
-		const targets: { container: HTMLElement; diagram: string }[] = [];
-		const visited = new Set<HTMLElement>();
-		mermaidNodes.forEach((node) => {
-			const isCode = node.tagName === "CODE";
-			const container = (isCode ? node.parentElement : node) as HTMLElement | null;
-			if (!container || visited.has(container)) return;
-			visited.add(container);
-			const diagramSource = isCode ? node.textContent : container.dataset.mermaidRaw || node.textContent;
-			const diagram = normalizeMermaidText(diagramSource ?? "");
-			const shouldRender =
-				container.classList.contains("mermaid") ||
-				node.classList.contains("language-mermaid") ||
-				node.classList.contains("lang-mermaid") ||
-				node.classList.contains("mermaid") ||
-				isMermaidDiagramText(diagram);
-			if (!diagram.trim() || !shouldRender) return;
-			container.classList.add("mermaid");
-			if (!container.dataset.mermaidRaw) {
-				container.dataset.mermaidRaw = diagram;
-			}
-			targets.push({ container, diagram });
-		});
-
-		for (const [index, target] of targets.entries()) {
-			const block = target.container;
-			const diagram = target.diagram;
-			if (!diagram.trim()) continue;
-			const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
-			try {
-				const { svg } = await mermaid.render(
-					`obsidian-preview-${renderToken}-${index}`,
-					themedDiagram,
-				);
-				if (this.mermaidRenderId !== renderToken) {
-					return;
-				}
-				const normalizedSvg = normalizeMermaidSvg(svg);
-				
-				// 包装 SVG 到隔离容器中，防止 Obsidian 深色模式样式污染
-				if (!isDarkMode) {
-					const wrapper = document.createElement('div');
-					wrapper.style.cssText = 'background: white; color-scheme: light; isolation: isolate; text-align: center;';
-					wrapper.innerHTML = normalizedSvg;
-					block.innerHTML = '';
-					block.appendChild(wrapper);
-					
-					// 在 SVG 中添加强制浅色样式
-					const svgEl = wrapper.querySelector('svg');
-					if (svgEl) {
-						const styleEl = document.createElement('style');
-						styleEl.textContent = `
-							svg, svg * {
-								color-scheme: light !important;
-							}
-							.node rect, .node circle, .node ellipse, .node polygon, .node path {
-								fill: #fff4dd !important;
-								stroke: #000 !important;
-							}
-							.label text, span, .nodeLabel, .edgeLabel {
-								fill: #000 !important;
-								color: #000 !important;
-							}
-							.flowchart-link, .edgePath .path {
-								stroke: #000 !important;
-							}
-							.marker {
-								fill: #000 !important;
-								stroke: #000 !important;
-							}
-							.cluster rect {
-								fill: #fff9ed !important;
-								stroke: #000 !important;
-							}
-						`;
-						svgEl.prepend(styleEl);
-					}
-				} else {
-					// 深色模式：添加纯白色文字样式
-					const wrapper = document.createElement('div');
-					wrapper.style.cssText = 'isolation: isolate; text-align: center;';
-					wrapper.innerHTML = normalizedSvg;
-					block.innerHTML = '';
-					block.appendChild(wrapper);
-					
-					const svgEl = wrapper.querySelector('svg');
-					if (svgEl) {
-						svgEl.style.display = 'inline-block';
-						const styleEl = document.createElement('style');
-						styleEl.textContent = `
-							.label text, span, .nodeLabel, .edgeLabel {
-								fill: #fff !important;
-								color: #fff !important;
-							}
-						`;
-						svgEl.prepend(styleEl);
-					}
-				}
-				
-				block.style.textAlign = 'center';
-
-			} catch (error: any) {
-				const errorEl = document.createElement('div');
-				errorEl.style.color = '#c62828';
-				errorEl.style.background = 'rgba(198, 40, 40, 0.08)';
-				errorEl.style.padding = '12px';
-				errorEl.style.borderRadius = '6px';
-				errorEl.textContent = `Mermaid 渲染失败: ${error?.message || String(error)}`;
-				block.innerHTML = '';
-				block.appendChild(errorEl);
-			}
-		}
+		await renderMermaid(
+			this.previewEl,
+			isDarkMode,
+			`obsidian-preview-${renderToken}`,
+			() => this.mermaidRenderId === renderToken
+		);
 	}
 }
 
@@ -1780,12 +2101,7 @@ class ThemeManagerModal extends Modal {
 		const { contentEl } = this;
 		contentEl.createEl('h2', { text: t('title_theme_manager') });
 
-		// --- Section: Create New Theme ---
-		const createSection = contentEl.createDiv();
-		createSection.style.marginBottom = '20px';
-		createSection.style.padding = '15px';
-		createSection.style.backgroundColor = 'var(--background-secondary)';
-		createSection.style.borderRadius = '8px';
+		const createSection = contentEl.createDiv({ cls: 'mdb-theme-manager-section' });
 
 		const nameSetting = new Setting(createSection)
 			.setName(t('btn_create_theme'))
@@ -1795,10 +2111,8 @@ class ThemeManagerModal extends Modal {
 
 		const createBtn = createSection.createEl('button', { 
 			text: t('btn_create_theme'), 
-			cls: 'mod-cta' 
+			cls: 'mod-cta mdb-theme-manager-btn' 
 		});
-		createBtn.style.marginTop = '10px';
-		createBtn.style.width = '100%';
 		
 		createBtn.onclick = async () => {
 			const input = nameSetting.controlEl.querySelector('input') as HTMLInputElement;
@@ -1827,30 +2141,18 @@ class ThemeManagerModal extends Modal {
 		
 		if (this.plugin.settings.customThemes.length === 0) return;
 
-		container.createEl('h3', { text: t('tab_theme'), cls: 'md-beautify-list-title' });
+		container.createEl('h3', { text: t('tab_theme'), cls: 'mdb-list-title' });
 		
-		const list = container.createDiv({ cls: 'md-beautify-theme-list' });
-		list.style.display = 'flex';
-		list.style.flexDirection = 'column';
-		list.style.gap = '8px';
+		const list = container.createDiv({ cls: 'mdb-theme-list' });
 
 		this.plugin.settings.customThemes.forEach((themeName: string) => {
-			const item = list.createDiv();
-			item.style.display = 'flex';
-			item.style.justifyContent = 'space-between';
-			item.style.alignItems = 'center';
-			item.style.padding = '8px 12px';
-			item.style.border = '1px solid var(--background-modifier-border)';
-			item.style.borderRadius = '4px';
-
+			const item = list.createDiv({ cls: 'mdb-theme-list-item' });
 			item.createSpan({ text: themeName });
 
 			const deleteBtn = item.createEl('button', { 
 				text: t('btn_delete'), 
 				cls: 'mod-warning' 
 			});
-			deleteBtn.style.padding = '4px 8px';
-			deleteBtn.style.fontSize = '12px';
 
 			deleteBtn.onclick = async () => {
 				const confirmMsg = t('msg_confirm_delete_theme', { themeName });
@@ -1893,22 +2195,15 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		const header = containerEl.createDiv({ cls: 'md-beautify-settings-header' });
+		const header = containerEl.createDiv({ cls: 'mdb-settings-header' });
 		header.createEl('h2', { text: t('settings_header') });
 
-		const nav = containerEl.createDiv({ cls: 'md-beautify-settings-nav' });
-		nav.style.display = 'flex';
-		nav.style.gap = '10px';
-		nav.style.marginBottom = '20px';
-		nav.style.borderBottom = '1px solid var(--background-modifier-border)';
-		nav.style.paddingBottom = '10px';
+		const nav = containerEl.createDiv({ cls: 'mdb-settings-nav' });
 
 		const createTabBtn = (id: typeof this.activeTab, label: string) => {
 			const btn = nav.createEl('button', { text: label });
-			btn.style.padding = '5px 15px';
 			if (this.activeTab === id) {
-				btn.style.backgroundColor = 'var(--interactive-accent)';
-				btn.style.color = 'var(--text-on-accent)';
+				btn.classList.add('active');
 			}
 			btn.onclick = () => {
 				this.activeTab = id;
@@ -1920,7 +2215,7 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		createTabBtn('theme', t('tab_theme'));
 		createTabBtn('imagehost', t('tab_image_host'));
 
-		const content = containerEl.createDiv({ cls: 'md-beautify-settings-content' });
+		const content = containerEl.createDiv({ cls: 'mdb-settings-content' });
 
 		if (this.activeTab === 'general') {
 			this.renderGeneralSettings(content);
@@ -1942,39 +2237,93 @@ class MDBeautifySettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
+		container.createEl('h3', { text: t('setting_header_preview') });
+
 		new Setting(container)
-			.setName('固定宽度预览')
-			.setDesc('启用固定宽度预览模式，模拟移动设备显示效果（iPhone 16 Pro 宽度：430px）')
-			.addToggle(toggle => toggle
-				.setValue(this.plugin.settings.fixedWidthPreview)
+			.setName(t('setting_default_device'))
+			.setDesc(t('setting_default_device_desc'))
+			.addDropdown(dropdown => dropdown
+				.addOption('custom', t('device_custom'))
+				.addOption('iphone16pro', t('device_iphone16pro'))
+				.addOption('iphone16', t('device_iphone16'))
+				.addOption('ipad', t('device_ipad'))
+				.addOption('desktop', t('device_desktop'))
+				.setValue(this.plugin.settings.previewDevice)
 				.onChange(async (value) => {
-					this.plugin.settings.fixedWidthPreview = value;
+					this.plugin.settings.previewDevice = value;
+					if (value === 'custom') {
+						this.plugin.settings.previewRotated = false;
+					}
 					await this.plugin.saveSettings();
 					this.plugin.updateAllPreviews();
 				}));
 
 		new Setting(container)
-			.setName('预览宽度')
-			.setDesc('设置固定宽度预览的宽度（像素）')
+			.setName(t('setting_custom_width'))
+			.setDesc(t('setting_custom_width_desc'))
 			.addText(text => text
-				.setPlaceholder('430')
-				.setValue(String(this.plugin.settings.previewWidth))
+				.setPlaceholder('100%')
+				.setValue(this.plugin.settings.customPreviewWidth)
 				.onChange(async (value) => {
-					const width = parseInt(value) || 430;
-					this.plugin.settings.previewWidth = Math.max(200, Math.min(width, 1200));
+					this.plugin.settings.customPreviewWidth = value.trim() || '100%';
 					await this.plugin.saveSettings();
 					this.plugin.updateAllPreviews();
+				}));
+
+		new Setting(container)
+			.setName(t('setting_custom_height'))
+			.setDesc(t('setting_custom_height_desc'))
+			.addText(text => text
+				.setPlaceholder('100%')
+				.setValue(this.plugin.settings.customPreviewHeight)
+				.onChange(async (value) => {
+					this.plugin.settings.customPreviewHeight = value.trim() || '100%';
+					await this.plugin.saveSettings();
+					this.plugin.updateAllPreviews();
+				}));
+
+		new Setting(container)
+			.setName(t('setting_default_scale_mode'))
+			.setDesc(t('setting_default_scale_mode_desc'))
+			.addDropdown(dropdown => dropdown
+				.addOption('auto', t('setting_scale_auto'))
+				.addOption('manual', t('setting_scale_manual'))
+				.setValue(this.plugin.settings.previewAutoScale ? 'auto' : 'manual')
+				.onChange(async (value) => {
+					this.plugin.settings.previewAutoScale = value === 'auto';
+					await this.plugin.saveSettings();
+					this.plugin.updateAllPreviews();
+				}));
+
+		new Setting(container)
+			.setName(t('setting_manual_scale'))
+			.setDesc(t('setting_manual_scale_desc'))
+			.addSlider(slider => slider
+				.setLimits(10, 200, 10)
+				.setValue(this.plugin.settings.previewManualScale)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.previewManualScale = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateAllPreviews();
+				}));
+
+		new Setting(container)
+			.setName(t('setting_sync_scroll'))
+			.setDesc(t('setting_sync_scroll_desc'))
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.syncScroll)
+				.onChange(async (value) => {
+					this.plugin.settings.syncScroll = value;
+					await this.plugin.saveSettings();
 				}));
 	}
 
-	renderThemeSettings(container: HTMLElement) {
+	async renderThemeSettings(container: HTMLElement) {
 		const themeId = this.plugin.settings.defaultTheme;
 
 		// Theme Management Button
-		const actionContainer = container.createDiv({ cls: 'md-beautify-theme-actions' });
-		actionContainer.style.marginBottom = '20px';
-		actionContainer.style.display = 'flex';
-		actionContainer.style.justifyContent = 'flex-start';
+		const actionContainer = container.createDiv({ cls: 'mdb-theme-actions' });
 
 		const manageBtn = actionContainer.createEl('button', {
 			text: t('btn_manage_themes'),
@@ -2010,13 +2359,13 @@ class MDBeautifySettingTab extends PluginSettingTab {
 			});
 
 		new Setting(container)
-			.setName('外观模式')
-			.setDesc('选择预览界面的外观模式（跟随系统、浅色或深色）')
+			.setName(t('setting_theme_mode'))
+			.setDesc(t('setting_theme_mode_desc'))
 			.addDropdown(dropdown => {
 				dropdown
-					.addOption('auto', '跟随 Obsidian')
-					.addOption('light', '浅色模式')
-					.addOption('dark', '深色模式')
+					.addOption('auto', t('theme_mode_auto'))
+					.addOption('light', t('theme_mode_light'))
+					.addOption('dark', t('theme_mode_dark'))
 					.setValue(this.plugin.settings.themeMode)
 					.onChange(async (value) => {
 						this.plugin.settings.themeMode = value as 'auto' | 'light' | 'dark';
@@ -2025,80 +2374,92 @@ class MDBeautifySettingTab extends PluginSettingTab {
 					});
 			});
 
-		const themeLabel = t(`theme_${themeId}` as any) || themeId;
-
 		// Main Editor Container
-		const editorContainer = container.createDiv({ cls: 'md-beautify-theme-editor-container' });
-		editorContainer.style.display = 'grid';
-		editorContainer.style.gridTemplateColumns = '1fr 1fr';
-		editorContainer.style.gap = '20px';
-		editorContainer.style.height = '70vh';
-		editorContainer.style.maxHeight = '600px';
-		editorContainer.style.minHeight = '400px';
-		editorContainer.style.marginTop = '20px';
+		const editorContainer = container.createDiv({ cls: 'mdb-theme-editor-container' });
 
-		// CSS Editor Section
-		const cssSection = editorContainer.createDiv();
-		cssSection.style.display = 'flex';
-		cssSection.style.flexDirection = 'column';
-		cssSection.style.height = '100%';
-		cssSection.style.overflow = 'hidden';
+		const cssSection = editorContainer.createDiv({ cls: 'mdb-editor-section' });
 		cssSection.createEl('h3', { text: t('setting_custom_css') });
 		
 		const cssEditor = cssSection.createEl('textarea');
-		cssEditor.style.flex = '1';
-		cssEditor.style.height = '0'; // Important for flex child overflow
-		cssEditor.style.fontFamily = 'var(--font-monospace)';
-		cssEditor.style.fontSize = '12px';
-		cssEditor.style.padding = '10px';
-		cssEditor.style.resize = 'none';
 		// Show current effective CSS (either custom or built-in base)
 		cssEditor.value = this.plugin.getThemeCss(themeId);
 
-		// Preview Section
-		const previewSection = editorContainer.createDiv();
-		previewSection.style.display = 'flex';
-		previewSection.style.flexDirection = 'column';
-		previewSection.style.height = '100%';
-		previewSection.style.overflow = 'hidden';
+		const previewSection = editorContainer.createDiv({ cls: 'mdb-editor-section' });
 		previewSection.createEl('h3', { text: t('preview_title') });
 
-		const previewFrame = previewSection.createDiv({ cls: 'md-beautify-settings-preview' });
-		previewFrame.style.flex = '1';
-		previewFrame.style.overflowY = 'auto';
-		previewFrame.style.border = '1px solid var(--background-modifier-border)';
-		previewFrame.style.padding = '20px';
-		previewFrame.style.backgroundColor = 'var(--background-primary)';
+		const previewFrame = previewSection.createDiv({ cls: 'mdb-editor-preview' });
 
 		const previewStyle = previewFrame.createEl('style');
 		const previewContent = previewFrame.createDiv();
 
-		const updateSettingsPreview = () => {
-			// In settings preview, we also want to force dark mode based on current system/obsidian state, 
-			// without wrapping in media query, so it displays correctly in the preview box.
+		const updateSettingsPreview = async () => {
 			const isDarkMode = this.plugin.isDarkMode();
-			const css = this.plugin.getThemeCss(themeId, isDarkMode, false);
-			// Wrap styles to scope them to preview frame
-			previewStyle.innerHTML = css.replace(/#wemd/g, '.md-beautify-preview-wrapper');
+			const themeCss = this.plugin.getThemeCss(themeId, isDarkMode, false);
 			
-			const html = this.plugin.parser.render(defaultMarkdown);
-			previewContent.innerHTML = `<div class="md-beautify-preview-wrapper">${html}</div>`;
-			
-			// Apply theme isolation classes
-			previewContent.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
-			if (isDarkMode) {
-				previewContent.classList.add('wemd-dark-mode');
-			} else {
-				previewContent.classList.remove('wemd-dark-mode');
+			// 只有在样式真正改变时才更新，减少重绘
+			const scopedCss = themeCss.replace(/#mdb/g, '.mdb-preview-wrapper');
+			if (previewStyle.innerHTML !== scopedCss) {
+				previewStyle.innerHTML = scopedCss;
 			}
 			
-			// 确保 Mermaid 块也被渲染（如果有的话）
-			// 注意：defaultMarkdown 中可能不包含 mermaid，但为了完整性可以考虑支持
-			// 这里暂时只处理基础 HTML 渲染和 CSS 隔离
+			const html = this.plugin.parser.render(defaultMarkdown);
+			// 使用 processHtml 处理 HTML，确保 Mermaid 代码块被正确识别
+			// 设置 inlineStyles 为 false, 因为我们已经在 previewStyle 中注入了样式
+			const processedHtml = processHtml(html, themeCss, false, false, true);
+			
+			// 只有在 HTML 改变时才更新
+			const newHtml = `<div class="mdb-preview-wrapper">${processedHtml}</div>`;
+			if (previewContent.innerHTML !== newHtml) {
+				previewContent.innerHTML = newHtml;
+				
+				// Apply theme isolation classes
+				previewContent.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
+				if (isDarkMode) {
+					previewContent.classList.add('mdb-dark-mode');
+				} else {
+					previewContent.classList.remove('mdb-dark-mode');
+				}
+				
+				// 使用 setTimeout 确保 DOM 已经渲染并且宽高已计算
+				// 解决 Mermaid 初始化时机问题和容器坍塌导致的渲染失败
+				setTimeout(async () => {
+					if (!previewContent.isConnected) return;
+					
+					// 合并所有样式，包含内联字体的 KaTeX CSS 和修正样式
+					const combinedSettingsCss = `
+						${katexInlineCss}
+						${scopedCss}
+						#mdb .katex-mathml {
+							display: none !important;
+						}
+						#mdb .katex-html {
+							display: inline-block !important;
+						}
+						#mdb .katex-display .katex-html {
+							display: block !important;
+						}
+						/* 修复公式颜色在深色模式下的显示 */
+						.mdb-dark-mode .katex {
+							color: var(--text-normal);
+						}
+					`;
+					
+					if (previewStyle.innerHTML !== combinedSettingsCss) {
+						previewStyle.innerHTML = combinedSettingsCss;
+					}
+
+					// 参考 web 端实现，添加 KaTeX 文本节点后处理
+					if (hasMathFormula(defaultMarkdown)) {
+						renderMathInElement(previewContent);
+					}
+
+					await renderMermaid(previewContent, isDarkMode, `mdb-settings-mermaid-${Date.now()}`);
+				}, 150);
+			}
 		};
 
 		// Initial preview
-		updateSettingsPreview();
+		await updateSettingsPreview();
 
 		// Auto save and live sync with debounce
 		let debounceTimer: any;
@@ -2161,8 +2522,6 @@ class MDBeautifySettingTab extends PluginSettingTab {
 	}
 
 	renderHostConfigFields(container: HTMLElement, type: string) {
-		const config = this.plugin.settings.imageHostConfigs[type] || {};
-
 		if (type === 'qiniu') {
 			this.createConfigInput(container, type, 'Access Key', 'accessKey', true);
 			this.createConfigInput(container, type, 'Secret Key', 'secretKey', true);

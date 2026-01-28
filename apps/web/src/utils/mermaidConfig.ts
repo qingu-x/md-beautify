@@ -57,15 +57,15 @@ export const getMermaidConfig = (
     themeCSS: `
       /* 允许 foreignObject 内容溢出，防止裁剪 */
       foreignObject {
-        overflow: visible !important;
+        overflow: visible;
       }
       .labelBkg {
-        overflow: visible !important;
+        overflow: visible;
       }
       .labelBkg p {
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.2 !important;
+        margin: 0;
+        padding: 0;
+        line-height: 1.2;
       }
     `,
     flowchart: {

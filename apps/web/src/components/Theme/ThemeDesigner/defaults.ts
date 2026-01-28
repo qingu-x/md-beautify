@@ -1,4 +1,4 @@
-// 可视化主题设计器 - 默认值
+// 可视化主题设计器 - 默认值 | Visual Theme Designer - Default Values
 import type { DesignerVariables } from "./types";
 import {
   fontFamilyOptions,
@@ -9,10 +9,10 @@ import {
 } from "@/config/styleOptions";
 
 /**
- * 设计器变量默认值
+ * 设计器变量默认值 | Designer variables default values
  */
 export const defaultVariables: DesignerVariables = {
-  // 全局
+  // 全局 | Global
   fontFamily: fontFamilyOptions[0].value,
   fontSize: fontSizeOptions[2].value,
   primaryColor: primaryColorOptions[0].value,
@@ -20,7 +20,7 @@ export const defaultVariables: DesignerVariables = {
   pagePadding: 8,
   globalLetterSpacing: 0,
 
-  // 标题
+  // 标题 | Heading
   h1: {
     fontSize: headingSizePresets.h1.default,
     color: "#000",
@@ -58,14 +58,14 @@ export const defaultVariables: DesignerVariables = {
     letterSpacing: 0,
   },
 
-  // 段落
+  // 段落 | Paragraph
   paragraphMargin: 16,
   paragraphPadding: 0,
   paragraphColor: "#333",
   textIndent: false,
   textJustify: true,
 
-  // 引用
+  // 引用 | Quote
   quoteBackground: "#f5f5f5",
   quoteBorderColor: "#ddd",
   quoteTextColor: "#666",
@@ -78,7 +78,7 @@ export const defaultVariables: DesignerVariables = {
   quoteLineHeight: 1.6,
   quoteTextCentered: false,
 
-  // 代码
+  // 代码 | Code
   codeBackground: "#f5f5f5",
   codeFontSize: 13,
   inlineCodeColor: "#c7254e",
@@ -87,14 +87,14 @@ export const defaultVariables: DesignerVariables = {
   showMacBar: true,
   codeTheme: "github",
 
-  // 图片
+  // 图片 | Image
   imageMargin: 20,
   imageBorderRadius: 4,
   imageCaptionColor: "#999",
   imageCaptionFontSize: 14,
   imageCaptionTextAlign: "center",
 
-  // 链接/文本
+  // 链接/文本 | Link/Text
   linkColor: "",
   linkUnderline: true,
   italicColor: "inherit",

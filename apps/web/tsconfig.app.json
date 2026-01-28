@@ -27,8 +27,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@wemd/core": ["../../packages/core/src/index.ts"]
+      "@mdb/core": ["../../packages/core/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "../../packages/core/src/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "../../packages/core/src/**/*.ts"
+  ]
 }

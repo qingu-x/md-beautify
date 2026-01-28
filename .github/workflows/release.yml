@@ -31,7 +31,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web frontend
-        run: pnpm --filter @wemd/web run build
+        run: pnpm --filter @mdb/web run build
 
       - name: Install Electron deps
         run: cd apps/electron && pnpm install --frozen-lockfile
@@ -74,7 +74,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web frontend
-        run: pnpm --filter @wemd/web run build
+        run: pnpm --filter @mdb/web run build
 
       - name: Install Electron deps
         run: cd apps/electron && pnpm install --frozen-lockfile
@@ -115,7 +115,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web frontend
-        run: pnpm --filter @wemd/web run build
+        run: pnpm --filter @mdb/web run build
 
       - name: Install Electron deps
         run: cd apps/electron && pnpm install --frozen-lockfile
@@ -156,7 +156,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Core Package
-        run: pnpm --filter @wemd/core run build
+        run: pnpm --filter @mdb/core run build
 
       - name: Build Obsidian Plugin
         run: |

@@ -52,7 +52,7 @@
               @click="handleExportPdf"
             >
               <FileText :size="20" />
-              <span>导出 PDF (图片)</span>
+              <span>导出 PDF</span>
             </button>
             <button
               v-if="uiThemeStore.headerAutoHide"

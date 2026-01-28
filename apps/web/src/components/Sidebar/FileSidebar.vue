@@ -17,7 +17,14 @@
           @click="createFile"
           title="新建文章"
         >
-          <Plus :size="16" />
+          <FileText :size="16" />
+        </button>
+        <button
+          class="fs-btn-secondary fs-btn-icon-only"
+          @click="createFolder"
+          title="新建文件夹"
+        >
+          <FolderPlus :size="16" />
         </button>
       </div>
     </div>
@@ -67,6 +74,15 @@
           class="fs-context-menu"
           :style="{ top: menuPos.y + 'px', left: menuPos.x + 'px' }"
         >
+          <template v-if="menuTarget?.isDirectory">
+            <button @click="createFileInFolder">
+              <FileText :size="14" /> 新建文件
+            </button>
+            <button @click="createFolderInFolder">
+              <FolderPlus :size="14" /> 新建文件夹
+            </button>
+            <div class="fs-menu-divider"></div>
+          </template>
           <button v-if="!menuTarget?.isDirectory" @click="copyTitleAction">
             <Copy :size="14" /> 复制标题
           </button>
@@ -103,17 +119,14 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useFileSystem } from "../../hooks/useFileSystem";
 import { toast } from "../../hooks/useToast";
 import { useThemeStore } from "../../store/themeStore";
+import { useStorageStore } from "../../store/storageStore";
 import {
   Search,
-  Plus,
   Trash2,
   FolderOpen,
+  FolderPlus,
   Edit2,
-  MoreHorizontal,
   Copy,
-  ChevronRight,
-  ChevronDown,
-  Folder,
   FileText,
 } from "lucide-vue-next";
 import type { FileItem } from "../../store/fileTypes";
@@ -125,15 +138,18 @@ const {
   files,
   currentFile,
   openFile,
-  createFile,
   renameFile,
   deleteFile,
   selectWorkspace,
   workspacePath,
+  refreshFiles,
 } = useFileSystem();
 
 const themeStore = useThemeStore();
+const storageStore = useStorageStore();
 const currentThemeName = computed(() => themeStore.themeName);
+
+const electron = (window as any).electron;
 
 const filter = ref("");
 const renamingPath = ref<string | null>(null);
@@ -147,6 +163,20 @@ const menuPos = ref({ x: 0, y: 0 });
 const menuTarget = ref<FileItem | null>(null);
 const deleteTarget = ref<FileItem | null>(null);
 const deleting = ref(false);
+
+// 排序函数：文件夹优先，然后按名称排序
+const sortFiles = (items: FileItem[]): FileItem[] => {
+  return items.slice().sort((a, b) => {
+    if (a.isDirectory && !b.isDirectory) return -1;
+    if (!a.isDirectory && b.isDirectory) return 1;
+    return a.name.localeCompare(b.name, 'zh-CN');
+  }).map(item => {
+    if (item.children && item.children.length > 0) {
+      return { ...item, children: sortFiles(item.children) };
+    }
+    return item;
+  });
+};
 
 // 扁平化文件列表（用于搜索）
 const flattenedFiles = computed(() => {
@@ -162,9 +192,14 @@ const flattenedFiles = computed(() => {
   return flatten(files.value || []);
 });
 
+// 排序后的文件列表
+const sortedFiles = computed(() => {
+  return sortFiles(files.value || []);
+});
+
 // 过滤后的文件列表
 const filteredItems = computed(() => {
-  if (!filter.value) return files.value;
+  if (!filter.value) return sortedFiles.value;
   
   const searchLower = filter.value.toLowerCase();
   const matchedFiles = flattenedFiles.value.filter((f: FileItem) => 
@@ -298,10 +333,265 @@ const handleDelete = async () => {
   }
 };
 
-// Custom directive for auto-focus
-const vFocus = {
-  mounted: (el: HTMLInputElement) => el.focus()
+const createFile = async () => {
+  const defaultName = "未命名文章";
+  let fileName = defaultName;
+  let counter = 1;
+  const initialContent = `---\ntheme: default\nthemeName: 默认主题\n---\n\n# ${fileName}\n\n`;
+  
+  try {
+    if (electron) {
+      // Electron mode
+      const res = await electron.fs.createFile({
+        filename: `${fileName}.md`,
+        content: initialContent,
+      });
+      
+      if (res.success && res.filePath) {
+        await refreshFiles();
+        const newFile = flattenedFiles.value.find(f => f.path === res.filePath);
+        if (newFile) {
+          renamingPath.value = newFile.path;
+          renameValue.value = fileName;
+        }
+      } else {
+        toast.error(res.error || "创建失败");
+      }
+    } else if (storageStore.adapter && storageStore.adapter.writeFile) {
+      // Browser mode
+      const checkFileExists = async (name: string) => {
+        const fullPath = `${name}.md`;
+        return await storageStore.adapter!.exists(fullPath);
+      };
+      
+      while (await checkFileExists(fileName)) {
+        fileName = `${defaultName} ${counter}`;
+        counter++;
+      }
+      
+      const filePath = `${fileName}.md`;
+      await storageStore.adapter.writeFile(filePath, initialContent);
+      await refreshFiles();
+      
+      const newFile = flattenedFiles.value.find(f => f.path === filePath);
+      if (newFile) {
+        renamingPath.value = newFile.path;
+        renameValue.value = fileName;
+      }
+    } else {
+      toast.error("存储未就绪");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("创建失败");
+  }
 };
+
+const createFolder = async () => {
+  const defaultName = "新建文件夹";
+  let folderName = defaultName;
+  let counter = 1;
+  
+  const checkFolderExists = (name: string) => {
+    return flattenedFiles.value.some(f => f.isDirectory && f.name === name);
+  };
+  
+  while (checkFolderExists(folderName)) {
+    folderName = `${defaultName} ${counter}`;
+    counter++;
+  }
+  
+  try {
+    if (electron) {
+      // Electron mode: 创建占位文件
+      const initialPath = `${folderName}/.gitkeep`;
+      
+      const res = await electron.fs.createFile({
+        filename: initialPath,
+        content: '',
+      });
+      
+      if (res.success) {
+        await refreshFiles();
+        const newFolder = flattenedFiles.value.find(f => f.isDirectory && f.name === folderName);
+        
+        if (newFolder) {
+          renamingPath.value = newFolder.path;
+          renameValue.value = folderName;
+        }
+      } else {
+        toast.error(res.error || "创建失败");
+      }
+    } else if (storageStore.adapter && storageStore.adapter.writeFile) {
+      // Browser mode
+      const initialPath = `${folderName}/.gitkeep`;
+      await storageStore.adapter.writeFile(initialPath, '');
+      await refreshFiles();
+      
+      const newFolder = flattenedFiles.value.find(f => f.isDirectory && f.name === folderName);
+      if (newFolder) {
+        renamingPath.value = newFolder.path;
+        renameValue.value = folderName;
+      }
+    } else {
+      toast.error("暂不支持创建文件夹");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("创建失败");
+  }
+};
+
+const createFileInFolder = async () => {
+  if (!menuTarget.value?.isDirectory) return;
+  const targetFolder = menuTarget.value;
+  closeMenu();
+  
+  const defaultName = "未命名文章";
+  let fileName = defaultName;
+  let counter = 1;
+  const initialContent = `---\ntheme: default\nthemeName: 默认主题\n---\n\n# ${fileName}\n\n`;
+  
+  try {
+    if (electron) {
+      // Electron mode: 使用相对路径
+      let relativePath = '';
+      if (workspacePath.value) {
+        // 移除 workspacePath，只保留相对部分
+        const workspaceWithSep = workspacePath.value.replace(/[\/\\]$/, ''); // 移除末尾的分隔符
+        if (targetFolder.path.startsWith(workspaceWithSep)) {
+          relativePath = targetFolder.path.substring(workspaceWithSep.length).replace(/^[\/\\]/, '');
+        }
+      }
+      
+      const fileNameWithPath = relativePath ? `${relativePath}/${fileName}.md` : `${fileName}.md`;
+      
+      const res = await electron.fs.createFile({
+        filename: fileNameWithPath,
+        content: initialContent,
+      });
+      
+      if (res.success && res.filePath) {
+        await refreshFiles();
+        expandedFolders.value.add(targetFolder.path);
+        expandedFolders.value = new Set(expandedFolders.value);
+        
+        const newFile = flattenedFiles.value.find(f => f.path === res.filePath);
+        if (newFile) {
+          renamingPath.value = newFile.path;
+          renameValue.value = fileName;
+        }
+      }
+    } else if (storageStore.adapter && storageStore.adapter.writeFile) {
+      // Browser mode
+      const folderPath = targetFolder.path.endsWith('/') ? targetFolder.path : `${targetFolder.path}/`;
+      
+      const checkFileExists = async (name: string) => {
+        const fullPath = `${folderPath}${name}.md`;
+        return await storageStore.adapter!.exists(fullPath);
+      };
+      
+      while (await checkFileExists(fileName)) {
+        fileName = `${defaultName} ${counter}`;
+        counter++;
+      }
+      
+      const filePath = `${folderPath}${fileName}.md`;
+      await storageStore.adapter.writeFile(filePath, initialContent);
+      await refreshFiles();
+      expandedFolders.value.add(targetFolder.path);
+      expandedFolders.value = new Set(expandedFolders.value);
+      
+      const newFile = flattenedFiles.value.find(f => f.path === filePath);
+      if (newFile) {
+        renamingPath.value = newFile.path;
+        renameValue.value = fileName;
+      }
+    } else {
+      toast.error("创建失败");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("创建失败");
+  }
+};
+
+const createFolderInFolder = async () => {
+  if (!menuTarget.value?.isDirectory) return;
+  const targetFolder = menuTarget.value;
+  closeMenu();
+  
+  const defaultName = "新建文件夹";
+  let folderName = defaultName;
+  let counter = 1;
+  
+  const parentPath = targetFolder.path.endsWith('/') ? targetFolder.path : `${targetFolder.path}/`;
+  
+  const checkFolderExists = (name: string) => {
+    const expectedPath = `${parentPath}${name}`;
+    return flattenedFiles.value.some(f => f.isDirectory && f.path === expectedPath);
+  };
+  
+  while (checkFolderExists(folderName)) {
+    folderName = `${defaultName} ${counter}`;
+    counter++;
+  }
+  
+  try {
+    if (electron) {
+      // Electron mode: 使用相对路径
+      let relativePath = '';
+      if (workspacePath.value) {
+        const workspaceWithSep = workspacePath.value.replace(/[\/\\]$/, '');
+        if (targetFolder.path.startsWith(workspaceWithSep)) {
+          relativePath = targetFolder.path.substring(workspaceWithSep.length).replace(/^[\/\\]/, '');
+        }
+      }
+      
+      const newFolderPath = relativePath ? `${relativePath}/${folderName}/.gitkeep` : `${folderName}/.gitkeep`;
+      
+      const res = await electron.fs.createFile({
+        filename: newFolderPath,
+        content: '',
+      });
+      
+      if (res.success) {
+        await refreshFiles();
+        expandedFolders.value.add(targetFolder.path);
+        const newPath = `${parentPath}${folderName}`;
+        expandedFolders.value.add(newPath);
+        expandedFolders.value = new Set(expandedFolders.value);
+        
+        const newFolder = flattenedFiles.value.find(f => f.isDirectory && f.path === newPath);
+        if (newFolder) {
+          renamingPath.value = newFolder.path;
+          renameValue.value = folderName;
+        }
+      }
+    } else if (storageStore.adapter && storageStore.adapter.writeFile) {
+      // Browser mode
+      const newFolderPath = `${parentPath}${folderName}/.gitkeep`;
+      await storageStore.adapter.writeFile(newFolderPath, '');
+      await refreshFiles();
+      expandedFolders.value.add(targetFolder.path);
+      const newPath = `${parentPath}${folderName}`;
+      expandedFolders.value.add(newPath);
+      expandedFolders.value = new Set(expandedFolders.value);
+      
+      const newFolder = flattenedFiles.value.find(f => f.isDirectory && f.path === newPath);
+      if (newFolder) {
+        renamingPath.value = newFolder.path;
+        renameValue.value = folderName;
+      }
+    } else {
+      toast.error("创建失败");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("创建失败");
+  }
+};
+
 </script>
 
 <style scoped>

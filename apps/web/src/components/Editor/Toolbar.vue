@@ -40,7 +40,7 @@ const emit = defineEmits<{
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
-const linkToFootnote = ref(localStorage.getItem("wemd-link-to-footnote") === "true");
+const linkToFootnote = ref(localStorage.getItem("mdb-link-to-footnote") === "true");
 
 const showMermaidMenu = ref(false);
 const showMermaidMore = ref(false);
@@ -168,7 +168,7 @@ const mermaidMoreTemplates = [
 // 同步状态到全局变量和 localStorage
 watch(linkToFootnote, (newVal: boolean) => {
   setLinkToFootnoteEnabled(newVal);
-  localStorage.setItem("wemd-link-to-footnote", String(newVal));
+  localStorage.setItem("mdb-link-to-footnote", String(newVal));
 }, { immediate: true });
 
 const tools = [

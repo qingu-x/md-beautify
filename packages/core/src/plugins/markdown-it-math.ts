@@ -238,6 +238,8 @@ export default (md: MarkdownIt, options: any) => {
       const rendered = katex.renderToString(latex, {
         displayMode: false,
         throwOnError: false,
+        strict: false,
+        trust: true,
       });
       return `<span class="inline-equation" data-latex="${escapeAttribute(latex)}">${rendered}</span>`;
     } catch (error) {
@@ -262,6 +264,8 @@ export default (md: MarkdownIt, options: any) => {
       const rendered = katex.renderToString(latex, {
         displayMode: true,
         throwOnError: false,
+        strict: false,
+        trust: true,
       });
       return `<section class="block-equation" data-latex="${escapeAttribute(latex)}">${rendered}</section>`;
     } catch (error) {

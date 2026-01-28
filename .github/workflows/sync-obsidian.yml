@@ -34,7 +34,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Core
-        run: pnpm --filter @wemd/core run build
+        run: pnpm --filter @mdb/core run build
 
       - name: Build Obsidian Plugin
         run: |
@@ -84,15 +84,22 @@ jobs:
 
           # 创建 Release
           VERSION=$(node -p "require('./manifest.json').version")
+          zip -j md-beautify-obsidian-${VERSION}.zip main.js manifest.json styles.css
           echo "Creating release for version $VERSION"
+          
+          # 获取 monorepo commit 信息
+          COMMIT_SHA="${GITHUB_SHA::7}"
+          COMMIT_MSG=$(cd $GITHUB_WORKSPACE && git log -1 --pretty=format:"%s" $GITHUB_SHA)
+          RELEASE_NOTES=$(printf "Automated release from monorepo\n\n**Source commit:** [\`%s\`](%s/%s/commit/%s)\n**Commit message:** %s" \
+            "$COMMIT_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$COMMIT_MSG")
           
           # 检查 Release 是否已存在，如果不存在则创建
           if ! gh release view "$VERSION" --repo qingu-x/obsidian-md-beautify-plugin > /dev/null 2>&1; then
             gh release create "$VERSION" \
-              main.js manifest.json styles.css \
+              main.js manifest.json styles.css md-beautify-obsidian-${VERSION}.zip \
               --repo qingu-x/obsidian-md-beautify-plugin \
               --title "$VERSION" \
-              --notes "Automated release from monorepo"
+              --notes "$RELEASE_NOTES"
           else
             echo "Release $VERSION already exists, uploading/updating assets..."
             gh release upload "$VERSION" \

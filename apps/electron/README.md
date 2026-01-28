@@ -1,10 +1,11 @@
-# WeMD Electron App
+# MD Beautify Electron App
 
-基于 Electron 的 WeMD 桌面应用，完全复用 Web 端代码。
+基于 Electron 的 MD Beautify 桌面应用，完全复用 Web 端代码。
 
 ## 开发
 
 ### 前置条件
+
 确保 Web 应用的开发服务器正在运行：
 
 ```bash
@@ -14,6 +15,7 @@ npm run dev
 ```
 
 ### 启动 Electron
+
 ```bash
 cd apps/electron
 npm run dev
@@ -24,6 +26,7 @@ Electron 会自动加载 `http://localhost:5173`。
 ## 生产构建
 
 ### 1. 构建 Web 应用
+
 ```bash
 cd apps/web
 npm run build
@@ -32,6 +35,7 @@ npm run build
 ### 2. 打包 Electron
 
 #### macOS
+
 ```bash
 cd apps/electron
 npm run build:mac
@@ -40,11 +44,13 @@ npm run build:mac
 生成的 `.dmg` 和 `.zip` 文件在 `apps/electron/dist/` 目录。
 
 #### Windows
+
 ```bash
 npm run build:win
 ```
 
 #### Linux
+
 ```bash
 npm run build:linux
 ```

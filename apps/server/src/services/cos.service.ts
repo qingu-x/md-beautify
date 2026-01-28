@@ -1,15 +1,15 @@
-const COS = require('cos-nodejs-sdk-v5');
+import COS from 'cos-nodejs-sdk-v5';
 
 export interface COSConfig {
   secretId: string;
   secretKey: string;
   bucket: string;
   region: string;
-  customDomain?: string; // 自定义域名，如 https://img.wemd.top
+  customDomain?: string;
 }
 
 export class COSService {
-  private cos: any;
+  private cos: COS;
   private bucket: string;
   private region: string;
   private customDomain?: string;
@@ -38,11 +38,18 @@ export class COSService {
           Key: key,
           Body: file,
         },
-        (err, data) => {
+        (err: COS.CosError) => {
           if (err) {
-            reject(err);
+            const message =
+              typeof err === 'string'
+                ? err
+                : err.error || err.message || 'Upload failed';
+            reject(
+              new Error(
+                typeof message === 'string' ? message : JSON.stringify(message),
+              ),
+            );
           } else {
-            // 如果配置了自定义域名，使用自定义域名
             const url = this.customDomain
               ? `${this.customDomain}/${key}`
               : `https://${this.bucket}.cos.${this.region}.myqcloud.com/${key}`;

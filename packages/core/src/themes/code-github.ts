@@ -2,8 +2,8 @@ export const codeGithubTheme = `/*
 github.com style (c) Vasily Polovnyov <vast@whiteants.net>
 */
 
-/* 代码块样式 - 需要添加 #wemd 前缀以匹配包装后的 HTML */
-#wemd .hljs {
+/* 代码块样式 - 需要添加 #mdb 前缀以匹配包装后的 HTML | Code Block Style - #mdb prefix required to match wrapped HTML */
+#mdb .hljs {
   display: block;
   overflow-x: auto;
   padding: 16px;
@@ -11,94 +11,94 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
   background: #f8f8f8;
 }
 
-#wemd .hljs-comment,
-#wemd .hljs-quote {
+#mdb .hljs-comment,
+#mdb .hljs-quote {
   color: #998;
   font-style: italic;
 }
 
-#wemd .hljs-keyword,
-#wemd .hljs-selector-tag,
-#wemd .hljs-subst {
+#mdb .hljs-keyword,
+#mdb .hljs-selector-tag,
+#mdb .hljs-subst {
   color: #333;
   font-weight: bold;
 }
 
-#wemd .hljs-number,
-#wemd .hljs-literal,
-#wemd .hljs-variable,
-#wemd .hljs-template-variable,
-#wemd .hljs-tag .hljs-attr {
+#mdb .hljs-number,
+#mdb .hljs-literal,
+#mdb .hljs-variable,
+#mdb .hljs-template-variable,
+#mdb .hljs-tag .hljs-attr {
   color: #008080;
 }
 
-#wemd .hljs-string,
-#wemd .hljs-doctag {
+#mdb .hljs-string,
+#mdb .hljs-doctag {
   color: #d14;
 }
 
-#wemd .hljs-title,
-#wemd .hljs-section,
-#wemd .hljs-selector-id {
+#mdb .hljs-title,
+#mdb .hljs-section,
+#mdb .hljs-selector-id {
   color: #900;
   font-weight: bold;
 }
 
-#wemd .hljs-subst {
+#mdb .hljs-subst {
   font-weight: normal;
 }
 
-#wemd .hljs-type,
-#wemd .hljs-class .hljs-title {
+#mdb .hljs-type,
+#mdb .hljs-class .hljs-title {
   color: #458;
   font-weight: bold;
 }
 
-#wemd .hljs-tag,
-#wemd .hljs-name,
-#wemd .hljs-attribute {
+#mdb .hljs-tag,
+#mdb .hljs-name,
+#mdb .hljs-attribute {
   color: #000080;
   font-weight: normal;
 }
 
-#wemd .hljs-regexp,
-#wemd .hljs-link {
+#mdb .hljs-regexp,
+#mdb .hljs-link {
   color: #009926;
 }
 
-#wemd .hljs-symbol,
-#wemd .hljs-bullet {
+#mdb .hljs-symbol,
+#mdb .hljs-bullet {
   color: #990073;
 }
 
-#wemd .hljs-built_in,
-#wemd .hljs-builtin-name {
+#mdb .hljs-built_in,
+#mdb .hljs-builtin-name {
   color: #0086b3;
 }
 
-#wemd .hljs-meta {
+#mdb .hljs-meta {
   color: #999;
   font-weight: bold;
 }
 
-#wemd .hljs-deletion {
+#mdb .hljs-deletion {
   background: #fdd;
 }
 
-#wemd .hljs-addition {
+#mdb .hljs-addition {
   background: #dfd;
 }
 
-#wemd .hljs-emphasis {
+#mdb .hljs-emphasis {
   font-style: italic;
 }
 
-#wemd .hljs-strong {
+#mdb .hljs-strong {
   font-weight: bold;
 }
 
 /* Imageflow CSS */
-#wemd .imageflow-layer1 {
+#mdb .imageflow-layer1 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   /* white-space: normal; */
@@ -107,13 +107,13 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
   overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
+#mdb .imageflow-layer2 {
   white-space: nowrap;
   width: 100%;
   overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
+#mdb .imageflow-layer3 {
   display: inline-block;
   word-wrap: break-word;
   white-space: normal;
@@ -123,7 +123,7 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
   flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
+#mdb .imageflow-img {
   display: block;
   width: 100%;
   height: auto;
@@ -132,7 +132,7 @@ github.com style (c) Vasily Polovnyov <vast@whiteants.net>
   border-radius: 4px;
 }
 
-#wemd .imageflow-caption {
+#mdb .imageflow-caption {
   text-align: center;
   margin-top: 0px;
   padding-top: 0px;

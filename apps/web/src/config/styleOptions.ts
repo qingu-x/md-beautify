@@ -5,7 +5,7 @@ function expandHexColor(color: string): string {
   return color;
 }
 
-// 可视化主题编辑器 - 预设选项配置
+// 可视化主题编辑器 - 预设选项配置 | Visual Theme Editor - Preset Options Configuration
 
 export interface StyleOption<T = string> {
   label: string;
@@ -13,7 +13,7 @@ export interface StyleOption<T = string> {
   desc?: string;
 }
 
-// 字体选项
+// 字体选项 | Font Family Options
 export const fontFamilyOptions: StyleOption[] = [
   {
     label: "无衬线",
@@ -32,7 +32,7 @@ export const fontFamilyOptions: StyleOption[] = [
   },
 ];
 
-// 字号选项
+// 字号选项 | Font Size Options
 export const fontSizeOptions: StyleOption[] = [
   { label: "14px", value: "14px", desc: "紧凑" },
   { label: "15px", value: "15px", desc: "稍小" },
@@ -41,7 +41,7 @@ export const fontSizeOptions: StyleOption[] = [
   { label: "18px", value: "18px", desc: "舒适" },
 ];
 
-// 主题色预设
+// 主题色预设 | Primary Color Presets
 export const primaryColorOptions: StyleOption[] = [
   { label: "翡翠绿", value: "#07C160", desc: "微信绿" },
   { label: "活力橘", value: "#FA5151", desc: "热情活力" },
@@ -53,7 +53,7 @@ export const primaryColorOptions: StyleOption[] = [
   { label: "酱紫", value: "#722ED1", desc: "高贵典雅" },
 ];
 
-// 行高选项
+// 行高选项 | Line Height Options
 export const lineHeightOptions: StyleOption[] = [
   { label: "1.5", value: "1.5", desc: "紧凑" },
   { label: "1.6", value: "1.6", desc: "适中" },
@@ -62,7 +62,7 @@ export const lineHeightOptions: StyleOption[] = [
   { label: "2.0", value: "2.0", desc: "宽松" },
 ];
 
-// 标题字号预设
+// 标题字号预设 | Heading Size Presets
 export const headingSizePresets = {
   h1: { min: 20, max: 32, default: 24 },
   h2: { min: 18, max: 28, default: 20 },
@@ -70,14 +70,14 @@ export const headingSizePresets = {
   h4: { min: 14, max: 20, default: 16 },
 };
 
-// 边距预设范围
+// 边距预设范围 | Margin Preset Range
 export const marginPresets = {
   min: 0,
   max: 60,
   step: 4,
 };
 
-// 标题样式预设
+// 标题样式预设 | Heading Style Presets
 export interface HeadingPresetCss {
   content: string;
   extra?: string;
@@ -86,7 +86,7 @@ export interface HeadingPresetCss {
 export interface HeadingPreset {
   id: string;
   label: string;
-  cssTemplate: (color: string, tag: string) => HeadingPresetCss; // 接受主题色和标签（如 h1）
+  cssTemplate: (color: string, tag: string) => HeadingPresetCss; // 接受主题色和标签（如 h1） | Accepts primary color and tag (e.g., h1)
 }
 
 export const headingStylePresets: HeadingPreset[] = [
@@ -172,13 +172,13 @@ export const headingStylePresets: HeadingPreset[] = [
             padding: 0 10px;
         `,
       extra: `
-        #wemd ${tag} .content::before {
+        #mdb ${tag} .content::before {
             content: '[';
             margin-right: 5px;
             color: ${color};
             font-weight: bold;
         }
-        #wemd ${tag} .content::after {
+        #mdb ${tag} .content::after {
             content: ']';
             margin-left: 5px;
             color: ${color};
@@ -198,6 +198,7 @@ export const boldStyleOptions = [
   { id: "dot", label: "着重号" },
 ];
 
+// 引用样式预设 | Quote Style Presets
 export interface QuotePresetCss {
   base: string;
   extra?: string;
@@ -257,7 +258,7 @@ export const quoteStylePresets: QuotePreset[] = [
             text-align: center;
         `,
       extra: `
-        #wemd blockquote p { text-align: center !important; }
+        #mdb blockquote p { text-align: center !important; }
         `,
     }),
   },
@@ -275,7 +276,7 @@ export const quoteStylePresets: QuotePreset[] = [
     ) => {
       const c = expandHexColor(color);
 
-      // 基础 padding + 40px 用于避让引号
+      // 基础 padding + 40px 用于避让引号 | Base padding + 40px to avoid quotation marks
       const leftPadding = (padding || 20) + 40;
 
       return {
@@ -286,7 +287,7 @@ export const quoteStylePresets: QuotePreset[] = [
             padding-left: ${leftPadding}px !important;
         `,
         extra: `
-        #wemd blockquote::before {
+        #mdb blockquote::before {
             content: "“";
             display: block;
             height: 0;
@@ -299,7 +300,7 @@ export const quoteStylePresets: QuotePreset[] = [
             opacity: 0.3;
             pointer-events: none;
         }
-        #wemd blockquote p {
+        #mdb blockquote p {
             position: relative;
             z-index: 1;
         }
@@ -350,8 +351,8 @@ export const quoteStylePresets: QuotePreset[] = [
             position: relative;
         `,
       extra: `
-        #wemd blockquote p { text-align: center !important; }
-        #wemd blockquote::before {
+        #mdb blockquote p { text-align: center !important; }
+        #mdb blockquote::before {
             content: "";
             display: block;
             width: 40px;
@@ -360,7 +361,7 @@ export const quoteStylePresets: QuotePreset[] = [
             margin: 0 auto 15px;
             opacity: 0.8;
         }
-        #wemd blockquote::after {
+        #mdb blockquote::after {
             content: "";
             display: block;
             width: 40px;
@@ -411,7 +412,7 @@ export const quoteStylePresets: QuotePreset[] = [
             border-radius: 8px;
         `,
       extra: `
-        #wemd blockquote p { text-align: center !important; }
+        #mdb blockquote p { text-align: center !important; }
         `,
     }),
   },
@@ -454,7 +455,7 @@ export const quoteStylePresets: QuotePreset[] = [
             position: relative;
         `,
         extra: `
-        #wemd blockquote::before {
+        #mdb blockquote::before {
             content: "";
             position: absolute;
             top: 0;
@@ -464,7 +465,7 @@ export const quoteStylePresets: QuotePreset[] = [
             border-top: ${borderWidth}px ${borderStyle} ${c};
             border-left: ${borderWidth}px ${borderStyle} ${c};
         }
-        #wemd blockquote::after {
+        #mdb blockquote::after {
             content: "";
             position: absolute;
             bottom: 0;

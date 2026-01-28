@@ -1,645 +1,644 @@
 /* ============================================
- * WeMD 主题模板
+ * MDB 主题模板 | MDB Theme Template
  * ============================================
  * 
- * 使用说明：
- * 1. 修改下方的样式定义，创建你的自定义主题
- * 2. 所有选择器必须以 #wemd 开头
- * 3. 代码块使用 #wemd pre code.hljs，不要设置全局 color
+ * 使用说明： | Usage:
+ * 1. 修改下方的样式定义，创建你的自定义主题 | 1. Modify the style definitions below to create your custom theme
+ * 2. 所有选择器必须以 #mdb 开头 | 2. All selectors must start with #mdb
+ * 3. 代码块使用 #mdb pre code.hljs，不要设置全局 color | 3. Code blocks use #mdb pre code.hljs, do not set global color
  * 
  * ============================================
- * 🌙 深色模式说明（微信兼容）
+ * 🌙 深色模式说明（微信兼容） | 🌙 Dark Mode Instructions (WeChat Compatibility)
  * ============================================
  * 
- * ✅ 支持自动转换的颜色格式：
+ * ✅ 支持自动转换的颜色格式： | ✅ Supported color formats for auto-conversion:
  *   - HEX: #333333, #fff
  *   - RGB: rgb(51, 51, 51), rgba(0, 0, 0, 0.5)
  *   - HSL: hsl(0, 0%, 20%), hsla(0, 0%, 0%, 0.5)
- *   - 渐变: linear-gradient(), radial-gradient() 中的色值
+ *   - 渐变: linear-gradient(), radial-gradient() 中的色值 | Gradients: color values in linear-gradient(), radial-gradient()
  * 
- * 🔄 智能转换规则（色彩语义保全）：
- *   - 灰度背景 → 映射到深色区间 (10%-20% 亮度)
- *   - 高饱和色彩 (S>15%) → 保持鲜艳，亮度钳制在 35%-55%
- *   - 深色阴影/边框 (L<20) → 锚定为暗色，不反转
- *   - 文字颜色 → 动态对比度调整以保证可读性
+ * 🔄 智能转换规则（色彩语义保全）： | 🔄 Intelligent conversion rules (color semantic preservation):
+ *   - 灰度背景 → 映射到深色区间 (10%-20% 亮度) | Grayscale background → mapped to dark range (10%-20% brightness)
+ *   - 高饱和色彩 (S>15%) → 保持鲜艳，亮度钳制在 35%-55% | High saturation colors (S>15%) → keep vivid, brightness clamped at 35%-55%
+ *   - 深色阴影/边框 (L<20) → 锚定为暗色，不反转 | Dark shadows/borders (L<20) → anchored as dark, no inversion
+ *   - 文字颜色 → 动态对比度调整以保证可读性 | Text color → dynamic contrast adjustment to ensure readability
  * 
- * ⚠️ 不会被转换：
- *   - CSS 变量: var(--xxx)
- *   - 图片: url()
- *   - 颜色名称: white, black（请使用 HEX 格式）
+ * ⚠️ 不会被转换： | ⚠️ Will not be converted:
+ *   - CSS 变量: var(--xxx) | CSS variables: var(--xxx)
+ *   - 图片: url() | Images: url()
+ *   - 颜色名称: white, black（请使用 HEX 格式） | Color names: white, black (please use HEX format)
  * 
- * 💡 设计建议：
- *   - 背景色用透明或浅灰，利于自动适配
- *   - 彩色装饰保持原值，算法自动保护
- *   - 深色投影和粗边框使用纯黑 #000，可保持层级感
+ * 💡 设计建议： | 💡 Design suggestions:
+ *   - 背景色用透明或浅灰，利于自动适配 | Use transparent or light gray for background color for better auto-adaptation
+ *   - 彩色装饰保持原值，算法自动保护 | Keep colored decorations at original values, algorithm automatically protects them
+ *   - 深色投影和粗边框使用纯黑 #000，可保持层级感 | Use pure black #000 for dark shadows and thick borders to maintain hierarchy
  */
 
 /* ============================================
- * 1. 全局容器样式
+ * 1. 全局容器样式 | 1. Global container styles
  * ============================================
  */
-#wemd {
-    padding: 30px 20px;
-    max-width: 677px;
-    margin: 0 auto;
-    font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
-    color: #333;
-    background-color: transparent;
-    /* 透明背景，兼容微信深色模式 */
-    word-break: break-word;
+#mdb {
+  padding: 30px 20px;
+  max-width: 677px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+  color: #333;
+  background-color: transparent;
+  /* 透明背景，兼容微信深色模式 | Transparent background, compatible with WeChat dark mode */
+  word-break: break-word;
 }
 
 /* ============================================
- * 2. 段落样式
+ * 2. 段落样式 | 2. Paragraph styles
  * ============================================
  */
-#wemd p {
-    margin: 16px 0;
-    /* 段落间距：上下各 16px */
-    line-height: 1.7;
-    /* 行高：1.7 倍，舒适阅读 */
-    text-align: justify;
-    /* 文本对齐：两端对齐 */
-    color: #333;
-    /* 文字颜色 */
-    font-size: 16px;
-    /* 字体大小 */
+#mdb p {
+  margin: 16px 0;
+  /* 段落间距：上下各 16px | Paragraph spacing: 16px top and bottom */
+  line-height: 1.7;
+  /* 行高：1.7 倍，舒适阅读 | Line height: 1.7x, comfortable reading */
+  text-align: justify;
+  /* 文本对齐：两端对齐 | Text alignment: justify */
+  color: #333;
+  /* 文字颜色 | Text color */
+  font-size: 16px;
+  /* 字体大小 | Font size */
 }
 
 /* ============================================
- * 3. 标题样式
+ * 3. 标题样式 | 3. Heading styles
  * ============================================
- * 注意：标题内部结构为：
+ * 注意：标题内部结构为： | Note: Heading internal structure is:
  * <h1>
  *   <span class="prefix"></span>
  *   <span class="content">标题文字</span>
  *   <span class="suffix"></span>
  * </h1>
  * 
- * 可以通过 .prefix 和 .suffix 添加装饰元素
+ * 可以通过 .prefix 和 .suffix 添加装饰元素 | Decoration elements can be added via .prefix and .suffix
  */
 
-/* 一级标题 */
-#wemd h1 {
-    margin: 40px 0 30px;
-    /* 外边距：上 40px，下 30px */
-    text-align: center;
-    /* 居中对齐 */
+/* 一级标题 | H1 */
+#mdb h1 {
+  margin: 40px 0 30px;
+  /* 外边距：上 40px，下 30px | Margin: 40px top, 30px bottom */
+  text-align: center;
+  /* 居中对齐 | Centered alignment */
 }
 
-#wemd h1 .content {
-    font-size: 24px;
-    /* 字体大小 */
-    font-weight: bold;
-    /* 字体粗细：加粗 */
-    color: #000;
-    /* 文字颜色 */
+#mdb h1 .content {
+  font-size: 24px;
+  /* 字体大小 | Font size */
+  font-weight: bold;
+  /* 字体粗细：加粗 | Font weight: bold */
+  color: #000;
+  /* 文字颜色 | Text color */
 }
 
-/* 隐藏前缀和后缀（如果不需要装饰） */
-#wemd h1 .prefix,
-#wemd h1 .suffix {
-    display: none;
+/* 隐藏前缀和后缀（如果不需要装饰） | Hide prefix and suffix (if no decoration needed) */
+#mdb h1 .prefix,
+#mdb h1 .suffix {
+  display: none;
 }
 
-/* 二级标题 */
-#wemd h2 {
-    margin: 30px 0 20px;
+/* 二级标题 | H2 */
+#mdb h2 {
+  margin: 30px 0 20px;
 }
 
-#wemd h2 .content {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
+#mdb h2 .content {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
 }
 
-#wemd h2 .prefix,
-#wemd h2 .suffix {
-    display: none;
+#mdb h2 .prefix,
+#mdb h2 .suffix {
+  display: none;
 }
 
-/* 三级标题 */
-#wemd h3 {
-    margin: 25px 0 15px;
+/* 三级标题 | H3 */
+#mdb h3 {
+  margin: 25px 0 15px;
 }
 
-#wemd h3 .content {
-    font-size: 18px;
-    font-weight: bold;
-    color: #666;
+#mdb h3 .content {
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
 }
 
-#wemd h3 .prefix,
-#wemd h3 .suffix {
-    display: none;
+#mdb h3 .prefix,
+#mdb h3 .suffix {
+  display: none;
 }
 
-/* 四级标题 */
-#wemd h4 {
-    margin: 20px 0 10px;
+/* 四级标题 | H4 */
+#mdb h4 {
+  margin: 20px 0 10px;
 }
 
-#wemd h4 .content {
-    font-size: 16px;
-    font-weight: bold;
-    color: #666;
+#mdb h4 .content {
+  font-size: 16px;
+  font-weight: bold;
+  color: #666;
 }
 
-#wemd h4 .prefix,
-#wemd h4 .suffix {
-    display: none;
+#mdb h4 .prefix,
+#mdb h4 .suffix {
+  display: none;
 }
 
 /* ============================================
- * 4. 引用样式
+ * 4. 引用样式 | 4. Blockquote styles
  * ============================================
- * 支持多级引用：.multiquote-1, .multiquote-2, .multiquote-3
+ * 支持多级引用：.multiquote-1, .multiquote-2, .multiquote-3 | Supports multi-level blockquotes
  */
-#wemd .multiquote-1 {
-    margin: 20px 0;
-    /* 外边距 */
-    padding: 16px 20px;
-    /* 内边距 */
-    background: #f5f5f5;
-    /* 背景色 */
-    border-left: 4px solid #ddd;
-    /* 左边框 */
-    border-radius: 4px;
-    /* 圆角 */
+#mdb .multiquote-1 {
+  margin: 20px 0;
+  /* 外边距 | Margin */
+  padding: 16px 20px;
+  /* 内边距 | Padding */
+  background: #f5f5f5;
+  /* 背景色 | Background color */
+  border-left: 4px solid #ddd;
+  /* 左边框 | Left border */
+  border-radius: 4px;
+  /* 圆角 | Border radius */
 }
 
-#wemd .multiquote-1 p {
-    margin: 0;
-    /* 段落无外边距 */
-    color: #666;
-    /* 文字颜色 */
-    font-size: 15px;
+#mdb .multiquote-1 p {
+  margin: 0;
+  /* 段落无外边距 | No paragraph margin */
+  color: #666;
+  /* 文字颜色 | Text color */
+  font-size: 15px;
 }
 
-/* 二级引用 */
-#wemd .multiquote-2 {
-    margin: 18px 0;
-    padding: 14px 18px;
-    background: #fafafa;
-    border-left: 3px solid #ccc;
+/* 二级引用 | Multi-level blockquote 2 */
+#mdb .multiquote-2 {
+  margin: 18px 0;
+  padding: 14px 18px;
+  background: #fafafa;
+  border-left: 3px solid #ccc;
 }
 
-#wemd .multiquote-2 p {
-    margin: 0;
-    color: #777;
-    font-size: 14px;
+#mdb .multiquote-2 p {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
 }
 
-/* 三级引用 */
-#wemd .multiquote-3 {
-    margin: 16px 0;
-    padding: 12px 16px;
-    background: #fafafa;
-    border-left: 2px solid #bbb;
+/* 三级引用 | Multi-level blockquote 3 */
+#mdb .multiquote-3 {
+  margin: 16px 0;
+  padding: 12px 16px;
+  background: #fafafa;
+  border-left: 2px solid #bbb;
 }
 
-#wemd .multiquote-3 p {
-    margin: 0;
-    color: #888;
-    font-size: 14px;
+#mdb .multiquote-3 p {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
 }
 
 /* ============================================
- * 5. 列表样式
- * ============================================
- */
-#wemd ul,
-#wemd ol {
-    margin: 15px 0;
-    padding-left: 25px;
-    /* 左内边距，为列表符号留空间 */
-}
-
-#wemd ul {
-    list-style-type: disc;
-    /* 无序列表：实心圆点 */
-}
-
-#wemd ol {
-    list-style-type: decimal;
-    /* 有序列表：数字 */
-}
-
-/* 列表项内容
- * 注意：列表项内部使用 <section> 包裹内容
- */
-#wemd li section {
-    margin: 5px 0;
-    /* 列表项间距 */
-    color: #333;
-    /* 文字颜色 */
-    line-height: 1.6;
-}
-
-#wemd ul ul {
-    list-style-type: circle;
-    margin-top: 6px;
-}
-
-#wemd ol ol {
-    list-style-type: lower-alpha;
-}
-
-/* ============================================
- * 6. 链接样式
+ * 5. 列表样式 | 5. List styles
  * ============================================
  */
-#wemd a {
-    color: #1e6bb8;
-    /* 链接颜色 */
-    text-decoration: none;
-    /* 去除下划线 */
-    border-bottom: 1px solid #1e6bb8;
-    /* 底部边框作为下划线 */
-    font-weight: bold;
-    /* 加粗 */
+#mdb ul,
+#mdb ol {
+  margin: 15px 0;
+  padding-left: 25px;
+  /* 左内边距，为列表符号留空间 | Left padding, leave space for list symbols */
+}
+
+#mdb ul {
+  list-style-type: disc;
+  /* 无序列表：实心圆点 | Unordered list: disc */
+}
+
+#mdb ol {
+  list-style-type: decimal;
+  /* 有序列表：数字 | Ordered list: decimal */
+}
+
+/* 列表项内容 | List item content
+ * 注意：列表项内部使用 <section> 包裹内容 | Note: List items use <section> internally to wrap content
+ */
+#mdb li section {
+  margin: 5px 0;
+  /* 列表项间距 | List item spacing */
+  color: #333;
+  /* 文字颜色 | Text color */
+  line-height: 1.6;
+}
+
+#mdb ul ul {
+  list-style-type: circle;
+  margin-top: 6px;
+}
+
+#mdb ol ol {
+  list-style-type: lower-alpha;
 }
 
 /* ============================================
- * 7. 文本样式
+ * 6. 链接样式 | 6. Link styles
  * ============================================
  */
-/* 加粗 */
-#wemd strong {
-    font-weight: bold;
-    color: #000;
-}
-
-/* 斜体 */
-#wemd em {
-    font-style: italic;
-    color: #333;
-}
-
-/* 加粗斜体 */
-#wemd em strong {
-    font-weight: bold;
-    font-style: italic;
-    color: #000;
-}
-
-/* 高亮 */
-#wemd mark {
-    background: #fff3cd;
-    color: #000;
-    padding: 2px 4px;
-    border-radius: 3px;
-}
-
-/* 删除线 */
-#wemd del {
-    text-decoration: line-through;
-    color: #999;
+#mdb a {
+  color: #1e6bb8;
+  /* 链接颜色 | Link color */
+  text-decoration: none;
+  /* 去除下划线 | Remove underline */
+  border-bottom: 1px solid #1e6bb8;
+  /* 底部边框作为下划线 | Bottom border as underline */
+  font-weight: bold;
+  /* 加粗 | Bold */
 }
 
 /* ============================================
- * 8. 行内代码样式
+ * 7. 文本样式 | 7. Text styles
  * ============================================
- * 注意：行内代码在段落和列表项中
  */
-#wemd p code,
-#wemd li code {
-    color: #e83e8c;
-    /* 文字颜色 */
-    background: #f8f9fa;
-    /* 背景色 */
-    padding: 2px 6px;
-    /* 内边距 */
-    margin: 0 2px;
-    /* 外边距 */
-    border-radius: 3px;
-    /* 圆角 */
-    font-size: 14px;
-    font-family: "Courier New", Courier, monospace;
-    /* 等宽字体 */
+/* 加粗 | Bold */
+#mdb strong {
+  font-weight: bold;
+  color: #000;
+}
+
+/* 斜体 | Italic */
+#mdb em {
+  font-style: italic;
+  color: #333;
+}
+
+/* 加粗斜体 | Bold Italic */
+#mdb em strong {
+  font-weight: bold;
+  font-style: italic;
+  color: #000;
+}
+
+/* 高亮 | Highlight */
+#mdb mark {
+  background: #fff3cd;
+  color: #000;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* 删除线 | Strikethrough */
+#mdb del {
+  text-decoration: line-through;
+  color: #999;
 }
 
 /* ============================================
- * 9. 代码块样式（重要！）
+ * 8. 行内代码样式 | 8. Inline code styles
+ * ============================================
+ * 注意：行内代码在段落和列表项中 | Note: Inline code in paragraphs and list items
+ */
+#mdb p code,
+#mdb li code {
+  color: #e83e8c;
+  /* 文字颜色 | Text color */
+  background: #f8f9fa;
+  /* 背景色 | Background color */
+  padding: 2px 6px;
+  /* 内边距 | Padding */
+  margin: 0 2px;
+  /* 外边距 | Margin */
+  border-radius: 3px;
+  /* 圆角 | Border radius */
+  font-size: 14px;
+  font-family: "Courier New", Courier, monospace;
+  /* 等宽字体 | Monospace font */
+}
+
+/* ============================================
+ * 9. 代码块样式（重要！） | 9. Code block styles (Important!)
  * ============================================
  * 
- * ⚠️ 重要提示：
- * 1. 必须使用 #wemd pre code.hljs 选择器，不要使用 #wemd pre code
- * 2. 不要设置全局 color 属性，让语法高亮主题控制文字颜色
- * 3. 如果设置了 color，会覆盖语法高亮的颜色，导致代码看不清
- * 4. 使用 #wemd pre code:not(.hljs) 作为后备样式（无语法高亮时）
+ * ⚠️ 重要提示： | ⚠️ Important tips:
+ * 1. 必须使用 #mdb pre code.hljs 选择器，不要使用 #mdb pre code | 1. Must use #mdb pre code.hljs selector, do not use #mdb pre code
+ * 2. 不要设置全局 color 属性，让语法高亮主题控制文字颜色 | 2. Do not set global color property, let syntax highlighting theme control text color
+ * 3. 如果设置了 color，会覆盖语法高亮的颜色，导致代码看不清 | 3. If color is set, it will override syntax highlighting colors, making code unreadable
+ * 4. 使用 #mdb pre code:not(.hljs) 作为后备样式（无语法高亮时） | 4. Use #mdb pre code:not(.hljs) as fallback style (when no syntax highlighting)
  * 
- * 示例（正确）：
- * #wemd pre code.hljs {
+ * 示例（正确）： | Example (Correct):
+ * #mdb pre code.hljs {
  *     background: #f5f5f5;
- *     // 不设置 color
+ *     // 不设置 color | // No color set
  * }
  * 
- * 示例（错误）：
- * #wemd pre code {
- *     color: #333;  // ❌ 这会覆盖语法高亮
+ * 示例（错误）： | Example (Wrong):
+ * #mdb pre code {
+ *     color: #333;  // ❌ 这会覆盖语法高亮 | // ❌ This overrides syntax highlighting
  * }
  */
-#wemd pre code.hljs {
-    display: block;
-    padding: 16px;
-    /* 内边距 */
-    background: #f5f5f5;
-    /* 背景色 */
-    /* ⚠️ 注意：不要在这里设置 color，让语法高亮主题控制 */
-    font-size: 13px;
-    line-height: 1.6;
-    border-radius: 4px;
-    /* 圆角 */
-    font-family: "Courier New", "Consolas", "Monaco", monospace;
-    /* 等宽字体 */
-    overflow-x: auto;
-    /* 横向滚动 */
-    white-space: pre;
-    min-width: max-content;
-    /* 保留空白和换行 */
-    border: 1px solid #ddd;
-    /* 边框 */
+#mdb pre code.hljs {
+  display: block;
+  padding: 16px;
+  /* 内边距 | Padding */
+  background: #f5f5f5;
+  /* 背景色 | Background color */
+  /* ⚠️ 注意：不要在这里设置 color，让语法高亮主题控制 | ⚠️ Note: Do not set color here, let syntax highlighting theme control */
+  font-size: 13px;
+  line-height: 1.6;
+  border-radius: 4px;
+  /* 圆角 | Border radius */
+  font-family: "Courier New", "Consolas", "Monaco", monospace;
+  /* 等宽字体 | Monospace font */
+  overflow-x: auto;
+  /* 横向滚动 | Horizontal scroll */
+  white-space: pre;
+  min-width: max-content;
+  /* 保留空白和换行 | Keep whitespace and line breaks */
+  border: 1px solid #ddd;
+  /* 边框 | Border */
 }
 
-/* 如果没有语法高亮，设置默认样式 */
-#wemd pre code:not(.hljs) {
-    color: #333;
-    /* 默认文字颜色 */
-    background: #f5f5f5;
-    border: 1px solid #ddd;
+/* 如果没有语法高亮，设置默认样式 | Default style if no syntax highlighting */
+#mdb pre code:not(.hljs) {
+  color: #333;
+  /* 默认文字颜色 | Default text color */
+  background: #f5f5f5;
+  border: 1px solid #ddd;
 }
 
 /* ============================================
- * 10. 图片样式
+ * 10. 图片样式 | 10. Image styles
  * ============================================
  */
-#wemd img {
-    display: block;
-    /* 块级元素 */
-    margin: 20px auto;
-    /* 居中：上下 20px，左右自动 */
-    max-width: 100%;
-    /* 最大宽度：不超出容器 */
-    border-radius: 4px;
-    /* 圆角 */
+#mdb img {
+  display: block;
+  /* 块级元素 | Block element */
+  margin: 20px auto;
+  /* 居中：上下 20px，左右自动 | Centered: 20px top/bottom, auto left/right */
+  max-width: 100%;
+  /* 最大宽度：不超出容器 | Max width: not exceeding container */
+  border-radius: 4px;
+  /* 圆角 | Border radius */
 }
 
-/* 图片容器（figure） */
-#wemd figure {
-    margin: 20px 0;
-    text-align: center;
+/* 图片容器（figure） | Image container (figure) */
+#mdb figure {
+  margin: 20px 0;
+  text-align: center;
 }
 
-/* 图片说明文字（figcaption） */
-#wemd figcaption {
-    margin-top: 8px;
-    color: #999;
-    font-size: 14px;
+/* 图片说明文字（figcaption） | Image caption (figcaption) */
+#mdb figcaption {
+  margin-top: 8px;
+  color: #999;
+  font-size: 14px;
 }
 
 /* ============================================
- * 11. 表格样式
+ * 11. 表格样式 | 11. Table styles
  * ============================================
  */
-#wemd table {
-    width: 100%;
-    /* 宽度：100% */
-    border-collapse: collapse;
-    /* 边框合并 */
-    margin: 20px 0;
-    /* 外边距 */
-    font-size: 14px;
+#mdb table {
+  width: 100%;
+  /* 宽度：100% | Width: 100% */
+  border-collapse: collapse;
+  /* 边框合并 | Border collapse */
+  margin: 20px 0;
+  /* 外边距 | Margin */
+  font-size: 14px;
 }
 
-/* 表头 */
-#wemd table tr th {
-    background: #f5f5f5;
-    /* 背景色 */
-    color: #333;
-    border: 1px solid #ddd;
-    /* 边框 */
-    padding: 10px;
-    /* 内边距 */
-    font-weight: bold;
-    /* 加粗 */
-    text-align: left;
+/* 表头 | Table header */
+#mdb table tr th {
+  background: #f5f5f5;
+  /* 背景色 | Background color */
+  color: #333;
+  border: 1px solid #ddd;
+  /* 边框 | Border */
+  padding: 10px;
+  /* 内边距 | Padding */
+  font-weight: bold;
+  /* 加粗 | Bold */
+  text-align: left;
 }
 
-/* 表格单元格 */
-#wemd table tr td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    color: #333;
+/* 表格单元格 | Table cell */
+#mdb table tr td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  color: #333;
 }
 
-/* 斑马纹（隔行变色） */
-#wemd table tr:nth-child(even) td {
-    background-color: #fafafa;
+/* 斑马纹（隔行变色） | Zebra stripe (alternate row colors) */
+#mdb table tr:nth-child(even) td {
+  background-color: #fafafa;
 }
 
 /* ============================================
- * 12. 分割线样式
+ * 12. 分割线样式 | 12. Horizontal rule styles
  * ============================================
  */
-#wemd hr {
-    margin: 30px 0;
-    /* 外边距 */
-    border: none;
-    /* 去除默认边框 */
-    border-top: 1px solid #ddd;
-    /* 顶部边框 */
-    height: 1px;
+#mdb hr {
+  margin: 30px 0;
+  /* 外边距 | Margin */
+  border: none;
+  /* 去除默认边框 | Remove default border */
+  border-top: 1px solid #ddd;
+  /* 顶部边框 | Top border */
+  height: 1px;
 }
 
 /* ============================================
- * 13. 脚注样式
+ * 13. 脚注样式 | 13. Footnote styles
  * ============================================
  */
-#wemd .footnote-word,
-#wemd .footnote-ref {
-    color: #1e6bb8;
-    /* 脚注链接颜色 */
-    font-weight: bold;
+#mdb .footnote-word,
+#mdb .footnote-ref {
+  color: #1e6bb8;
+  /* 脚注链接颜色 | Footnote link color */
+  font-weight: bold;
 }
 
-#wemd .footnotes-sep {
-    border-top: 1px solid #ddd;
-    /* 分隔线 */
-    padding-top: 20px;
-    margin-top: 40px;
+#mdb .footnotes-sep {
+  border-top: 1px solid #ddd;
+  /* 分隔线 | Separator */
+  padding-top: 20px;
+  margin-top: 40px;
 }
 
-#wemd .footnote-num {
-    font-weight: bold;
-    color: #1e6bb8;
-    margin-right: 4px;
+#mdb .footnote-num {
+  font-weight: bold;
+  color: #1e6bb8;
+  margin-right: 4px;
 }
 
-#wemd .footnote-item p {
-    color: #666;
-    font-size: 14px;
-    margin: 4px 0;
+#mdb .footnote-item p {
+  color: #666;
+  font-size: 14px;
+  margin: 4px 0;
 }
 
 /* ============================================
- * 14. 数学公式样式
+ * 14. 数学公式样式 | 14. Math formula styles
  * ============================================
  */
-/* 行间公式 */
-#wemd .block-equation {
-    display: block;
-    text-align: center;
-    margin: 20px 0;
-    overflow-x: auto;
+/* 行间公式 | Block equation */
+#mdb .block-equation {
+  display: block;
+  text-align: center;
+  margin: 20px 0;
+  overflow-x: auto;
 }
 
-#wemd .block-equation svg {
-    max-width: 100% !important;
-    /* 最大宽度：不超出容器 */
+#mdb .block-equation svg {
+  max-width: 100% !important;
+  /* 最大宽度：不超出容器 | Max width: not exceeding container */
 }
 
-/* 行内公式 */
-#wemd .inline-equation {
-    display: inline;
+/* 行内公式 | Inline equation */
+#mdb .inline-equation {
+  display: inline;
 }
 
-#wemd .inline-equation svg {
-    max-width: 100%;
-    vertical-align: middle;
-    /* 垂直居中 */
+#mdb .inline-equation svg {
+  max-width: 100%;
+  vertical-align: middle;
+  /* 垂直居中 | Vertical middle alignment */
 }
 
 /* ============================================
- * 16. 提示块样式（Callout）
+ * 16. 提示块样式（Callout） | 16. Callout styles
  * ============================================
  * 
- * GitHub 风格 Alert 语法：
+ * GitHub 风格 Alert 语法： | GitHub style Alert syntax:
  * > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]
  */
 
-/* 提示块基础样式 */
-#wemd .callout {
-    margin: 20px 0;
-    padding: 16px 20px;
-    background: #f5f5f5;
-    border-left: 4px solid #ddd;
-    border-radius: 4px;
+/* 提示块基础样式 | Callout base styles */
+#mdb .callout {
+  margin: 20px 0;
+  padding: 16px 20px;
+  background: #f5f5f5;
+  border-left: 4px solid #ddd;
+  border-radius: 4px;
 }
 
-#wemd .callout-title {
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #333;
-    font-size: 15px;
+#mdb .callout-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 15px;
 }
 
-#wemd .callout-icon {
-    margin-right: 6px;
+#mdb .callout-icon {
+  margin-right: 6px;
 }
 
-/* 不同类型的提示块 */
-#wemd .callout-note {
-    border-left-color: #6366f1;
-    background: #f5f5ff;
+/* 不同类型的提示块 | Different types of callouts */
+#mdb .callout-note {
+  border-left-color: #6366f1;
+  background: #f5f5ff;
 }
 
-#wemd .callout-tip {
-    border-left-color: #10b981;
-    background: #ecfdf5;
+#mdb .callout-tip {
+  border-left-color: #10b981;
+  background: #ecfdf5;
 }
 
-#wemd .callout-important {
-    border-left-color: #8b5cf6;
-    background: #f5f3ff;
+#mdb .callout-important {
+  border-left-color: #8b5cf6;
+  background: #f5f3ff;
 }
 
-#wemd .callout-warning {
-    border-left-color: #f59e0b;
-    background: #fffbeb;
+#mdb .callout-warning {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
 }
 
-#wemd .callout-caution {
-    border-left-color: #ef4444;
-    background: #fff5f5;
+#mdb .callout-caution {
+  border-left-color: #ef4444;
+  background: #fff5f5;
 }
 
 /* ============================================
- * 15. 其他元素
+ * 15. 其他元素 | 15. Other elements
  * ============================================
  */
-/* 定义列表 */
-#wemd dl {
-    margin: 15px 0;
+/* 定义列表 | Definition list */
+#mdb dl {
+  margin: 15px 0;
 }
 
-#wemd dt {
-    font-weight: bold;
-    margin-top: 10px;
+#mdb dt {
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-#wemd dd {
-    margin-left: 20px;
-    color: #666;
+#mdb dd {
+  margin-left: 20px;
+  color: #666;
 }
 
-/* 目录（TOC） */
-#wemd .table-of-contents {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f5f5f5;
-    border-left: 3px solid #ddd;
-    border-radius: 4px;
+/* 目录（TOC） | Table of contents (TOC) */
+#mdb .table-of-contents {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f5f5f5;
+  border-left: 3px solid #ddd;
+  border-radius: 4px;
 }
 
-#wemd .table-of-contents a {
-    color: #333;
-    text-decoration: none;
+#mdb .table-of-contents a {
+  color: #333;
+  text-decoration: none;
 }
-
 
 /* ============================================
- * 17. 图片轮播样式 (Imageflow)
+ * 17. 图片轮播样式 (Imageflow) | 17. Imageflow styles
  * ============================================
  */
 
-#wemd .imageflow-layer1 {
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-    /* white-space: normal; */
-    border: 0px none;
-    padding: 0px;
-    overflow: hidden;
+#mdb .imageflow-layer1 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  /* white-space: normal; */
+  border: 0px none;
+  padding: 0px;
+  overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
-    white-space: nowrap;
-    width: 100%;
-    overflow-x: scroll;
+#mdb .imageflow-layer2 {
+  white-space: nowrap;
+  width: 100%;
+  overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
-    display: inline-block;
-    word-wrap: break-word;
-    white-space: normal;
-    vertical-align: top;
-    width: 80%;
-    margin-right: 10px;
-    flex-shrink: 0;
+#mdb .imageflow-layer3 {
+  display: inline-block;
+  word-wrap: break-word;
+  white-space: normal;
+  vertical-align: top;
+  width: 80%;
+  margin-right: 10px;
+  flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
-    display: block;
-    width: 100%;
-    height: auto;
-    max-height: 300px;
-    object-fit: contain;
-    border-radius: 4px;
+#mdb .imageflow-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 
-#wemd .imageflow-caption {
-    text-align: center;
-    margin-top: 0px;
-    padding-top: 0px;
-    color: #888;
+#mdb .imageflow-caption {
+  text-align: center;
+  margin-top: 0px;
+  padding-top: 0px;
+  color: #888;
 }

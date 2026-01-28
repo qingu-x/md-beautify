@@ -27,7 +27,7 @@
     "icon": "assets/icon.icns"
   },
   "dmg": {
-    "title": "WeMD ${version}",
+    "title": "MDBeautify ${version}",
     "backgroundColor": "#ffffff",
     "icon": "assets/icon.icns",
     "contents": [
@@ -63,6 +63,6 @@
     "target": ["AppImage", "deb"],
     "category": "Office",
     "icon": "assets/icon.png",
-    "maintainer": "WeMD Team"
+    "maintainer": "MD Beautify Team"
   }
 }

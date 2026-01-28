@@ -66,13 +66,9 @@
                     <Download :size="14" :strokeWidth="2" />
                     <span>导出 HTML</span>
                   </button>
-                  <button class="submenu-item" @click="() => exportPdf('image')">
+                  <button class="submenu-item" @click="() => exportPdf()">
                     <FileText :size="14" :strokeWidth="2" />
-                    <span>导出 PDF (图片)</span>
-                  </button>
-                  <button class="submenu-item" @click="() => exportPdf('vector')">
-                    <FileText :size="14" :strokeWidth="2" />
-                    <span>导出 PDF (矢量)</span>
+                    <span>导出 PDF</span>
                   </button>
                 </div>
               </div>
@@ -108,7 +104,7 @@
           <StructuralismLogoMark v-if="isStructuralismUI" />
           <DefaultLogoMark v-else />
           <div class="logo-info">
-            <span class="logo-text">WeMD</span>
+            <span class="logo-text">MD Beautify</span>
             <span class="logo-subtitle">公众号 Markdown 排版编辑器</span>
           </div>
         </div>
@@ -142,19 +138,12 @@
                 </div>
                 <span class="item-desc">包含完整样式的 HTML 文件</span>
               </button>
-              <button class="dropdown-item" @click="() => exportPdf('image')">
+              <button class="dropdown-item" @click="() => exportPdf()">
                 <div class="item-title">
                   <FileText :size="16" :strokeWidth="2" />
-                  <span>导出 PDF (图片)</span>
+                  <span>导出 PDF</span>
                 </div>
-                <span class="item-desc">不弹窗，不支持选中文字</span>
-              </button>
-              <button class="dropdown-item" @click="() => exportPdf('vector')">
-                <div class="item-title">
-                  <FileText :size="16" :strokeWidth="2" />
-                  <span>导出 PDF (矢量)</span>
-                </div>
-                <span class="item-desc">支持选中文字，建议桌面端使用</span>
+                <span class="item-desc">矢量格式，支持选中文字</span>
               </button>
             </div>
           </div>
@@ -308,7 +297,7 @@ const DefaultLogoMark = () => h('svg', {
 
 const structuralismLogoSrc = (import.meta as any).env.BASE_URL + "favicon-light.svg";
 const StructuralismLogoMark = () => h('img', {
-  src: structuralismLogoSrc, alt: "WeMD Logo", width: "40", height: "40", style: { display: "block" }
+  src: structuralismLogoSrc, alt: "MD Beautify Logo", width: "40", height: "40", style: { display: "block" }
 });
 
 const editorStore = useEditorStore();
@@ -391,8 +380,8 @@ const exportHtml = async () => {
   showFloatingExportMenu.value = false;
 };
 
-const exportPdf = async (mode: 'image' | 'vector' = 'image') => {
-  await baseExportPdf(mode);
+const exportPdf = async () => {
+  await baseExportPdf();
   showExportMenu.value = false;
   showFloatingExportMenu.value = false;
 };

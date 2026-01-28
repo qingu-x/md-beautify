@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow } from 'electron';
 
-const GITHUB_REPO = 'qingu-x/md-editor';
+const GITHUB_REPO = 'qingu-x/md-beautify';
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases`;
 const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 
@@ -22,7 +22,7 @@ export async function checkForUpdates(
 ): Promise<void> {
     try {
         const response = await fetch(API_URL, {
-            headers: { 'User-Agent': 'WeMD-Electron' }
+            headers: { 'User-Agent': 'MDBeautify-Electron' }
         });
         if (!response.ok) return;
 

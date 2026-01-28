@@ -6,13 +6,13 @@ import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import { builtInThemes } from "./themes/builtInThemes";
 import type { CustomTheme, DesignerVariables } from "../types/theme";
-import { convertCssToWeChatDarkMode } from "@wemd/core";
+import { convertCssToWeChatDarkMode } from "@mdb/core";
 import { generateCSS } from "../components/Theme/ThemeDesigner/generateCSS";
 import { defaultVariables } from "../components/Theme/ThemeDesigner/defaults";
 
 // 深色转换缓存，避免重复转换同一段 CSS
 const darkCssCache = new Map<string, string>();
-const DARK_MARK = "/* wemd-wechat-dark-converted */";
+const DARK_MARK = "/* mdb-wechat-dark-converted */";
 
 const hashCss = (css: string): string => {
   let hash = 0;
@@ -27,8 +27,8 @@ const buildDarkCacheKey = (themeId: string, css: string) =>
   `${themeId}:${hashCss(css)}`;
 
 // localStorage 键名
-const CUSTOM_THEMES_KEY = "wemd-custom-themes";
-const SELECTED_THEME_KEY = "wemd-selected-theme";
+const CUSTOM_THEMES_KEY = "mdb-custom-themes";
+const SELECTED_THEME_KEY = "mdb-selected-theme";
 
 // 检查 localStorage 是否可用
 const canUseLocalStorage = () =>
@@ -180,14 +180,21 @@ export const useThemeStore = defineStore("theme", () => {
   }
 
   function getWechatDarkCss(css: string): string {
-    if (css.includes(DARK_MARK)) return css;
+    if (css.includes(DARK_MARK)) {
+      // 如果已经包含转换标记，尝试提取转换后的部分以减少冗余
+      const parts = css.split(DARK_MARK);
+      if (parts.length > 1) {
+        return `${DARK_MARK}\n${parts[parts.length - 1].trim()}`;
+      }
+      return css;
+    }
     const cacheKey = buildDarkCacheKey(selectedThemeId.value, css);
     if (darkCssCache.has(cacheKey)) return darkCssCache.get(cacheKey)!;
 
     const darkCss = convertCssToWeChatDarkMode(css);
-    const result = `${css}\n${DARK_MARK}\n${darkCss}`;
-    darkCssCache.set(cacheKey, result);
-    return result;
+    // convertCssToWeChatDarkMode 已经包含了 DARK_MARK
+    darkCssCache.set(cacheKey, darkCss);
+    return darkCss;
   }
 
   function getThemeCSS(themeId: string, isDarkMode: boolean) {
@@ -196,6 +203,12 @@ export const useThemeStore = defineStore("theme", () => {
     if (isDarkMode) {
       return getWechatDarkCss(theme.css);
     }
+
+    // 如果是浅色模式且包含转换标记，只提取浅色部分（标记之前的内容）
+    if (theme.css.includes(DARK_MARK)) {
+      return theme.css.split(DARK_MARK)[0].trim();
+    }
+
     return theme.css;
   }
 

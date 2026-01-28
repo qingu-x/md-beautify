@@ -1,8 +1,8 @@
 import juice from "juice";
 
 // 常量定义
-const DATA_TOOL = "WeMD编辑器";
-const SECTION_ID = "wemd";
+const DATA_TOOL = "MD Beautify";
+const SECTION_ID = "mdb";
 
 // 需要添加 data-tool 属性的块级元素
 const BLOCK_TAGS = [
@@ -46,7 +46,7 @@ export const processHtml = (
   // 替换本地图片为占位图
   if (replaceLocalImages) {
     const placeholderUrl =
-      "https://img.wemd.app/wemd/local-image-placeholder.png";
+      "https://img.wemd.app/mdb/local-image-placeholder.png";
     html = html.replace(
       /<img\s+([^>]*?)src="([^"]+)"([^>]*?)>/gi,
       (match, p1, src, p3) => {
@@ -108,16 +108,7 @@ export const processHtml = (
 
   // 复制到微信时，将 CSS 伪元素替换为真实 HTML（微信会清洗伪元素）
   if (hasMacBar && inlinePseudoElements) {
-    let paddingTop = 36;
-    const paddingMatch = css.match(
-      /pre\s+code(?:\.hljs)?\s*\{[^}]*padding:\s*(\d+)px/i,
-    );
-    if (paddingMatch) {
-      paddingTop = parseInt(paddingMatch[1], 10);
-    }
-    const marginTop = -(paddingTop - 12);
-
-    const macBarHtml = `<span style="display:block;margin:${marginTop}px 0 16px 0;line-height:1;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ff5f56;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffbd2e;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#27c93f;"></span></span>`;
+    const macBarHtml = `<span style="display:block;line-height:1;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ff5f56;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffbd2e;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#27c93f;"></span></span>`;
     html = html.replace(
       /<code([^>]*class="[^"]*\bhljs\b[^"]*"[^>]*)>/gi,
       `<code$1>${macBarHtml}`,
@@ -125,7 +116,7 @@ export const processHtml = (
 
     // 移除 CSS 伪元素规则，避免重复
     css = css.replace(
-      /#wemd[^{]*pre[^{]*::before\s*\{[^}]*#ff5f56[^}]*\}/gi,
+      /#mdb[^{]*pre[^{]*::before\s*\{[^}]*#ff5f56[^}]*\}/gi,
       "",
     );
   }
@@ -135,7 +126,7 @@ export const processHtml = (
     // 1. 大引号样式 (Quotation Marks)
     if (css.includes("blockquote::before") && css.includes('content: "“"')) {
       const quoteColorMatch = css.match(
-        /#wemd\s+blockquote::before\s*\{[^}]*color:\s*([^;}]+)/i,
+        /#mdb\s+blockquote::before\s*\{[^}]*color:\s*([^;}]+)/i,
       );
       const quoteColor = quoteColorMatch
         ? quoteColorMatch[1].trim()
@@ -152,7 +143,7 @@ export const processHtml = (
 
       // 移除 CSS 中的伪元素规则
       css = css.replace(
-        /#wemd\s+blockquote::before\s*\{[^}]*content:\s*"“"[^}]*\}/gi,
+        /#mdb\s+blockquote::before\s*\{[^}]*content:\s*"“"[^}]*\}/gi,
         "",
       );
     }
@@ -164,10 +155,10 @@ export const processHtml = (
       css.includes("border-left")
     ) {
       const beforeMatch = css.match(
-        /#wemd\s+blockquote::before\s*\{([^}]*border-top:[^}]*border-left:[^}]*)\}/i,
+        /#mdb\s+blockquote::before\s*\{([^}]*border-top:[^}]*border-left:[^}]*)\}/i,
       );
       const afterMatch = css.match(
-        /#wemd\s+blockquote::after\s*\{([^}]*border-bottom:[^}]*border-right:[^}]*)\}/i,
+        /#mdb\s+blockquote::after\s*\{([^}]*border-bottom:[^}]*border-right:[^}]*)\}/i,
       );
 
       if (beforeMatch && afterMatch) {
@@ -191,11 +182,11 @@ export const processHtml = (
 
         // 移除 CSS 中的伪元素规则
         css = css.replace(
-          /#wemd\s+blockquote::before\s*\{[^}]*border-top:[^}]*border-left:[^}]*\}/gi,
+          /#mdb\s+blockquote::before\s*\{[^}]*border-top:[^}]*border-left:[^}]*\}/gi,
           "",
         );
         css = css.replace(
-          /#wemd\s+blockquote::after\s*\{[^}]*border-bottom:[^}]*border-right:[^}]*\}/gi,
+          /#mdb\s+blockquote::after\s*\{[^}]*border-bottom:[^}]*border-right:[^}]*\}/gi,
           "",
         );
       }
@@ -207,10 +198,10 @@ export const processHtml = (
       css.includes("margin: 0 auto 15px")
     ) {
       const beforeMatch = css.match(
-        /#wemd\s+blockquote::before\s*\{([^}]*background:[^}]*margin:\s*0\s+auto\s+15px[^}]*)\}/i,
+        /#mdb\s+blockquote::before\s*\{([^}]*background:[^}]*margin:\s*0\s+auto\s+15px[^}]*)\}/i,
       );
       const afterMatch = css.match(
-        /#wemd\s+blockquote::after\s*\{([^}]*background:[^}]*margin:\s*15px\s+auto\s+0[^}]*)\}/i,
+        /#mdb\s+blockquote::after\s*\{([^}]*background:[^}]*margin:\s*15px\s+auto\s+0[^}]*)\}/i,
       );
 
       if (beforeMatch && afterMatch) {
@@ -234,18 +225,18 @@ export const processHtml = (
 
         // 移除 CSS 中的伪元素规则
         css = css.replace(
-          /#wemd\s+blockquote::before\s*\{[^}]*margin:\s*0\s+auto\s+15px[^}]*\}/gi,
+          /#mdb\s+blockquote::before\s*\{[^}]*margin:\s*0\s+auto\s+15px[^}]*\}/gi,
           "",
         );
         css = css.replace(
-          /#wemd\s+blockquote::after\s*\{[^}]*margin:\s*15px\s+auto\s+0[^}]*\}/gi,
+          /#mdb\s+blockquote::after\s*\{[^}]*margin:\s*15px\s+auto\s+0[^}]*\}/gi,
           "",
         );
       }
     }
   }
 
-  // 包裹在 section#wemd 中，复制时添加透明背景防止某些浏览器保留选区背景色
+  // 包裹在 section#mdb 中，复制时添加透明背景防止某些浏览器保留选区背景色
   const bgStyle = inlinePseudoElements
     ? ' style="background:transparent;background-color:transparent;"'
     : "";

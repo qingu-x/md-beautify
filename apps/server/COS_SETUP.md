@@ -3,7 +3,8 @@
 ## 📋 前置准备
 
 你已经完成：
-- ✅ 创建了 COS 存储桶：`wemd-1302564514`
+
+- ✅ 创建了 COS 存储桶：`你的存储桶名字`
 - ✅ 区域：广州 (`ap-guangzhou`)
 
 ## 🔑 获取访问密钥
@@ -25,7 +26,7 @@ PORT=4000
 # 腾讯云 COS 配置
 COS_SECRET_ID=你的SecretId
 COS_SECRET_KEY=你的SecretKey
-COS_BUCKET=wemd-1302564514
+COS_BUCKET=你的存储桶名字
 COS_REGION=ap-guangzhou
 
 # 存储模式: local | cos
@@ -45,17 +46,19 @@ pnpm run dev
 2. 在编辑器中粘贴一张图片
 3. 查看返回的 URL，应该是：
    ```
-   https://wemd-1302564514.cos.ap-guangzhou.myqcloud.com/images/xxx.jpg
+   https://你的存储桶名字.cos.ap-guangzhou.myqcloud.com/images/xxx.jpg
    ```
 
 ## 🔄 切换存储模式
 
 ### 使用本地存储
+
 ```env
 STORAGE_MODE=local
 ```
 
 ### 使用腾讯云 COS
+
 ```env
 STORAGE_MODE=cos
 ```

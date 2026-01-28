@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="apps/web/public/favicon-dark.svg" width="80" height="80" alt="WeMD Logo" />
+  <img src="apps/web/public/favicon-dark.svg" width="80" height="80" alt="MD Beautify Logo" />
 </p>
 
-<h1 align="center">WeMD - Vue</h1>
+<h1 align="center">MD Beautify</h1>
 
 <h4 align="center">
-  本项目是基于 @tenngoxars 开发的 WeMD 项目，采用 Vue3 框架进行全面的重构与升级。
+  本项目是基于 @tenngoxars 开发的 WeMD 项目进行全面的重构与升级，现更名为 MD Beautify。
   再次感谢 @tenngoxars
 </h4>
 <p align="center">
@@ -14,14 +14,16 @@
 
 <p align="center">
   告别复杂工具。Markdown 写作，一键复制到公众号。<br>
-  专为公众号创作者设计的<b>本地优先</b>编辑器。
+  专为公众号创作者设计的<b>本地优先</b>编辑器。<br>
+  支持 Obsidian
 </p>
 
 <p align="center">
-  <a href="https://wemd.app">🌐 官网</a> •
-  <a href="https://edit.wemd.app">✏️ 在线使用</a> •
-  <a href="https://wemd.app/docs">📖 文档</a> •
-  <a href="https://github.com/qingu-x/md-editor/releases">📦 下载桌面版</a>
+  <a href="https://github.com/qingu-x/md-beautify">🌐 项目主页</a> •
+  <a href="https://github.com/qingu-x/md-beautify#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">✏️ 快速开始</a> •
+  <a href="https://github.com/qingu-x/md-beautify#%E4%BD%BF%E7%94%A8">📖 使用文档</a> •
+  <a href="https://github.com/qingu-x/md-beautify/releases">📦 下载桌面版</a>
+  <a href="https://github.com/qingu-x/obsidian-md-beautify-plugin/releases">Obsidian 插件</a>
 </p>
 
 <p align="center">
@@ -55,16 +57,14 @@
 
 ### 微信深色模式预览算法
 
-WeMD 内置了一套**色彩语义保全算法**，可在编辑器中预览微信公众号深色模式下的实际效果，还原度达 **98% 以上**。
+MD Beautify 基于 Wemd 的**色彩语义保全算法**，可在编辑器中预览微信公众号深色模式下的实际效果，还原度达 **98% 以上**。
 
 > 该算法基于微信官方开源的 [wechatjs/mp-darkmode](https://github.com/wechatjs/mp-darkmode) 核心算法迁移并优化，旨在保证高性能 CSS 转换的同时提供最接近官方的渲染效果。
 
 - 智能识别不同元素类型，分别优化
 - HSL 色彩空间计算，确保视觉一致性
 
-这（可能）是目前市面上除官方外唯一针对微信公众号深色模式预览的开源解决方案。
-
-👉 **[查看算法详细原理解析](https://wemd.app/docs/reference/dark-mode-algorithm.html)** | **[查看算法源码](packages/core/src/wechatDarkMode.ts)**
+👉 **[查看算法源码](packages/core/src/wechatDarkMode.ts)**
 
 ---
 
@@ -72,11 +72,11 @@ WeMD 内置了一套**色彩语义保全算法**，可在编辑器中预览微�
 
 ### 在线使用
 
-直接访问 **[edit.wemd.app](https://edit.wemd.app)** 即可开始写作，无需安装，同样支持纯本地存储。
+直接在本地运行 Web 版即可开始写作，无需安装，支持纯本地存储。
 
 ### 桌面版下载
 
-前往 [Releases](https://github.com/qingu-x/md-editor/releases) 下载对应平台安装包：
+前往 [Releases](https://github.com/qingu-x/md-beautify/releases) 下载对应平台安装包：
 
 - **macOS**: `.dmg`（Intel 版）/ `-arm64.dmg`（Apple Silicon 版）
 - **Windows**: `.exe`
@@ -85,12 +85,12 @@ WeMD 内置了一套**色彩语义保全算法**，可在编辑器中预览微�
 > ⚠️ **macOS 用户注意**：首次打开时如提示"应用已损坏"，请在终端执行：
 >
 > ```bash
-> xattr -cr /Applications/WeMD.app
+> xattr -cr /Applications/MDBeautify.app
 > ```
 >
 > ⚠️ **Windows 用户注意**：如 SmartScreen 提示"未知发布者"，点击「更多信息」→「仍要运行」
 >
-> ⚠️ **Linux 用户注意**：运行前需设置可执行权限：`chmod +x WeMD.AppImage`
+> ⚠️ **Linux 用户注意**：运行前需设置可执行权限：`chmod +x MDBeautify.AppImage`
 
 ### Docker 部署
 
@@ -126,11 +126,11 @@ pnpm dev:desktop
 
 ```bash
 # 构建 Web
-pnpm --filter @wemd/web build
+pnpm --filter @mdb/web build
 
 # 构建桌面应用
-pnpm --filter wemd-electron run build:mac  # macOS
-pnpm --filter wemd-electron run build:win  # Windows
+pnpm --filter mdb-electron run build:mac  # macOS
+pnpm --filter mdb-electron run build:win  # Windows
 ```
 
 ---
@@ -138,7 +138,7 @@ pnpm --filter wemd-electron run build:win  # Windows
 ## 📁 项目结构
 
 ```
-WeMD/
+MDB/
 ├── apps/
 │   ├── web/        # Vue + Vite 前端
 │   ├── electron/   # Electron 桌面端
@@ -159,7 +159,7 @@ WeMD/
 
 ## 💬 反馈
 
-如有问题或建议，欢迎提交 [Issue](https://github.com/qingu-x/md-editor/issues)。
+如有问题或建议，欢迎提交 [Issue](https://github.com/qingu-x/md-beautify/issues)。
 
 ---
 
@@ -171,6 +171,6 @@ WeMD/
 
 ## 📄 License
 
-[MIT](LICENSE) © WeMD Team
+[MIT](LICENSE) © MDBeautify Team
 
-再次感谢 [tenngoxars](https://github.com/tenngoxars) 以及 WeMD Team。本项目同样采用 MIT 协议开源。
+再次感谢 [@tenngoxars](https://github.com/tenngoxars) 以及 WeMD Team 的原始项目。本项目同样采用 MIT 协议开源。

@@ -50,11 +50,15 @@ let relativeTimeTimer: ReturnType<typeof setInterval> | null = null;
 // 非文件模式：内容变化后 2 秒标记为"已保存"
 watch(() => editorStore.markdown, () => {
   if (isFileMode.value) return;
-  if (!editorStore.isEditing) return;
+  
+  // 标记为正在编辑
+  editorStore.setIsEditing(true);
 
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
     editorStore.setLastAutoSavedAt(new Date());
+    // 2 秒后标记为保存完成
+    editorStore.setIsEditing(false);
   }, 2000);
 });
 
@@ -94,11 +98,11 @@ onUnmounted(() => {
 }
 
 .save-indicator.saving {
-  color: var(--primary-color);
+  color: var(--accent-primary);
 }
 
 .save-indicator.unsaved {
-  color: var(--warning-color);
+  color: var(--warning);
 }
 
 .save-indicator.saved {
@@ -106,6 +110,6 @@ onUnmounted(() => {
 }
 
 .save-indicator.ready {
-  color: var(--text-quaternary);
+  color: var(--text-tertiary);
 }
 </style>

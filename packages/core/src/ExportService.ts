@@ -1,7 +1,5 @@
 import { processHtml } from "./ThemeProcessor";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - html2pdf.js may or may not have TypeScript definitions
-import html2pdf from "html2pdf.js";
+import { katexInlineCss } from "./katex-inline-css";
 
 export interface ExportOptions {
   title?: string;
@@ -31,10 +29,10 @@ export const generateExportHtml = (
   contentHtml: string,
   options: ExportOptions,
 ): string => {
-  const { title = "WeMD Export", themeCss, extraCss = "" } = options;
+  const { title = "MD Beautify Export", themeCss, extraCss = "" } = options;
 
   // 使用 processHtml 处理内联样式
-  // 导出时，我们希望尽可能内联所有样式以保证在离线环境下也能正常显示
+  // 导出时内联基本样式，并转换伪元素（确保Mac指示器等样式生效）
   let styledHtml = "";
   try {
     styledHtml = processHtml(contentHtml, themeCss, true, true);
@@ -42,9 +40,9 @@ export const generateExportHtml = (
     console.error("Export processHtml failed:", e);
   }
 
-  // 兜底逻辑：如果 styledHtml 为空，则直接使用 contentHtml 并包裹在 wemd 容器中
+  // 兜底逻辑：如果 styledHtml 为空，则直接使用 contentHtml 并包裹在 mdb 容器中
   if (!styledHtml || styledHtml.trim() === "") {
-    styledHtml = `<section id="wemd">${contentHtml}</section>`;
+    styledHtml = `<section id="mdb">${contentHtml}</section>`;
   }
 
   // 转换 checkbox 为 emoji
@@ -57,20 +55,85 @@ export const generateExportHtml = (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
   <style>
+    /* KaTeX CSS (完全内联，包含 base64 字体，离线可用) */
+    ${katexInlineCss}
+  </style>
+  <style>
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     body {
       margin: 0;
       padding: 0;
       background-color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     }
-    #wemd-export-container {
+    #mdb-export-container {
       max-width: 900px;
       margin: 0 auto;
       padding: 40px 20px;
     }
+    /* 修复极光玻璃主题的渲染问题 */
+    #mdb h1 .content {
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      background-image: none !important;
+      color: #4158D0 !important;
+    }
+    #mdb strong {
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      background-image: none !important;
+      color: #C850C0 !important;
+    }
+    #mdb .callout-title {
+      -webkit-background-clip: initial !important;
+      background-clip: initial !important;
+      background-image: none !important;
+      color: #4158D0 !important;
+    }
+    #mdb .callout {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+    #mdb .callout p,
+    #mdb .callout section,
+    #mdb .callout li {
+      color: #444 !important;
+    }
     @page {
       size: auto;
       margin: 0; /* 设为 0 以强制隐藏 Edge/Chrome 的默认页眉页脚 */
+    }
+    /* KaTeX 公式样式 - 确保正确显示 */
+    .katex {
+      font: normal 1.21em KaTeX_Main, Times New Roman, serif;
+      line-height: 1.2;
+      text-indent: 0;
+      text-rendering: auto;
+    }
+    .katex .katex-mathml {
+      position: absolute !important;
+      clip: rect(1px, 1px, 1px, 1px) !important;
+      padding: 0 !important;
+      border: 0 !important;
+      height: 1px !important;
+      width: 1px !important;
+      overflow: hidden !important;
+    }
+    .katex .katex-html {
+      display: inline-block !important;
+    }
+    .katex-display {
+      display: block !important;
+      margin: 1em 0 !important;
+      text-align: center !important;
+    }
+    .katex-display > span {
+      display: inline-block !important;
+      text-align: initial !important;
     }
     @media print {
       html, body {
@@ -100,61 +163,68 @@ export const generateExportHtml = (
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
-      #wemd-export-container {
+      #mdb-export-container {
         max-width: 100%;
         margin: 0;
         padding: 0;
       }
       /* 内容按块分页，避免跨页拆分 */
-      #wemd p, 
-      #wemd li, 
-      #wemd img, 
-      #wemd figure,
-      #wemd pre, 
-      #wemd blockquote, 
-      #wemd .callout, 
-      #wemd table,
-      #wemd h1, #wemd h2, #wemd h3, #wemd h4, #wemd h5, #wemd h6 {
+      #mdb p, 
+      #mdb li, 
+      #mdb img, 
+      #mdb figure,
+      #mdb pre, 
+      #mdb blockquote, 
+      #mdb .callout, 
+      #mdb table,
+      #mdb h1, #mdb h2, #mdb h3, #mdb h4, #mdb h5, #mdb h6 {
         break-inside: avoid;
         page-break-inside: avoid;
       }
       /* 标题后避免分页，确保标题与其内容在同一页 */
-      #wemd h1, #wemd h2, #wemd h3, #wemd h4, #wemd h5, #wemd h6 {
+      #mdb h1, #mdb h2, #mdb h3, #mdb h4, #mdb h5, #mdb h6 {
         break-after: avoid;
         page-break-after: avoid;
       }
       /* 修复打印时文字颜色透明的问题（通常是由于 background-clip: text 引起） */
-      #wemd h1 .content,
-      #wemd strong,
-      #wemd .callout-title {
+      #mdb h1 .content,
+      #mdb strong,
+      #mdb .callout-title {
         -webkit-background-clip: initial !important;
         background-clip: initial !important;
         background-image: none !important;
         color: inherit !important;
       }
       /* 针对不同主题的特殊修复 */
-      #wemd .callout-title {
+      #mdb .callout-title {
         color: #333 !important;
       }
       /* 确保 callout 内的内容可见 */
-      #wemd .callout p, 
-      #wemd .callout section,
-      #wemd .callout li {
+      #mdb .callout p, 
+      #mdb .callout section,
+      #mdb .callout li {
         color: #444 !important;
       }
       /* 确保背景色能够打印出来 */
-      #wemd .callout {
+      #mdb .callout {
         background-color: #f8fafc !important;
         background-image: none !important;
       }
       /* 隐藏可能遮挡文字的装饰性伪元素 */
-      #wemd .callout::after,
-      #wemd .callout::before {
+      #mdb .callout::after,
+      #mdb .callout::before {
         display: none !important;
       }
       /* 打印时隐藏不必要的元素 */
       .no-print {
         display: none !important;
+      }
+      /* 打印时确保 KaTeX 公式正确显示 */
+      .katex .katex-mathml {
+        display: none !important;
+      }
+      .katex .katex-html {
+        display: inline-block !important;
       }
     }
     ${extraCss}
@@ -166,7 +236,7 @@ export const generateExportHtml = (
     <tbody>
       <tr>
         <td class="print-content-cell">
-          <div id="wemd-export-container">
+          <div id="mdb-export-container">
             ${styledHtml}
           </div>
         </td>
@@ -225,63 +295,5 @@ export const exportToPdfNative = (html: string) => {
         }, 1000);
       }, 500);
     };
-  }
-};
-
-/**
- * 使用 html2pdf.js 将 HTML 转换为 PDF 并下载（高清图片方案，不弹窗，支持中文）
- */
-export const exportToPdfImage = async (html: string, fileName: string) => {
-  // 创建一个临时的 iframe 来渲染 HTML，以保证样式正确加载
-  const iframe = document.createElement("iframe");
-  iframe.style.visibility = "hidden";
-  iframe.style.position = "fixed";
-  iframe.style.left = "-9999px";
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentWindow?.document;
-  if (!doc) {
-    document.body.removeChild(iframe);
-    throw new Error("Failed to create iframe for PDF export");
-  }
-
-  doc.open();
-  doc.write(html);
-  doc.close();
-
-  // 等待样式和图片加载
-  await new Promise((resolve) => {
-    iframe.onload = resolve;
-    // 兜底超时
-    setTimeout(resolve, 2000);
-  });
-
-  const contentElement = (doc.querySelector("#wemd-export-container") ||
-    doc.body) as HTMLElement;
-
-  const opt = {
-    margin: 10,
-    filename: fileName,
-    image: { type: "jpeg" as const, quality: 0.98 },
-    html2canvas: {
-      scale: 3, // 提高分辨率
-      useCORS: true,
-      letterRendering: true,
-      logging: false,
-    },
-    jsPDF: {
-      unit: "mm" as const,
-      format: "a4" as const,
-      orientation: "portrait" as const,
-    },
-  };
-
-  try {
-    await html2pdf().set(opt).from(contentElement).save();
-  } catch (e) {
-    console.error("html2pdf failed:", e);
-    throw e;
-  } finally {
-    document.body.removeChild(iframe);
   }
 };

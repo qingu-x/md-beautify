@@ -6,11 +6,11 @@
       </button>
 
       <div class="update-modal-icon">
-        <img src="/favicon-dark.svg" alt="WeMD" width="64" height="64" />
+        <img src="/favicon-dark.svg" alt="MD Beautify" width="64" height="64" />
       </div>
 
       <h2 class="update-modal-title">发现新版本</h2>
-      <p class="update-modal-version">WeMD {{ latestVersion }} 已发布</p>
+      <p class="update-modal-version">MD Beautify {{ latestVersion }} 已发布</p>
 
       <button
         v-if="releaseNotes"

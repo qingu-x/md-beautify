@@ -198,10 +198,8 @@ function initEditor() {
 
   const scrollDOM = view.scrollDOM;
   const handleEditorScroll = () => {
-    if (isSyncing.value) {
-      isSyncing.value = false;
-      return;
-    }
+    if (!editorStore.syncScroll || isSyncing.value) return;
+    
     const max = scrollDOM.scrollHeight - scrollDOM.clientHeight;
     if (max <= 0) return;
     const ratio = scrollDOM.scrollTop / max;
@@ -213,6 +211,7 @@ function initEditor() {
   };
 
   const handleSync = (event: Event) => {
+    if (!editorStore.syncScroll) return;
     const customEvent = event as CustomEvent<SyncScrollDetail>;
     const detail = customEvent.detail;
     if (!detail || detail.source === "editor") return;
@@ -220,6 +219,10 @@ function initEditor() {
     if (max <= 0) return;
     isSyncing.value = true;
     scrollDOM.scrollTo({ top: detail.ratio * max });
+    
+    setTimeout(() => {
+      isSyncing.value = false;
+    }, 100);
   };
 
   scrollDOM.addEventListener("scroll", handleEditorScroll);

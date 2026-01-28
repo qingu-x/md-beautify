@@ -3,8 +3,8 @@ import { ref } from "vue";
 
 export type UITheme = "default" | "dark";
 
-const THEME_STORAGE_KEY = "wemd-ui-theme";
-const AUTOHIDE_STORAGE_KEY = "wemd-header-autohide";
+const THEME_STORAGE_KEY = "mdb-ui-theme";
+const AUTOHIDE_STORAGE_KEY = "mdb-header-autohide";
 
 const FAVICON_MAP: Record<UITheme, string> = {
   default: "favicon-dark.svg",

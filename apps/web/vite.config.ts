@@ -7,7 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@wemd/core": path.resolve(__dirname, "../../packages/core/src/index.ts"),
+      "@mdb/core": path.resolve(__dirname, "../../packages/core/src/index.ts"),
     },
   },
   plugins: [vue()],

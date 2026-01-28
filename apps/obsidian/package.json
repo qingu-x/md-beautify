@@ -1,6 +1,6 @@
 {
   "name": "md-beautify-obsidian",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Obsidian plugin for MD Beautify",
   "main": "dist/main.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "author": "MD Beautify",
   "license": "MIT",
   "dependencies": {
-    "@wemd/core": "workspace:*",
+    "@mdb/core": "workspace:*",
     "katex": "^0.16.27",
     "mermaid": "^11.12.2",
     "markdown-it": "^14.1.0"

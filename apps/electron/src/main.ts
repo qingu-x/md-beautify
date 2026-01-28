@@ -7,8 +7,8 @@ import { checkForUpdates, openReleasesPage } from './updater';
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
 let isDev = !app.isPackaged || process.argv.includes('--dev') || !!process.env.ELECTRON_START_URL;
 
-app.setName('WeMD');
-app.setAppUserModelId('com.wemd.app');
+app.setName('MD Beautify');
+app.setAppUserModelId('com.mdb.app');
 
 interface FileEntry {
     name: string;
@@ -121,54 +121,52 @@ function scanWorkspace(dir: string, level: number = 0, parentPath: string = ''):
             const stats = fs.statSync(fullPath);
             const children = scanWorkspace(fullPath, level + 1, fullPath);
             
-            if (children.length > 0) {
-                results.push({
-                    name: dirEntry.name,
-                    path: fullPath,
-                    isDirectory: true,
-                    createdAt: stats.birthtime,
-                    updatedAt: stats.mtime,
-                    size: 0,
-                    children,
-                    level,
-                    parentPath
-                });
-            }
+            results.push({
+                name: dirEntry.name,
+                path: fullPath,
+                isDirectory: true,
+                createdAt: stats.birthtime,
+                updatedAt: stats.mtime,
+                size: 0,
+                children,
+                level,
+                parentPath
+            });
         }
 
         // 处理文件
         for (const fileEntry of files) {
             const fullPath = path.join(dir, fileEntry.name);
-            const stats = fs.statSync(fullPath);
+                const stats = fs.statSync(fullPath);
 
-            // 尝试读取 Frontmatter 获取 themeName
-            let themeName = '默认主题';
-            try {
-                const fd = fs.openSync(fullPath, 'r');
+                // 尝试读取 Frontmatter 获取 themeName
+                let themeName = '默认主题';
+                try {
+                    const fd = fs.openSync(fullPath, 'r');
                 const buffer = Buffer.alloc(500);
-                const bytesRead = fs.readSync(fd, buffer, 0, 500, 0);
-                fs.closeSync(fd);
+                    const bytesRead = fs.readSync(fd, buffer, 0, 500, 0);
+                    fs.closeSync(fd);
 
-                const content = buffer.toString('utf8', 0, bytesRead);
-                const match = content.match(/^---\n([\s\S]*?)\n---/);
-                if (match) {
-                    const frontmatter = match[1];
-                    const themeMatch = frontmatter.match(/themeName:\s*(.+)/);
-                    if (themeMatch) {
-                        themeName = themeMatch[1].trim().replace(/^['"]|['"]$/g, '');
+                    const content = buffer.toString('utf8', 0, bytesRead);
+                    const match = content.match(/^---\n([\s\S]*?)\n---/);
+                    if (match) {
+                        const frontmatter = match[1];
+                        const themeMatch = frontmatter.match(/themeName:\s*(.+)/);
+                        if (themeMatch) {
+                            themeName = themeMatch[1].trim().replace(/^['"]|['"]$/g, '');
+                        }
                     }
+                } catch (e) {
+                    // 忽略读取错误
                 }
-            } catch (e) {
-                // 忽略读取错误
-            }
 
             results.push({
                 name: fileEntry.name,
-                path: fullPath,
-                isDirectory: false,
-                createdAt: stats.birthtime,
-                updatedAt: stats.mtime,
-                size: stats.size,
+                    path: fullPath,
+                    isDirectory: false,
+                    createdAt: stats.birthtime,
+                    updatedAt: stats.mtime,
+                    size: stats.size,
                 themeName,
                 level,
                 parentPath
@@ -197,12 +195,14 @@ function createWindow() {
         height: 800,
         minWidth: 1024,
         minHeight: 640,
-        title: 'WeMD',
+        title: 'MD Beautify',
         icon: windowIcon,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
+            webSecurity: true,
+            allowRunningInsecureContent: false,
         },
         titleBarStyle: 'hidden',
         frame: !isWindows, // Windows 完全无边框
@@ -220,9 +220,22 @@ function createWindow() {
             ? 'http://localhost:5173'
             : `file://${path.join(process.resourcesPath, 'web-dist', 'index.html')}`;
 
-    console.log('[WeMD] Loading URL:', startUrl);
-    console.log('[WeMD] isDev:', isDev);
-    console.log('[WeMD] resourcesPath:', process.resourcesPath);
+    console.log('[MDBeautify] Loading URL:', startUrl);
+    console.log('[MDBeautify] isDev:', isDev);
+    console.log('[MDBeautify] resourcesPath:', process.resourcesPath);
+
+    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': [
+                    isDev
+                        ? "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: http://localhost:* ws://localhost:*; img-src 'self' data: blob: https:; connect-src 'self' https: http://localhost:* ws://localhost:*"
+                        : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:"
+                ]
+            }
+        });
+    });
 
     mainWindow.loadURL(startUrl);
     
@@ -275,7 +288,10 @@ ipcMain.handle('export:html', async (_event, { content, title }) => {
 });
 
 ipcMain.handle('export:pdf', async (_event, { content, title }) => {
-    if (!mainWindow) return;
+    if (!mainWindow) {
+        console.error('[Export PDF] Main window not available');
+        return false;
+    }
 
     const printWindow = new BrowserWindow({
         show: false,
@@ -285,8 +301,58 @@ ipcMain.handle('export:pdf', async (_event, { content, title }) => {
         }
     });
 
+    let tmpPath: string | null = null;
+    
     try {
-        await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(content)}`);
+        tmpPath = path.join(app.getPath('temp'), `mdb-export-${Date.now()}.html`);
+        fs.writeFileSync(tmpPath, content, 'utf-8');
+        
+        await printWindow.loadFile(tmpPath);
+        
+        await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('Resource loading timeout'));
+            }, 30000);
+            
+            printWindow.webContents.executeJavaScript(`
+                (async () => {
+                    // 等待所有外部样式表加载完成（包括 KaTeX CSS）
+                    const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+                    await Promise.all(links.map(link => {
+                        if (link.sheet) return Promise.resolve();
+                        return new Promise((resolve) => {
+                            link.addEventListener('load', () => resolve());
+                            link.addEventListener('error', () => resolve());
+                            setTimeout(() => resolve(), 5000);
+                        });
+                    }));
+                    
+                    // 等待字体加载（KaTeX 使用自定义字体）
+                    await document.fonts.ready;
+                    
+                    // 等待图片加载
+                    const images = Array.from(document.images);
+                    await Promise.all(images.map(img => {
+                        if (img.complete) return Promise.resolve();
+                        return new Promise((resolve) => {
+                            img.onload = () => resolve();
+                            img.onerror = () => resolve();
+                            setTimeout(() => resolve(), 3000);
+                        });
+                    }));
+                    
+                    // 额外等待，确保 KaTeX 渲染完成
+                    await new Promise(r => setTimeout(r, 1500));
+                })();
+            `).then(() => {
+                clearTimeout(timeout);
+                resolve();
+            }).catch((err) => {
+                clearTimeout(timeout);
+                reject(err);
+            });
+        });
+        
         const data = await printWindow.webContents.printToPDF({
             printBackground: true,
             margins: {
@@ -299,23 +365,31 @@ ipcMain.handle('export:pdf', async (_event, { content, title }) => {
             preferCSSPageSize: true
         });
 
-        const { filePath } = await dialog.showSaveDialog(mainWindow, {
+        const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
             title: '导出 PDF',
             defaultPath: `${title || 'export'}.pdf`,
             filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
         });
 
-        if (filePath) {
-            fs.writeFileSync(filePath, data);
-            return true;
+        if (canceled || !filePath) {
+            return false;
         }
+
+        fs.writeFileSync(filePath, data);
+        return true;
     } catch (error) {
-        console.error('Export PDF failed:', error);
+        console.error('[Export PDF] Error:', error);
         throw error;
     } finally {
         printWindow.close();
+        if (tmpPath && fs.existsSync(tmpPath)) {
+            try {
+                fs.unlinkSync(tmpPath);
+            } catch (err) {
+                console.error('[Export PDF] Failed to clean up temp file:', err);
+            }
+        }
     }
-    return false;
 });
 
 // 工作区管理
@@ -323,7 +397,7 @@ ipcMain.handle('workspace:select', async () => {
     if (!mainWindow) return { success: false, error: 'Window not initialized' };
     const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory', 'createDirectory'],
-        message: '选择 WeMD 工作区文件夹'
+        message: '选择 MD Beautify 工作区文件夹'
     });
     if (result.canceled || result.filePaths.length === 0) {
         return { success: false, canceled: true };
@@ -360,6 +434,10 @@ ipcMain.handle('file:read', async (_event: IpcMainInvokeEvent, filePath: string)
         if (!fs.existsSync(filePath)) {
             return { success: false, error: 'File not found' };
         }
+        const stats = fs.statSync(filePath);
+        if (stats.isDirectory()) {
+            return { success: false, error: 'Cannot read directory as file' };
+        }
         const content = fs.readFileSync(filePath, 'utf-8');
         return { success: true, content, filePath };
     } catch (error: any) {
@@ -372,12 +450,26 @@ ipcMain.handle('file:create', async (_event: IpcMainInvokeEvent, payload: { file
     const { filename, content } = payload || {};
     const safeName = filename ? filename.trim() : '未命名文章.md';
 
-    // 自动处理重名
-    const targetPath = getUniqueFilePath(workspaceDir, safeName);
-
     try {
-        fs.writeFileSync(targetPath, content || '', 'utf-8');
-        return { success: true, filePath: targetPath, filename: path.basename(targetPath) };
+        // 检查文件名是否包含子目录
+        if (safeName.includes('/') || safeName.includes(path.sep)) {
+            // 包含子目录，直接使用路径并确保目录存在
+            const targetPath = path.join(workspaceDir, safeName);
+            const targetDir = path.dirname(targetPath);
+            
+            // 确保目录存在
+            if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+            }
+            
+            fs.writeFileSync(targetPath, content || '', 'utf-8');
+            return { success: true, filePath: targetPath, filename: path.basename(targetPath) };
+        } else {
+            // 不包含子目录，使用原有逻辑处理重名
+            const targetPath = getUniqueFilePath(workspaceDir, safeName);
+            fs.writeFileSync(targetPath, content || '', 'utf-8');
+            return { success: true, filePath: targetPath, filename: path.basename(targetPath) };
+        }
     } catch (error: any) {
         return { success: false, error: error.message };
     }
@@ -405,14 +497,9 @@ ipcMain.handle('file:save', async (_event: IpcMainInvokeEvent, payload: { filePa
     }
 });
 
-ipcMain.handle('file:rename', async (_event: IpcMainInvokeEvent, payload: { oldPath: string; newName: string }) => {
-    const { oldPath, newName } = payload;
-    if (!oldPath || !newName) return { success: false, error: 'Invalid arguments' };
-
-    const dir = path.dirname(oldPath);
-    // 确保新名字以 .md 结尾
-    const safeName = newName.endsWith('.md') ? newName : `${newName}.md`;
-    const newPath = path.join(dir, safeName);
+ipcMain.handle('file:rename', async (_event: IpcMainInvokeEvent, payload: { oldPath: string; newPath: string }) => {
+    const { oldPath, newPath } = payload;
+    if (!oldPath || !newPath) return { success: false, error: 'Invalid arguments' };
 
     if (oldPath === newPath) return { success: true, filePath: newPath };
 
@@ -422,6 +509,12 @@ ipcMain.handle('file:rename', async (_event: IpcMainInvokeEvent, payload: { oldP
     }
 
     try {
+        // 确保目标目录存在
+        const targetDir = path.dirname(newPath);
+        if (!fs.existsSync(targetDir)) {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
+        
         fs.renameSync(oldPath, newPath);
         return { success: true, filePath: newPath };
     } catch (error: any) {
@@ -440,7 +533,14 @@ ipcMain.handle('file:delete', async (_event: IpcMainInvokeEvent, filePath: strin
     } catch (error) {
         // 如果回收站失败，尝试物理删除
         try {
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            if (fs.existsSync(filePath)) {
+                const stats = fs.statSync(filePath);
+                if (stats.isDirectory()) {
+                    fs.rmSync(filePath, { recursive: true, force: true });
+                } else {
+                    fs.unlinkSync(filePath);
+                }
+            }
             return { success: true };
         } catch (e: any) {
             return { success: false, error: e.message };
@@ -464,15 +564,15 @@ ipcMain.handle('update:openReleases', () => {
 function createMenu() {
     const template: Electron.MenuItemConstructorOptions[] = [
         {
-            label: 'WeMD',
+            label: 'MD Beautify',
             submenu: [
-                { role: 'about', label: '关于 WeMD' },
+                { role: 'about', label: '关于 MD Beautify' },
                 { type: 'separator' },
-                { role: 'hide', label: '隐藏 WeMD' },
+                { role: 'hide', label: '隐藏 MD Beautify' },
                 { role: 'hideOthers', label: '隐藏其他' },
                 { role: 'unhide', label: '显示全部' },
                 { type: 'separator' },
-                { role: 'quit', label: '退出 WeMD' },
+                { role: 'quit', label: '退出 MD Beautify' },
             ],
         },
         {
@@ -543,11 +643,11 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: '访问官网',
-                    click: () => shell.openExternal('https://wemd.app'),
+                    click: () => shell.openExternal('https://mdb.app'),
                 },
                 {
                     label: 'GitHub 仓库',
-                    click: () => shell.openExternal('https://github.com/qingu-x/md-editor'),
+                    click: () => shell.openExternal('https://github.com/qingu-x/md-beautify'),
                 },
             ],
         },

@@ -117,11 +117,11 @@ export const createMarkdownParser = () => {
     const srcIndex = token.attrIndex("src");
     let src = token.attrs![srcIndex][1];
 
-    // 匹配 URL 中的 wemd-size 参数（由下面的 render 拦截器注入）
-    const sizeMatch = src.match(/[?&]wemd-size=([^&]+)/);
+    // 匹配 URL 中的 mdb-size 参数（由下面的 render 拦截器注入）
+    const sizeMatch = src.match(/[?&]mdb-size=([^&]+)/);
     if (sizeMatch) {
       const size = decodeURIComponent(sizeMatch[1]);
-      // 移除 src 中的 wemd-size 参数
+      // 移除 src 中的 mdb-size 参数
       src = src.replace(sizeMatch[0], "");
       // 如果移除后 URL 以 ? 或 & 结尾，也清理掉
       src = src.replace(/[?&]$/, "");
@@ -140,15 +140,25 @@ export const createMarkdownParser = () => {
     }
 
     // 支持 Obsidian 风格的图片尺寸语法：![alt|100](url) 或 ![alt|100x200](url)
-    const content = token.content;
-    if (content) {
+    const altIndex = token.attrIndex("alt");
+    let altText = "";
+
+    // 优先从 attrs 读取，如果为空则使用 content
+    if (altIndex >= 0 && token.attrs && token.attrs[altIndex]) {
+      altText = token.attrs[altIndex][1] || "";
+    }
+    if (!altText && token.content) {
+      altText = token.content;
+    }
+
+    if (altText) {
       // 匹配结尾的 |width 或 |widthxheight
-      const match = content.match(/\|(\d+)(?:x(\d+))?$/);
+      const match = altText.match(/\|(\d+)(?:x(\d+))?$/);
       if (match) {
         const width = match[1];
         const height = match[2];
 
-        // 仅当之前未设置 width/height 时才设置（wemd-size 优先级更高）
+        // 仅当之前未设置 width/height 时才设置（mdb-size 优先级更高）
         if (width && token.attrIndex("width") === -1) {
           token.attrPush(["width", width]);
         }
@@ -156,14 +166,33 @@ export const createMarkdownParser = () => {
           token.attrPush(["height", height]);
         }
 
-        // 清理 alt 文本（移除尺寸部分）
-        // token.content 是 alt 文本的主要来源
-        token.content = content.substring(0, match.index);
+        // 添加 style 属性，直接设置宽高，覆盖主题的 width: 100%
+        const styleIndex = token.attrIndex("style");
+        let styleValue = "";
+        if (width) {
+          styleValue += `width: ${width}px !important; max-width: none !important;`;
+        }
+        if (height) {
+          styleValue += ` height: ${height}px !important; max-height: none !important;`;
+        }
 
-        // 如果 attrs 中已有 alt 属性，也同步更新
-        const altIndex = token.attrIndex("alt");
-        if (altIndex >= 0) {
-          token.attrs![altIndex][1] = token.content;
+        if (styleValue) {
+          if (styleIndex >= 0) {
+            // 合并已有的 style
+            token.attrs![styleIndex][1] += "; " + styleValue;
+          } else {
+            // 添加新的 style
+            token.attrPush(["style", styleValue]);
+          }
+        }
+
+        // 清理 alt 文本（移除尺寸部分）
+        const cleanAlt = altText.substring(0, match.index);
+        token.content = cleanAlt;
+
+        // 同步更新 attrs 中的 alt 属性
+        if (altIndex >= 0 && token.attrs) {
+          token.attrs[altIndex][1] = cleanAlt;
         }
       }
     }
@@ -184,7 +213,7 @@ export const createMarkdownParser = () => {
         const title = p3 || p6;
         const size = p4 || p5;
         const connector = url.includes("?") ? "&" : "?";
-        return `${p1}${url}${connector}wemd-size=${encodeURIComponent(size)} ${title})`;
+        return `${p1}${url}${connector}mdb-size=${encodeURIComponent(size)} ${title})`;
       },
     );
 
@@ -193,7 +222,7 @@ export const createMarkdownParser = () => {
       /(!\[.*?\]\()(.+?)\s+(=(?:\d+)?x?(?:\d+)?)\)/g,
       (match, p1, url, size) => {
         const connector = url.includes("?") ? "&" : "?";
-        return `${p1}${url}${connector}wemd-size=${encodeURIComponent(size)})`;
+        return `${p1}${url}${connector}mdb-size=${encodeURIComponent(size)})`;
       },
     );
 

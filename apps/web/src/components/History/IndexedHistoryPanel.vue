@@ -3,7 +3,16 @@
     <div class="history-header">
       <h3>历史记录</h3>
       <div class="history-actions">
-        <button class="btn-secondary btn-icon-only" @click="handleCreateArticle" data-tooltip="新增文章">
+        <button 
+          class="btn-secondary btn-icon-only" 
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+          @mouseleave="handleMouseLeave"
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @touchcancel="handleTouchCancel"
+          :data-tooltip="isLongPressing ? '松开创建示例文章' : '新增文章 (长按创建示例)'"
+        >
           <Plus :size="16" />
         </button>
         <button
@@ -147,10 +156,12 @@ import { Search, Plus, Trash2, MoreHorizontal, Edit2, Copy } from 'lucide-vue-ne
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useHistoryStore } from '../../store/historyStore';
+import { defaultMarkdown } from '../../store/editorStore';
 import { toast } from '../../hooks/useToast';
 import type { HistorySnapshot } from '../../store/historyTypes';
 
 const PAGE_SIZE = 50;
+const LONG_PRESS_DURATION = 500;
 
 const editorStore = useEditorStore();
 const themeStore = useThemeStore();
@@ -175,6 +186,9 @@ const showClearConfirm = ref(false);
 const clearing = ref(false);
 const deleteTarget = ref<HistorySnapshot | null>(null);
 const deleting = ref(false);
+
+const isLongPressing = ref(false);
+let longPressTimer: number | null = null;
 
 const handleRestore = async (entry: HistorySnapshot) => {
   try {
@@ -226,8 +240,9 @@ const handleDeleteConfirm = async () => {
   }
 };
 
-const handleCreateArticle = async () => {
-  const initial = '# 新文章\n\n';
+const handleCreateArticle = async (withExample = false) => {
+  const initial = withExample ? defaultMarkdown : '# 新文章\n\n';
+  const title = withExample ? '示例文章' : '新文章';
   
   try {
     // 1. 保存当前文章的状态
@@ -252,7 +267,7 @@ const handleCreateArticle = async () => {
         markdown: initial, 
         theme: 'default', 
         customCSS: '', 
-        title: '新文章', 
+        title, 
         themeName: '默认主题' 
       },
       { force: true }
@@ -263,7 +278,7 @@ const handleCreateArticle = async () => {
       historyStore.setActiveId(newEntry.id);
     }
     
-    toast.success('已创建新文章');
+    toast.success(withExample ? '已创建示例文章' : '已创建新文章');
 
     // 5. 关闭重命名等临时状态
     renamingId.value = null;
@@ -272,6 +287,52 @@ const handleCreateArticle = async () => {
     toast.error('创建失败');
     console.error(error);
   }
+};
+
+const clearLongPressTimer = () => {
+  if (longPressTimer !== null) {
+    window.clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+  isLongPressing.value = false;
+};
+
+const handleMouseDown = (e: MouseEvent) => {
+  e.preventDefault();
+  clearLongPressTimer();
+  longPressTimer = window.setTimeout(() => {
+    isLongPressing.value = true;
+  }, LONG_PRESS_DURATION);
+};
+
+const handleMouseUp = (e: MouseEvent) => {
+  e.preventDefault();
+  const wasLongPress = isLongPressing.value;
+  clearLongPressTimer();
+  handleCreateArticle(wasLongPress);
+};
+
+const handleMouseLeave = () => {
+  clearLongPressTimer();
+};
+
+const handleTouchStart = (e: TouchEvent) => {
+  e.preventDefault();
+  clearLongPressTimer();
+  longPressTimer = window.setTimeout(() => {
+    isLongPressing.value = true;
+  }, LONG_PRESS_DURATION);
+};
+
+const handleTouchEnd = (e: TouchEvent) => {
+  e.preventDefault();
+  const wasLongPress = isLongPressing.value;
+  clearLongPressTimer();
+  handleCreateArticle(wasLongPress);
+};
+
+const handleTouchCancel = () => {
+  clearLongPressTimer();
 };
 
 const startRename = (entry: HistorySnapshot) => {
@@ -384,6 +445,7 @@ onMounted(() => {
     observer?.disconnect();
     window.removeEventListener('click', handleWindowClick);
     window.removeEventListener('scroll', handleWindowScroll, true);
+    clearLongPressTimer();
   });
 });
 

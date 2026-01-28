@@ -17,12 +17,9 @@ import {
   receiptTheme,
   sunsetFilmTheme,
   templateTheme,
-} from "@wemd/core";
+} from "@mdb/core";
 
-import type {
-  CustomTheme,
-  ThemeDefinition,
-} from "@/types/theme";
+import type { CustomTheme, ThemeDefinition } from "@/types/theme";
 
 /**
  * 内置主题列表

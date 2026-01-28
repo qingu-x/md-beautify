@@ -1,5 +1,5 @@
 {
-  "name": "md-beautify-electron",
+  "name": "mdb-electron",
   "version": "1.2.3",
   "description": "MD Beautify - 更优雅的 Markdown 公众号排版工具",
   "main": "dist/main.js",

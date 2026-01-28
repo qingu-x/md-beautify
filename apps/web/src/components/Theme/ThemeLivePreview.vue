@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import mermaid from "mermaid";
-import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode } from "@wemd/core";
+import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, getDefaultMarkdown } from "@mdb/core";
 import { useUIThemeStore } from "../../store/uiThemeStore";
 import type { DesignerVariables } from "./ThemeDesigner/types";
 import {
@@ -29,62 +29,8 @@ const props = defineProps<{
   designerVariables?: DesignerVariables;
 }>();
 
-// 主题预览用的示例 Markdown
-const PREVIEW_MARKDOWN = `# 一级标题示例
-
-这是一段**加粗文本**、*斜体文本*、~~删除线文本~~、==高亮文本==和 [链接示例](https://github.com/tenngoxars/WeMD)。
-正文段落通常需要设置行高和间距，以保证阅读体验。
-
----
-
-## 二级标题
-
-> 这是一个引用块示例，通常用于强调重要内容或摘录。
-
-| 平台 | 特点 | 适用程度 |
-| :--- | :--- | :--- |
-| 微信 | 封闭但流量大 | ⭐⭐⭐⭐⭐ |
-| 博客 | 自由但流量小 | ⭐⭐⭐ |
-
-### 三级标题
-
-这里演示脚注的使用：[WeChat Markdown](https://github.com/tenngoxars/WeMD "WeMD 是一款专为公众号设计的编辑器") 可以极大提升排版效率。
-
-> [!TIP]
-> 这是一个提示块示例。支持切换“默认彩色”或“跟随主题色”风格，让排版更统一。
-
-- 无序列表
-  - 嵌套的无序列表 A
-  - 嵌套的无序列表 B
-
-
-1. 有序列表
-   1. 嵌套的有序列表 A
-   2. 嵌套的有序列表 B
-
-
-#### 四级标题
-
-这里有 \`行内代码\` 样式，也可以用来表示 \`npm install wemd\` 等指令。
-
-\`\`\`js
-// 代码块示例
-function hello() {
-  console.log("Hello WeMD");
-}
-\`\`\`
-
-\`\`\`mermaid
-flowchart TD
-  Start([Start]) --> Check{Is valid?}
-  Check -- Yes --> Process[Process]
-  Check -- No --> Reject[Reject]
-  Process --> End([End])
-  Reject --> End
-\`\`\`
-
-![WeMD 示例图片：不仅支持常规排版，更可以深度定制每一个细节。](https://img.wemd.app/example.jpg)
-`;
+const resolvedLocale = typeof navigator !== "undefined" ? navigator.language : "en";
+const PREVIEW_MARKDOWN = getDefaultMarkdown(resolvedLocale);
 
 const uiThemeStore = useUIThemeStore();
 const isDarkMode = computed(() => uiThemeStore.theme === "dark");
@@ -124,16 +70,22 @@ const html = computed(() => {
   return processHtml(rawHtml.value, finalCss.value, false);
 });
 
+const normalizeMermaidText = (text: string): string => {
+  return text.replace(/\u00A0/g, " ").replace(/\r\n?/g, "\n");
+};
+
 const renderMermaid = async (doc: Document) => {
   const blocks = Array.from(
-    doc.querySelectorAll<HTMLElement>("pre.mermaid"),
+    doc.querySelectorAll<HTMLElement>(
+      ".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
+    ),
   );
   if (blocks.length === 0) return;
 
-  if (!(window as any).__wemdMermaidInitialized) {
+  if (!(window as any).__mdbMermaidInitialized) {
     try {
       mermaid.initialize({ startOnLoad: false });
-      (window as any).__wemdMermaidInitialized = true;
+      (window as any).__mdbMermaidInitialized = true;
     } catch (e) {
       console.error("Mermaid initialization failed in preview:", e);
       return;
@@ -150,7 +102,7 @@ const renderMermaid = async (doc: Document) => {
     if (!block.dataset.mermaidRaw) {
       block.dataset.mermaidRaw = block.textContent ?? "";
     }
-    const diagram = block.dataset.mermaidRaw ?? "";
+    const diagram = normalizeMermaidText(block.dataset.mermaidRaw ?? "");
     if (!diagram.trim()) continue;
 
     const themedDiagram = getThemedMermaidDiagram(diagram, initConfig);
@@ -163,6 +115,7 @@ const renderMermaid = async (doc: Document) => {
         return;
       }
       block.innerHTML = svg;
+      block.classList.add("mermaid");
       const svgEl = block.querySelector("svg");
       if (svgEl) {
         const defs = svgEl.querySelector("defs");

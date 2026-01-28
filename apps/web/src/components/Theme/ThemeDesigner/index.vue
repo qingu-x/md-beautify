@@ -49,9 +49,9 @@ watch(variables, (newVars: DesignerVariables) => {
     clearTimeout(cssUpdateTimer);
   }
   cssUpdateTimer = setTimeout(() => {
-    const css = generateCSS(newVars);
-    emit("css-change", css);
-    emit("variables-change", newVars);
+  const css = generateCSS(newVars);
+  emit("css-change", css);
+  emit("variables-change", newVars);
     cssUpdateTimer = null;
   }, 16);
 }, { deep: true, immediate: true });

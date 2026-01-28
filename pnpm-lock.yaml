@@ -62,7 +62,7 @@ importers:
 
   apps/obsidian:
     dependencies:
-      '@wemd/core':
+      '@mdb/core':
         specifier: workspace:*
         version: link:../../packages/core
       katex:
@@ -229,7 +229,7 @@ importers:
       '@uiw/codemirror-theme-github':
         specifier: ^4.25.3
         version: 4.25.4(@codemirror/language@6.12.1)(@codemirror/state@6.5.3)(@codemirror/view@6.39.7)
-      '@wemd/core':
+      '@mdb/core':
         specifier: workspace:*
         version: link:../../packages/core
       codemirror:

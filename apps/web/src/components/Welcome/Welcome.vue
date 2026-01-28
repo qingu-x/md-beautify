@@ -3,10 +3,10 @@
     <div class="welcome-content">
       <img
         src="/favicon-dark.svg"
-        alt="WeMD Logo"
+        alt="MD Beautify Logo"
         class="welcome-logo"
       />
-      <h1>欢迎使用 WeMD</h1>
+      <h1>欢迎使用 MD Beautify</h1>
       <p>请选择一个文件夹作为工作区以开始写作</p>
       <button class="btn-primary" @click="selectWorkspace">
         <FolderOpen :size="20" />

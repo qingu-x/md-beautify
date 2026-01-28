@@ -37,6 +37,13 @@
         :style="mainStyle"
         :data-show-history="showHistory"
       >
+        <!-- 遮罩层（仅在中小屏幕显示） -->
+        <div 
+          v-if="showHistory"
+          class="history-backdrop"
+          @click="showHistory = false"
+        ></div>
+
         <div
           class="history-pane"
           :class="showHistory ? 'is-visible' : 'is-hidden'"
@@ -159,13 +166,13 @@ const copyToWechat = () => {
 
 const showThemePanel = ref(false);
 const showHistory = ref(
-  localStorage.getItem("wemd-show-history") !== "false"
+  localStorage.getItem("mdb-show-history") !== "false"
 );
 
 const historyWidth = ref(showHistory.value ? "280px" : "0px");
 
 watch(showHistory, (val: boolean) => {
-  localStorage.setItem("wemd-show-history", String(val));
+  localStorage.setItem("mdb-show-history", String(val));
   if (val) {
     historyWidth.value = "280px";
   } else {
@@ -204,7 +211,7 @@ onMounted(() => {
     const electron = (window as any).electron;
     if (electron?.update?.onUpdateAvailable) {
       electron.update.onUpdateAvailable((data: any) => {
-        const skippedVersion = localStorage.getItem("wemd-skipped-version");
+        const skippedVersion = localStorage.getItem("mdb-skipped-version");
         if (!data.force && skippedVersion === data.latestVersion) {
           return;
         }
@@ -229,7 +236,7 @@ const handleDownload = () => {
 
 const handleSkipVersion = () => {
   if (updateInfo.value) {
-    localStorage.setItem("wemd-skipped-version", updateInfo.value.latestVersion);
+    localStorage.setItem("mdb-skipped-version", updateInfo.value.latestVersion);
   }
   updateInfo.value = null;
 };

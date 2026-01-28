@@ -1,12 +1,12 @@
 {
-  "name": "wemd-monorepo",
+  "name": "mdb-monorepo",
   "private": true,
   "packageManager": "pnpm@10.26.2",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "dev:web": "pnpm --filter @wemd/web run dev",
-    "dev:electron": "ELECTRON_START_URL=http://localhost:5173 NODE_ENV=development pnpm --filter wemd-electron run dev -- --dev",
+    "dev:web": "pnpm --filter @mdb/web run dev",
+    "dev:electron": "ELECTRON_START_URL=http://localhost:5173 NODE_ENV=development pnpm --filter mdb-electron run dev -- --dev",
     "dev:desktop": "node scripts/run-desktop-dev.mjs",
     "version:major": "node scripts/version-bump.mjs major",
     "version:minor": "node scripts/version-bump.mjs minor",

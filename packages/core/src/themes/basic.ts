@@ -1,7 +1,7 @@
-export const basicTheme = `/* 默认样式，最佳实践 */
+export const basicTheme = `/* 默认样式，最佳实践 | Default Style, Best Practices */
 
-/* 全局属性 */
-#wemd {
+/* 全局属性 | Global Attributes */
+#mdb {
   font-size: 16px;
   color: #000000;
   padding: 0 10px;
@@ -14,8 +14,8 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   font-family: Optima-Regular, Optima, PingFangSC-light, PingFangTC-light, 'PingFang SC', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
-/* 段落 */
-#wemd p {
+/* 段落 | Paragraph */
+#mdb p {
   font-size: 16px;
   margin-top: 10px;
   margin-bottom: 10px;
@@ -23,114 +23,114 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   color: #000000;
 }
 
-/* 标题 */
-#wemd h1,
-#wemd h2,
-#wemd h3,
-#wemd h4,
-#wemd h5,
-#wemd h6 {
+/* 标题 | Heading */
+#mdb h1,
+#mdb h2,
+#mdb h3,
+#mdb h4,
+#mdb h5,
+#mdb h6 {
   margin-top: 30px;
   margin-bottom: 15px;
   padding: 0px;
   font-weight: bold;
   color: #000000;
 }
-#wemd h1 {
+#mdb h1 {
   font-size: 24px;
 }
-#wemd h2 {
+#mdb h2 {
   font-size: 22px;
 }
-#wemd h3 {
+#mdb h3 {
   font-size: 20px;
 }
-#wemd h4 {
+#mdb h4 {
   font-size: 18px;
 }
-#wemd h5 {
+#mdb h5 {
   font-size: 16px;
 }
-#wemd h6 {
+#mdb h6 {
   font-size: 16px;
 }
 
-#wemd h1 .prefix,
-#wemd h2 .prefix,
-#wemd h3 .prefix,
-#wemd h4 .prefix,
-#wemd h5 .prefix,
-#wemd h6 .prefix {
+#mdb h1 .prefix,
+#mdb h2 .prefix,
+#mdb h3 .prefix,
+#mdb h4 .prefix,
+#mdb h5 .prefix,
+#mdb h6 .prefix {
   display: none;
 }
 
-#wemd h1 .suffix,
-#wemd h2 .suffix,
-#wemd h3 .suffix,
-#wemd h4 .suffix,
-#wemd h5 .suffix,
-#wemd h6 .suffix {
+#mdb h1 .suffix,
+#mdb h2 .suffix,
+#mdb h3 .suffix,
+#mdb h4 .suffix,
+#mdb h5 .suffix,
+#mdb h6 .suffix {
   display: none;
 }
 
-/* 列表 */
-#wemd ul,
-#wemd ol {
+/* 列表 | List */
+#mdb ul,
+#mdb ol {
   margin-top: 8px;
   margin-bottom: 8px;
   padding-left: 25px;
   color: #000000;
 }
-#wemd ul {
+#mdb ul {
   list-style-type: disc;
 }
-#wemd ol {
+#mdb ol {
   list-style-type: decimal;
 }
-#wemd li section {
+#mdb li section {
   margin-top: 5px;
   margin-bottom: 5px;
   line-height: 26px;
   text-align: left;
-  color: #010101; /* 使用接近黑色的 HEX，避免微信吞掉纯黑色 */
+  color: #010101; /* 使用接近黑色的 HEX，避免微信吞掉纯黑色 | Use HEX close to black to avoid WeChat stripping pure black */
   font-weight: 500;
 }
 
-/* 术语列表 (Definition List) */
-#wemd dl {
+/* 术语列表 | Definition List */
+#mdb dl {
   margin: 20px 0;
   padding: 0;
 }
 
-#wemd dt {
+#mdb dt {
   font-weight: bold;
   font-size: 1.1em;
   margin-top: 16px;
   color: #000000;
 }
 
-#wemd dt::after {
+#mdb dt::after {
   content: "：";
   display: inline;
 }
 
-#wemd dd {
+#mdb dd {
   margin-left: 0;
   margin-top: 4px;
   color: #333333;
   line-height: 1.6;
 }
 
-#wemd dd p {
+#mdb dd p {
   margin: 4px 0;
 }
 
-/* 引用 */
-#wemd blockquote {
+/* 引用 | Blockquote */
+#mdb blockquote {
   border: none;
 }
 
-#wemd .multiquote-1 {
+#mdb .multiquote-1 {
   display: block;
   font-size: 0.9em;
   overflow: auto;
@@ -146,42 +146,42 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   margin-top: 20px;
 }
 
-#wemd .multiquote-1 p {
+#mdb .multiquote-1 p {
   margin: 0px;
   color: #000000;
   line-height: 26px;
 }
 
-#wemd .multiquote-2 {
+#mdb .multiquote-2 {
   box-shadow: 1px 1px 10px rgba(0,0,0,0.2);
   padding: 20px;
   margin-bottom: 20px;
   margin-top: 20px;
 }
 
-#wemd .multiquote-3 {
+#mdb .multiquote-3 {
   box-shadow: 1px 1px 10px rgba(0,0,0,0.2);
   padding: 20px;
   margin-bottom: 20px;
   margin-top: 20px;
 }
 
-#wemd .multiquote-3 p {
+#mdb .multiquote-3 p {
   text-align: center;
 }
 
-#wemd .multiquote-3 h3 {
+#mdb .multiquote-3 h3 {
   text-align: center;
 }
 
-#wemd .table-of-contents a {
+#mdb .table-of-contents a {
   border: none;
   color: #000000;
   font-weight: normal;
 }
 
-/* 链接 */
-#wemd a {
+/* 链接 | Link */
+#mdb a {
   text-decoration: none;
   color: #1e6bb8;
   word-wrap: break-word;
@@ -189,32 +189,32 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   border-bottom: 1px solid #1e6bb8;
 }
 
-/* 加粗 */
-#wemd strong {
+/* 加粗 | Bold */
+#mdb strong {
   font-weight: bold;
   color: #000000;
 }
 
-/* 斜体 */
-#wemd em {
+/* 斜体 | Italic */
+#mdb em {
   font-style: italic;
   color: #000000;
 }
 
-/* 加粗斜体 */
-#wemd em strong {
+/* 加粗斜体 | Bold Italic */
+#mdb em strong {
   font-weight: bold;
   color: #000000;
 }
 
-/* 删除线 */
-#wemd del {
+/* 删除线 | Strikethrough */
+#mdb del {
   font-style: italic;
   color: #000000;
 }
 
-/* 分隔线 */
-#wemd hr {
+/* 分隔线 | Horizontal Rule */
+#mdb hr {
   height: 1px;
   margin: 0;
   margin-top: 10px;
@@ -224,7 +224,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 }
 
 /* 代码块容器 */
-#wemd pre {
+#mdb pre {
   margin: 10px 0;
   position: relative;
   padding: 0;
@@ -232,7 +232,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   overflow: hidden;
 }
 
-#wemd pre.custom::before {
+#mdb pre.custom::before {
   content: "";
   position: absolute;
   top: 10px;
@@ -245,7 +245,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   z-index: 10;
 }
 
-#wemd pre code {
+#mdb pre code {
   display: block;
   font-family: Operator Mono, Consolas, Monaco, Menlo, monospace;
   border-radius: 0px;
@@ -255,15 +255,15 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   box-sizing: border-box;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 36px 16px 16px !important;
+  padding: 36px 16px 16px;
 }
 
-#wemd pre code span {
+#mdb pre code span {
   line-height: 26px;
 }
 
 /* Mermaid */
-#wemd .mermaid {
+#mdb .mermaid {
   background: #f8f8f8;
   display: flex;
   justify-content: center;
@@ -276,43 +276,43 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   font-size: inherit;
 }
 
-#wemd .mermaid svg {
+#mdb .mermaid svg {
   display: block;
   width: 100%;
   max-width: 100%;
   height: auto;
 }
 
-#wemd .mermaid svg line,
-#wemd .mermaid svg path {
+#mdb .mermaid svg line,
+#mdb .mermaid svg path {
   vector-effect: non-scaling-stroke;
 }
 
-#wemd .mermaid svg text {
-  letter-spacing: 0 !important;
-  word-spacing: 0 !important;
+#mdb .mermaid svg text {
+  letter-spacing: 0;
+  word-spacing: 0;
   font-kerning: normal;
 }
 
-#wemd .mermaid svg .eventWrapper {
-  filter: none !important;
+#mdb .mermaid svg .eventWrapper {
+  filter: none;
 }
 
-#wemd .mermaid .label {
+#mdb .mermaid .label {
   text-align: left;
   white-space: normal;
-  letter-spacing: 0 !important;
-  word-spacing: 0 !important;
+  letter-spacing: 0;
+  word-spacing: 0;
   font-kerning: normal;
 }
-#wemd .mermaid .label * {
-  letter-spacing: 0 !important;
-  word-spacing: 0 !important;
+#mdb .mermaid .label * {
+  letter-spacing: 0;
+  word-spacing: 0;
 }
 
 /* 行内代码 */
-#wemd p code,
-#wemd li code {
+#mdb p code,
+#mdb li code {
   font-size: 14px;
   word-wrap: break-word;
   padding: 2px 4px;
@@ -325,21 +325,21 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 }
 
 /* 图片 */
-#wemd img {
+#mdb img {
   display: block;
   margin: 0 auto;
   max-width: 100%;
 }
 
 /* 图片 */
-#wemd figure {
+#mdb figure {
   margin: 0;
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
 /* 图片描述文字 */
-#wemd figcaption {
+#mdb figcaption {
   margin-top: 5px;
   text-align: center;
   color: #888;
@@ -348,65 +348,65 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 
 
 /* 表格容器 */
-#wemd .table-container{
+#mdb .table-container{
   overflow-x: auto;
 }
 
 /* 表格 */
-#wemd table {
+#mdb table {
   display: table;
   text-align: left;
 }
-#wemd tbody {
+#mdb tbody {
   border: 0;
 }
 
-#wemd table tr {
+#mdb table tr {
   border: 0;
   border-top: 1px solid #ccc;
   background-color: #ffffff;
 }
 
-#wemd table tr:nth-child(2n) {
+#mdb table tr:nth-child(2n) {
   background-color: #F8F8F8;
 }
 
-#wemd table tr th,
-#wemd table tr td {
+#mdb table tr th,
+#mdb table tr td {
   font-size: 16px;
   border: 1px solid #ccc;
   padding: 5px 10px;
   text-align: left;
 }
 
-#wemd table tr th {
+#mdb table tr th {
   font-weight: bold;
   background-color: #f0f0f0;
 }
 
 /* 表格最小列宽4个汉字 */
-#wemd table tr th:nth-of-type(n),
-#wemd table tr td:nth-of-type(n){
+#mdb table tr th:nth-of-type(n),
+#mdb table tr td:nth-of-type(n){
   min-width:85px;
 }
 
-#wemd .footnote-word {
+#mdb .footnote-word {
   color: #1e6bb8;
   font-weight: bold;
 }
 
-#wemd .footnote-ref {
+#mdb .footnote-ref {
   color: #1e6bb8;
   font-weight: bold;
 }
 
-#wemd .footnote-item {
+#mdb .footnote-item {
   display: flex;
 }
 
-#wemd .footnote-num {
+#mdb .footnote-num {
   display: inline;
-  width: 10%; /*神奇，50px就不可以*/
+  width: 10%;
   background: none;
   font-size: 80%;
   opacity: 0.6;
@@ -414,7 +414,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   font-family: ptima-Regular, Optima, PingFangSC-light, PingFangTC-light, 'PingFang SC', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
 }
 
-#wemd .footnote-item p {
+#mdb .footnote-item p {
   display: inline;
   font-size: 14px;
   width: 90%;
@@ -426,17 +426,17 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   width: calc(100%-50)
 }
 
-#wemd sub, sup {
+#mdb sub, sup {
   line-height: 0;
 }
 
-#wemd .footnotes-sep:before {
+#mdb .footnotes-sep:before {
   content: "参考资料";
   display: block;
 }
 
 /* 解决公式问题 */
-#wemd .block-equation {
+#mdb .block-equation {
   display:block;
   text-align: center;
   overflow: auto;
@@ -444,18 +444,18 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   -webkit-overflow-scrolling: touch;
 }
 
-#wemd .block-equation svg {
-  max-width: 300% !important;
+#mdb .block-equation svg {
+  max-width: 300%;
   -webkit-overflow-scrolling: touch;
 }
 
-#wemd .inline-equation {
+#mdb .inline-equation {
 }
 
-#wemd .inline-equation svg {
+#mdb .inline-equation svg {
 }
 
-#wemd .imageflow-layer1 {
+#mdb .imageflow-layer1 {
   margin-top: 1em;
   margin-bottom: 0.5em;
   white-space: normal;
@@ -464,13 +464,13 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   overflow: hidden;
 }
 
-#wemd .imageflow-layer2 {
+#mdb .imageflow-layer2 {
   white-space: nowrap;
   width: 100%;
   overflow-x: scroll;
 }
 
-#wemd .imageflow-layer3 {
+#mdb .imageflow-layer3 {
   display: inline-block;
   word-wrap: break-word;
   white-space: normal;
@@ -480,7 +480,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   flex-shrink: 0;
 }
 
-#wemd .imageflow-img {
+#mdb .imageflow-img {
   display: block;
   width: 100%;
   height: auto;
@@ -489,26 +489,26 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   border-radius: 4px;
 }
 
-#wemd .imageflow-caption {
+#mdb .imageflow-caption {
   text-align: center;
   margin-top: 0px;
   padding-top: 0px;
   color: #888;
 }
 
-#wemd .nice-suffix-juejin-container {
-  margin-top: 20px !important;
+#mdb .nice-suffix-juejin-container {
+  margin-top: 20px;
 }
 
-#wemd figure a {
+#mdb figure a {
   border: none;
 }
 
-#wemd figure a img {
+#mdb figure a img {
   margin: 0px;
 }
 
-#wemd figure {
+#mdb figure {
   display:flex;
   flex-direction: column;
   justify-content: center;
@@ -516,14 +516,14 @@ export const basicTheme = `/* 默认样式，最佳实践 */
 }
 
 /* 图片链接嵌套 */
-#wemd figure a {
+#mdb figure a {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 /* 图片链接嵌套，图片解释 */
-#wemd figure a + figcaption {
+#mdb figure a + figcaption {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -535,7 +535,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   z-index: 20;
 }
 
-#wemd .callout {
+#mdb .callout {
   margin: 24px 0;
   padding: 18px 20px;
   border-radius: 16px;
@@ -544,7 +544,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   box-shadow: 0 12px 25px rgba(15, 23, 42, 0.08);
 }
 
-#wemd .callout-title {
+#mdb .callout-title {
   font-weight: 600;
   margin-bottom: 8px;
   display: flex;
@@ -553,18 +553,18 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   letter-spacing: 0.05em;
 }
 
-#wemd .callout-icon {
+#mdb .callout-icon {
   font-size: 18px;
 }
 
-#wemd .callout-note { border-left: 4px solid #6366f1; background: #f5f5ff; }
-#wemd .callout-tip { border-left: 4px solid #10b981; background: #ecfdf5; }
-#wemd .callout-important { border-left: 4px solid #8b5cf6; background: #f5f3ff; }
-#wemd .callout-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
-#wemd .callout-caution { border-left: 4px solid #ef4444; background: #fff5f5; }
+#mdb .callout-note { border-left: 4px solid #6366f1; background: #f5f5ff; }
+#mdb .callout-tip { border-left: 4px solid #10b981; background: #ecfdf5; }
+#mdb .callout-important { border-left: 4px solid #8b5cf6; background: #f5f3ff; }
+#mdb .callout-warning { border-left: 4px solid #f59e0b; background: #fffbeb; }
+#mdb .callout-caution { border-left: 4px solid #ef4444; background: #fff5f5; }
 
 
-#wemd .task-list-item {
+#mdb .task-list-item {
   list-style: none;
   margin-left: -1.2em;
   margin-bottom: 6px;
@@ -573,7 +573,7 @@ export const basicTheme = `/* 默认样式，最佳实践 */
   align-items: flex-start;
 }
 
-#wemd .task-list-item input[type='checkbox'] {
+#mdb .task-list-item input[type='checkbox'] {
   margin-top: 4px;
   pointer-events: none;
 }

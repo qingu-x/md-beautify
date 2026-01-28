@@ -1,4 +1,4 @@
-import { processHtml, createMarkdownParser } from "@wemd/core";
+import { processHtml, createMarkdownParser } from "@mdb/core";
 import mermaid from "mermaid";
 import katexCss from "katex/dist/katex.min.css?raw";
 import { loadMathJax } from "../utils/mathJaxLoader";
@@ -146,7 +146,7 @@ const renderMermaidBlocks = async (container: HTMLElement): Promise<void> => {
   if (designerVariables) {
     designerVariables.mermaidTheme = "base";
   }
-  const renderIdBase = `wemd-mermaid-${Date.now()}`;
+  const renderIdBase = `mdb-mermaid-${Date.now()}`;
 
   // 构建 Mermaid 配置
   const initConfig = getMermaidConfig(designerVariables, false);
@@ -212,7 +212,7 @@ const renderMermaidBlocks = async (container: HTMLElement): Promise<void> => {
       figure.appendChild(img);
       block.parentNode?.replaceChild(figure, block);
     } catch (error) {
-      console.error("[WeMD] Mermaid render failed:", error);
+      console.error("[MDBeautify] Mermaid render failed:", error);
     }
   }
 };

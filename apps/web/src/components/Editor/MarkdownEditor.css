@@ -405,14 +405,6 @@
   color: #d4d4d4;
 }
 
-[data-ui-theme="dark"] .editor-container .cm-scroller::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-[data-ui-theme="dark"] .editor-container .cm-scroller::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
 [data-ui-theme="dark"] .editor-container .cm-inline-code {
   background-color: rgba(255, 255, 255, 0.1);
   color: #f08080;
@@ -421,16 +413,6 @@
 
 [data-ui-theme="dark"] .editor-container .cm-activeLine {
   background-color: rgba(255, 255, 255, 0.05);
-}
-
-/* 标题 - 深色模式 */
-[data-ui-theme="dark"] .editor-container .cm-header {
-  color: #e2e8f0;
-}
-
-/* 粗体 - 深色模式 */
-[data-ui-theme="dark"] .editor-container .cm-strong {
-  color: #e2e8f0;
 }
 
 /* 标题 - 深色模式 */

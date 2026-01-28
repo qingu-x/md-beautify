@@ -52,6 +52,28 @@
   color: var(--text-primary);
 }
 
+.history-actions .btn-icon-only:active {
+  transform: scale(0.95);
+}
+
+.history-actions .btn-icon-only[data-tooltip*="松开"] {
+  background: var(--accent-primary);
+  color: white;
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
 /* 自定义 Tooltip（悬浮提示） */
 .history-actions .btn-icon-only {
   position: relative;
@@ -72,7 +94,9 @@
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s, visibility 0.15s;
+  transition:
+    opacity 0.15s,
+    visibility 0.15s;
   pointer-events: none;
   z-index: 9999;
 }
@@ -294,7 +318,9 @@
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -392,7 +418,11 @@
 .history-confirm-actions button:hover {
   background: var(--bg-hover);
   border-color: var(--border-light);
-  border-color: color-mix(in srgb, var(--border-light) 60%, var(--accent-primary) 40%);
+  border-color: color-mix(
+    in srgb,
+    var(--border-light) 60%,
+    var(--accent-primary) 40%
+  );
 }
 
 .history-confirm-actions .btn-danger {
@@ -408,6 +438,5 @@
   background: color-mix(in srgb, var(--error) 26%, var(--bg-primary) 74%);
   border-color: var(--error);
   box-shadow: 0 8px 16px rgba(var(--error-rgb), 0.24);
-  box-shadow: 0 8px 16px
-    color-mix(in srgb, var(--error) 24%, transparent);
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--error) 24%, transparent);
 }

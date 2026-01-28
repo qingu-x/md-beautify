@@ -15,6 +15,10 @@ interface ElectronFileItem {
   updatedAt: string;
   size?: number;
   themeName?: string;
+  isDirectory?: boolean;
+  children?: ElectronFileItem[];
+  level?: number;
+  parentPath?: string;
 }
 
 interface ElectronAPI {
@@ -41,7 +45,7 @@ interface ElectronAPI {
     }) => Promise<{ success: boolean; error?: string }>;
     renameFile: (payload: {
       oldPath: string;
-      newName: string;
+      newPath: string;
     }) => Promise<{ success: boolean; filePath?: string; error?: string }>;
     deleteFile: (path: string) => Promise<{ success: boolean; error?: string }>;
     revealInFinder: (path: string) => Promise<void>;
@@ -58,8 +62,8 @@ const getElectron = (): ElectronAPI | null => {
   return (window as any).electron as ElectronAPI;
 };
 
-const WORKSPACE_KEY = "wemd-workspace-path";
-const LAST_FILE_KEY = "wemd-last-file-path";
+const WORKSPACE_KEY = "mdb-workspace-path";
+const LAST_FILE_KEY = "mdb-last-file-path";
 
 export function useFileSystem(options: { registerListeners?: boolean } = {}) {
   const { registerListeners = false } = options;
@@ -103,14 +107,20 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
       try {
         const res = await electron.fs.listFiles(fileStore.workspacePath);
         if (res.success && res.files) {
-          const formattedFiles: StoreFileItem[] = res.files.map((f) => ({
+          const mapFileItem = (f: any): StoreFileItem => ({
             name: f.name,
             path: f.path,
             createdAt: new Date(f.createdAt),
             updatedAt: new Date(f.updatedAt),
             size: f.size || 0,
             themeName: f.themeName,
-          }));
+            isDirectory: f.isDirectory,
+            children: f.children?.map(mapFileItem),
+            level: f.level,
+            parentPath: f.parentPath,
+          });
+
+          const formattedFiles: StoreFileItem[] = res.files.map(mapFileItem);
           fileStore.setFiles(formattedFiles);
         }
       } catch (error) {
@@ -119,20 +129,31 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
     } else if (storageStore.adapter) {
       // Browser mode (filesystem or indexeddb)
       try {
+        if (!storageStore.adapter.ready) {
+          console.warn("Storage adapter not ready yet");
+          return;
+        }
+
         const list = await storageStore.adapter.listFiles();
-        const formattedFiles: StoreFileItem[] = list.map(
-          (f: StorageFileItem) => ({
-            name: f.name,
-            path: f.path,
-            createdAt: new Date(f.updatedAt || Date.now()), // Browser adapters might not have createdAt
-            updatedAt: new Date(f.updatedAt || Date.now()),
-            size: f.size || 0,
-            themeName: (f.meta?.themeName as string) || undefined,
-          }),
-        );
+
+        const mapFileItem = (f: StorageFileItem): StoreFileItem => ({
+          name: f.name,
+          path: f.path,
+          createdAt: new Date(f.updatedAt || Date.now()),
+          updatedAt: new Date(f.updatedAt || Date.now()),
+          size: f.size || 0,
+          themeName: (f.meta?.themeName as string) || undefined,
+          isDirectory: f.isDirectory,
+          children: f.children?.map(mapFileItem),
+          level: f.level,
+          parentPath: f.parentPath,
+        });
+
+        const formattedFiles: StoreFileItem[] = list.map(mapFileItem);
         fileStore.setFiles(formattedFiles);
       } catch (error) {
         console.error("Failed to refresh files in browser:", error);
+        toast.error("刷新文件列表失败");
       }
     }
   };
@@ -155,12 +176,15 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
       // Browser mode: switch to filesystem adapter
       try {
         const res = await storageStore.select("filesystem");
-        if (res.ready) {
+        if (res.ready && storageStore.adapter && storageStore.adapter.ready) {
           await refreshFiles();
           toast.success("已选择本地文件夹");
+        } else if (!res.ready) {
+          toast.error("选择文件夹失败，请重试");
         }
       } catch (error) {
         console.error("Failed to select filesystem in browser:", error);
+        toast.error("选择文件夹失败");
       }
     }
   };
@@ -194,6 +218,7 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
 
   // 5. 打开文件
   const openFile = async (file: StoreFileItem) => {
+    if (file.isDirectory) return;
     if (fileStore.currentFile?.path === file.path) return;
 
     // 如果有未保存的内容，提示
@@ -209,12 +234,15 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
       fileStore.setIsDirty(false);
 
       // 解析 frontmatter (如果有)
-      const { body, themeId, themeName } = parseFsFrontmatter(content);
+      const { body, themeId } = parseFsFrontmatter(content);
       editorStore.setMarkdown(body);
 
       if (themeId) {
         themeStore.setTheme(themeId);
       }
+
+      // 更新页面 title
+      document.title = file.name.replace(/\.md$/, "") + " - MD Beautify";
 
       localStorage.setItem(LAST_FILE_KEY, file.path);
     }
@@ -326,17 +354,14 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
   };
 
   // 8. 重命名文件
-  const renameFile = async (oldPath: string, newName: string) => {
+  const renameFile = async (oldPath: string, newPath: string) => {
     if (!electron && !storageStore.adapter) return;
 
     try {
-      // 确保新名字以 .md 结尾
-      const safeName = newName.endsWith(".md") ? newName : `${newName}.md`;
-
       if (electron) {
         const res = await electron.fs.renameFile({
           oldPath,
-          newName: safeName,
+          newPath,
         });
         if (res.success && res.filePath) {
           await refreshFiles();
@@ -347,6 +372,9 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
             );
             if (updatedFile) {
               fileStore.setCurrentFile(updatedFile);
+              // 更新页面 title
+              document.title =
+                updatedFile.name.replace(/\.md$/, "") + " - MD Beautify";
             }
           }
           toast.success("重命名成功");
@@ -354,12 +382,6 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
           toast.error(res.error || "重命名失败");
         }
       } else if (storageStore.adapter) {
-        // Browser mode rename
-        const dir = oldPath.includes("/")
-          ? oldPath.substring(0, oldPath.lastIndexOf("/") + 1)
-          : "";
-        const newPath = dir + safeName;
-
         if (oldPath === newPath) return;
 
         if (await storageStore.adapter.exists(newPath)) {
@@ -374,6 +396,9 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
           const updatedFile = fileStore.files.find((f) => f.path === newPath);
           if (updatedFile) {
             fileStore.setCurrentFile(updatedFile);
+            // 更新页面 title
+            document.title =
+              updatedFile.name.replace(/\.md$/, "") + " - MD Beautify";
           }
         }
         toast.success("重命名成功");
@@ -399,6 +424,8 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
             fileStore.setLastSavedContent("");
             fileStore.setIsDirty(false);
             localStorage.removeItem(LAST_FILE_KEY);
+            // 恢复默认 title
+            document.title = "MD Beautify";
           }
           toast.success("删除成功");
         } else {
@@ -413,6 +440,8 @@ export function useFileSystem(options: { registerListeners?: boolean } = {}) {
           fileStore.setLastSavedContent("");
           fileStore.setIsDirty(false);
           localStorage.removeItem(LAST_FILE_KEY);
+          // 恢复默认 title
+          document.title = "MD Beautify";
         }
         toast.success("删除成功");
       }
