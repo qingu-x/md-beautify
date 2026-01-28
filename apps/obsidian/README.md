@@ -19,7 +19,7 @@
 
 ### 📸 Screenshot
 
-![MD Beautify for Obsidian](https://raw.githubusercontent.com/qingu-x/md-beautify/main/vue/.github/assets/screenshot.png)
+![MD Beautify for Obsidian](assets/screenshot.jpg)
 
 ### 🖼️ Preview
 
