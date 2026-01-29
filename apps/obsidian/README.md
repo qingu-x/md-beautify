@@ -19,13 +19,13 @@
 
 ### 📸 Screenshot
 
-![MD Beautify for Obsidian](assets/screenshot.jpg)
+![MD Beautify for Obsidian](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/screenshot.jpg)
 
 ### 🖼️ Preview
 
-| Light Mode                      | Dark Mode                     |
-| ------------------------------- | ----------------------------- |
-| ![Light Mode](assets/light.jpg) | ![Dark Mode](assets/dark.jpg) |
+| Light Mode                                                                                       | Dark Mode                                                                                      |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| ![Light Mode](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/light.jpg) | ![Dark Mode](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/dark.jpg) |
 
 ### 🚀 How to Use
 
@@ -70,6 +70,10 @@
 ### 💬 Support & Feedback
 
 If you enjoy this plugin, please consider giving it a ⭐ on [GitHub](https://github.com/qingu-x/obsidian-md-beautify-plugin)!
+
+If you find this plugin helpful and want to support its development, you can buy me a coffee!
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/pax_z)
 
 For bugs and feature requests, please [open an issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues).
 

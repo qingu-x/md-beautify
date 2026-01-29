@@ -69,6 +69,10 @@
 
 如果你喜欢这个插件，请在 [GitHub](https://github.com/qingu-x/obsidian-md-beautify-plugin) 上给它一个 ⭐！
 
+如果你觉得这个插件对你有帮助，想要支持后续的开发，可以请我喝杯咖啡！
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/pax_z)
+
 如果有 Bug 或功能建议，请 [提交 Issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues)。
 
 ---

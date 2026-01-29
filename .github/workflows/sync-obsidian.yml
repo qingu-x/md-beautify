@@ -64,6 +64,10 @@ jobs:
           [ -f apps/obsidian/dist/main.js ] && cp apps/obsidian/dist/main.js $TEMP_DIR/main.js
           [ -f apps/obsidian/dist/styles.css ] && cp apps/obsidian/dist/styles.css $TEMP_DIR/styles.css
           
+          # 同步赞助配置文件
+          mkdir -p $TEMP_DIR/.github
+          [ -f .github/FUNDING.yml ] && cp .github/FUNDING.yml $TEMP_DIR/.github/FUNDING.yml
+          
           if [ -f apps/obsidian/LICENSE ]; then
             cp apps/obsidian/LICENSE $TEMP_DIR/LICENSE
           else
