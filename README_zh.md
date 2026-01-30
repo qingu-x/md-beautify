@@ -189,6 +189,8 @@ MDB/
 
 ## 🤝 致谢
 
+再次感谢 [@tenngoxars](https://github.com/tenngoxars) 以及 WeMD Team 的原始项目。
+
 本项目的深色模式预览算法深度参考了微信官方开源的 [wechatjs/mp-darkmode](https://github.com/wechatjs/mp-darkmode) 核心逻辑。感谢微信团队为开发者提供的优秀解决方案！
 
 ---
@@ -196,5 +198,3 @@ MDB/
 ## 📄 License
 
 [MIT](LICENSE) © MDBeautify Team
-
-再次感谢 [@tenngoxars](https://github.com/tenngoxars) 以及 WeMD Team 的原始项目。本项目同样采用 MIT 协议开源。

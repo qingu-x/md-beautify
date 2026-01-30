@@ -188,6 +188,8 @@ If you find this project helpful, you can buy me a coffee!
 
 ## 🤝 Acknowledgments
 
+Thanks again to [@tenngoxars](https://github.com/tenngoxars) and the WeMD Team for the original project.
+
 The dark mode preview algorithm in this project is deeply inspired by the core logic of [wechatjs/mp-darkmode](https://github.com/wechatjs/mp-darkmode) open-sourced by the WeChat team. Thanks to the WeChat team for providing excellent solutions for developers!
 
 ---
@@ -195,5 +197,3 @@ The dark mode preview algorithm in this project is deeply inspired by the core l
 ## 📄 License
 
 [MIT](LICENSE) © MDBeautify Team
-
-Special thanks again to [@tenngoxars](https://github.com/tenngoxars) and the WeMD Team for the original project. This project is also open-sourced under the MIT license.
