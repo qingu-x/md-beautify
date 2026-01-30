@@ -8,7 +8,6 @@ import {
 } from "@mdb/core";
 import { useEditorStore } from "../store/editorStore";
 import { useThemeStore } from "../store/themeStore";
-import { useUIThemeStore } from "../store/uiThemeStore";
 import { useFileStore } from "../store/fileStore";
 import { useWindowControls } from "./useWindowControls";
 import { toast } from "./useToast";
@@ -38,7 +37,6 @@ interface ElectronWindow extends Window {
 export function useExport() {
   const editorStore = useEditorStore();
   const themeStore = useThemeStore();
-  const uiThemeStore = useUIThemeStore();
   const fileStore = useFileStore();
   const { isElectron } = useWindowControls();
   const parser = createMarkdownParser();
@@ -86,7 +84,7 @@ export function useExport() {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
-      // 处理导出内容
+      // Process export content / 处理导出内容
       let processedHtml = tempContainer.innerHTML;
       processedHtml = processExportContent(processedHtml);
 

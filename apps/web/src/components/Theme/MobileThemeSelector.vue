@@ -2,7 +2,7 @@
   <div v-if="open" class="mobile-theme-overlay" @click="$emit('close')">
     <div class="mobile-theme-panel" @click.stop>
       <div class="mobile-theme-header">
-        <span>选择主题</span>
+        <span>{{ t('theme.title') }}</span>
         <button class="mobile-theme-close" @click="$emit('close')">
           <X :size="20" />
         </button>
@@ -10,7 +10,7 @@
 
       <div class="mobile-theme-list">
         <div v-if="customThemes.length > 0" class="mobile-theme-group">
-          <div class="mobile-theme-group-title">自定义主题</div>
+          <div class="mobile-theme-group-title">{{ t('theme.customThemes') }}</div>
           <button
             v-for="theme in customThemes"
             :key="theme.id"
@@ -24,7 +24,7 @@
         </div>
 
         <div class="mobile-theme-group">
-          <div class="mobile-theme-group-title">内置主题</div>
+          <div class="mobile-theme-group-title">{{ t('theme.builtInThemes') }}</div>
           <button
             v-for="theme in builtInThemes"
             :key="theme.id"
@@ -45,6 +45,7 @@
 import { computed } from 'vue';
 import { X, Check } from 'lucide-vue-next';
 import { useThemeStore } from '../../store/themeStore';
+import { useI18n } from '../../i18n';
 import './MobileThemeSelector.css';
 
 const props = defineProps<{
@@ -55,15 +56,20 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
+const { t } = useI18n();
 const themeStore = useThemeStore();
 
 const currentThemeId = computed(() => themeStore.themeId);
 
-// 获取所有主题并分组
+// Get all themes and group them / 获取所有主题并分组
 const allThemes = computed(() => themeStore.allThemes);
 const builtInThemes = computed(() => allThemes.value.filter((t: any) => t.isBuiltIn));
 const customThemes = computed(() => allThemes.value.filter((t: any) => !t.isBuiltIn));
 
+/**
+ * Handle theme selection
+ * Handle theme selection / 处理主题选择
+ */
 const handleSelect = (themeId: string) => {
   themeStore.selectTheme(themeId);
   emit('close');

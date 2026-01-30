@@ -36,8 +36,8 @@
                 v-focus
               />
               <div class="fs-rename-actions">
-                <button @click="$emit('cancel-rename')">取消</button>
-                <button @click="$emit('submit-rename')">确认</button>
+                <button @click="$emit('cancel-rename')">{{ t('sidebar.renameCancel') }}</button>
+                <button @click="$emit('submit-rename')">{{ t('sidebar.renameConfirm') }}</button>
               </div>
             </div>
             <span v-else class="fs-title" :title="item.name">
@@ -63,8 +63,8 @@
                 v-focus
               />
               <div class="fs-rename-actions">
-                <button @click="$emit('cancel-rename')">取消</button>
-                <button @click="$emit('submit-rename')">确认</button>
+                <button @click="$emit('cancel-rename')">{{ t('sidebar.renameCancel') }}</button>
+                <button @click="$emit('submit-rename')">{{ t('sidebar.renameConfirm') }}</button>
               </div>
             </div>
           </template>
@@ -81,7 +81,7 @@
             <div class="fs-file-content">
               <div class="fs-title" :title="item.name">{{ item.name }}</div>
               <div class="fs-theme-info">
-                {{ currentFile?.path === item.path ? currentThemeName : (item.themeName || "默认主题") }}
+                {{ currentFile?.path === item.path ? currentThemeName : (item.themeName || t('sidebar.defaultTheme')) }}
               </div>
             </div>
           </template>
@@ -112,6 +112,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from "../../i18n";
 import { ChevronRight, ChevronDown, Folder, FileText, MoreHorizontal } from 'lucide-vue-next';
 import type { FileItem } from '../../store/fileTypes';
 
@@ -133,12 +134,15 @@ const emit = defineEmits<{
   (e: 'cancel-rename'): void;
 }>();
 
+const { t, locale } = useI18n();
+
 const isExpanded = computed(() => props.expandedFolders.has(props.item.path));
 
 const formattedTime = computed(() => {
   if (!props.item.updatedAt) return '';
   const date = new Date(props.item.updatedAt);
-  return date.toLocaleString('en-US', {
+  const localeStr = locale.value === 'zh' ? 'zh-CN' : 'en-US';
+  return date.toLocaleString(localeStr, {
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',

@@ -51,7 +51,7 @@ contextBridge.exposeInMainWorld('electron', {
         }
     },
 
-    // 窗口控制 (用于 Windows 自定义标题栏)
+    // Window Control (For Windows Custom Title Bar) / 窗口控制 (用于 Windows 自定义标题栏)
     window: {
         minimize: () => ipcRenderer.invoke('window:minimize'),
         maximize: () => ipcRenderer.invoke('window:maximize'),
@@ -59,7 +59,7 @@ contextBridge.exposeInMainWorld('electron', {
         isMaximized: () => ipcRenderer.invoke('window:isMaximized'),
     },
 
-    // 更新相关
+    // Update Related / 更新相关
     update: {
         onUpdateAvailable: (callback: (data: {
             latestVersion: string;

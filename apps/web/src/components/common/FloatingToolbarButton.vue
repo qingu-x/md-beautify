@@ -18,13 +18,13 @@
 import { computed, type Component } from 'vue';
 
 const props = defineProps<{
-  /** 按钮图标 */
+  /** Button icon / 按钮图标 */
   icon?: Component;
-  /** 无障碍标签和 tooltip 文本 */
+  /** Accessibility label and tooltip text / 无障碍标签和 tooltip 文本 */
   label: string;
-  /** 是否为主操作按钮（绿色渐变背景） */
+  /** Whether it is a primary action button (green gradient background) / 是否为主操作按钮（绿色渐变背景） */
   primary?: boolean;
-  /** 是否显示为强调样式（主题色边框） */
+  /** Whether to show as highlighted style (theme color border) / 是否显示为强调样式（主题色边框） */
   highlight?: boolean;
 }>();
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import ColorSelector from "../ColorSelector.vue";
 import {
   ulStyleOptions,
@@ -6,6 +7,9 @@ import {
   fontSizeOptions,
 } from "@/config/styleOptions";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -15,10 +19,14 @@ const emit = defineEmits<{
   (e: "change", updates: Partial<DesignerVariables>): void;
 }>();
 
-const listFontSizeOptions = [
-  { label: "跟随全局", value: "inherit" },
-  ...fontSizeOptions.map((opt) => ({ label: opt.label, value: opt.value })),
-];
+const listFontSizeOptions = computed(() => [
+  { id: "inherit", label: t("designer.options.fontSize.inherit"), value: "inherit" },
+  ...fontSizeOptions.map((opt) => ({
+    id: opt.id,
+    label: opt.id ? t(`designer.options.fontSize.${opt.id}`) : opt.label,
+    value: opt.value,
+  })),
+]);
 
 const updateVariable = <K extends keyof DesignerVariables>(
   key: K,
@@ -32,7 +40,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
   <div class="designer-section">
     <div class="designer-row">
       <div class="designer-field half">
-        <label>一级标识颜色</label>
+        <label>{{ t('designer.fields.listMarkerColorL1') }}</label>
         <ColorSelector
           :value="variables.listMarkerColor"
           :presets="[variables.primaryColor]"
@@ -40,7 +48,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
         />
       </div>
       <div class="designer-field half">
-        <label>二级标识颜色</label>
+        <label>{{ t('designer.fields.listMarkerColorL2') }}</label>
         <ColorSelector
           :value="variables.listMarkerColorL2"
           :presets="[variables.primaryColor]"
@@ -50,7 +58,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>列表项间距: {{ variables.listSpacing }}px</label>
+      <label>{{ t('designer.fields.listSpacing') }}: {{ variables.listSpacing }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -68,7 +76,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field mt-2">
-      <label>无序列表字号</label>
+      <label>{{ t('designer.fields.ulFontSize') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in listFontSizeOptions"
@@ -82,7 +90,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       </div>
     </div>
     <div class="designer-field">
-      <label>有序列表字号</label>
+      <label>{{ t('designer.fields.olFontSize') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in listFontSizeOptions"
@@ -97,9 +105,9 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>无序列表符号</label>
+      <label>{{ t('designer.fields.ulStyle') }}</label>
       <div class="level-group">
-        <span class="level-tag">一级</span>
+        <span class="level-tag">{{ t('common.level1') }}</span>
         <div class="designer-options">
           <button
             v-for="opt in ulStyleOptions"
@@ -108,12 +116,12 @@ const updateVariable = <K extends keyof DesignerVariables>(
             :class="{ active: variables.ulStyle === opt.value }"
             @click="updateVariable('ulStyle', opt.value)"
           >
-            {{ opt.label }}
+            {{ opt.id ? t(`designer.options.ulStyle.${opt.id}`) : opt.label }}
           </button>
         </div>
       </div>
       <div class="level-group mt-2">
-        <span class="level-tag">二级</span>
+        <span class="level-tag">{{ t('common.level2') }}</span>
         <div class="designer-options">
           <button
             v-for="opt in ulStyleOptions"
@@ -122,16 +130,16 @@ const updateVariable = <K extends keyof DesignerVariables>(
             :class="{ active: variables.ulStyleL2 === opt.value }"
             @click="updateVariable('ulStyleL2', opt.value)"
           >
-            {{ opt.label }}
+            {{ opt.id ? t(`designer.options.ulStyle.${opt.id}`) : opt.label }}
           </button>
         </div>
       </div>
     </div>
 
     <div class="designer-field">
-      <label>有序列表符号</label>
+      <label>{{ t('designer.fields.olStyle') }}</label>
       <div class="level-group">
-        <span class="level-tag">一级</span>
+        <span class="level-tag">{{ t('common.level1') }}</span>
         <div class="designer-options">
           <button
             v-for="opt in olStyleOptions"
@@ -140,12 +148,12 @@ const updateVariable = <K extends keyof DesignerVariables>(
             :class="{ active: variables.olStyle === opt.value }"
             @click="updateVariable('olStyle', opt.value)"
           >
-            {{ opt.label.split(' ')[0] }}
+            {{ opt.id ? t(`designer.options.olStyle.${opt.id}`) : opt.label.split(' ')[0] }}
           </button>
         </div>
       </div>
       <div class="level-group mt-2">
-        <span class="level-tag">二级</span>
+        <span class="level-tag">{{ t('common.level2') }}</span>
         <div class="designer-options">
           <button
             v-for="opt in olStyleOptions"
@@ -154,7 +162,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
             :class="{ active: variables.olStyleL2 === opt.value }"
             @click="updateVariable('olStyleL2', opt.value)"
           >
-            {{ opt.label.split(' ')[0] }}
+            {{ opt.id ? t(`designer.options.olStyle.${opt.id}`) : opt.label.split(' ')[0] }}
           </button>
         </div>
       </div>

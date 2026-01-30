@@ -1,5 +1,6 @@
 import { processHtml } from "./ThemeProcessor";
 import { katexInlineCss } from "./katex-inline-css";
+import { t } from "./i18n";
 
 export interface ExportOptions {
   title?: string;
@@ -29,8 +30,14 @@ export const generateExportHtml = (
   contentHtml: string,
   options: ExportOptions,
 ): string => {
-  const { title = "MD Beautify Export", themeCss, extraCss = "" } = options;
+  const {
+    title = t("export", "defaultTitle"),
+    themeCss,
+    extraCss = "",
+  } = options;
 
+  // Use processHtml to process inline styles
+  // Inline basic styles for export and convert pseudo-elements (ensure Mac indicators etc. work)
   // 使用 processHtml 处理内联样式
   // 导出时内联基本样式，并转换伪元素（确保Mac指示器等样式生效）
   let styledHtml = "";
@@ -40,12 +47,12 @@ export const generateExportHtml = (
     console.error("Export processHtml failed:", e);
   }
 
-  // 兜底逻辑：如果 styledHtml 为空，则直接使用 contentHtml 并包裹在 mdb 容器中
+  // Fallback: if styledHtml is empty, use contentHtml wrapped in mdb container / 兜底逻辑：如果 styledHtml 为空，则直接使用 contentHtml 并包裹在 mdb 容器中
   if (!styledHtml || styledHtml.trim() === "") {
     styledHtml = `<section id="mdb">${contentHtml}</section>`;
   }
 
-  // 转换 checkbox 为 emoji
+  // Convert checkboxes to emojis / 转换 checkbox 为 emoji
   styledHtml = convertCheckboxesToEmoji(styledHtml);
 
   return `<!DOCTYPE html>
@@ -55,7 +62,7 @@ export const generateExportHtml = (
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
   <style>
-    /* KaTeX CSS (完全内联，包含 base64 字体，离线可用) */
+    /* KaTeX CSS (Fully inlined, includes base64 fonts, offline available) / KaTeX CSS (完全内联，包含 base64 字体，离线可用) */
     ${katexInlineCss}
   </style>
   <style>
@@ -168,7 +175,7 @@ export const generateExportHtml = (
         margin: 0;
         padding: 0;
       }
-      /* 内容按块分页，避免跨页拆分 */
+      /* Pagination by block, avoid split across pages / 内容按块分页，避免跨页拆分 */
       #mdb p, 
       #mdb li, 
       #mdb img, 
@@ -181,12 +188,12 @@ export const generateExportHtml = (
         break-inside: avoid;
         page-break-inside: avoid;
       }
-      /* 标题后避免分页，确保标题与其内容在同一页 */
+      /* Avoid page break after heading, ensure heading stays with content / 标题后避免分页，确保标题与其内容在同一页 */
       #mdb h1, #mdb h2, #mdb h3, #mdb h4, #mdb h5, #mdb h6 {
         break-after: avoid;
         page-break-after: avoid;
       }
-      /* 修复打印时文字颜色透明的问题（通常是由于 background-clip: text 引起） */
+      /* Fix text color transparency issue during printing (usually caused by background-clip: text) / 修复打印时文字颜色透明的问题（通常是由于 background-clip: text 引起） */
       #mdb h1 .content,
       #mdb strong,
       #mdb .callout-title {

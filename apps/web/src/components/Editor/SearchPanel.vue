@@ -7,7 +7,7 @@
           v-model="searchText"
           type="text"
           class="search-input"
-          placeholder="查找"
+          :placeholder="t('editor.search.placeholder')"
           @input="handleInputChange"
           @keydown.enter="handleFindNext"
           @keydown.esc="onClose"
@@ -16,10 +16,10 @@
           {{ currentIndex + 1 }} / {{ matches.length }}
         </div>
         <div v-else-if="hasSearched && matches.length === 0" class="match-count">
-          无结果
+          {{ t('editor.search.noResults') }}
         </div>
         <div v-else-if="searchText" class="match-count">
-          按回车搜索
+          {{ t('editor.search.pressEnter') }}
         </div>
       </div>
 
@@ -27,7 +27,7 @@
         <button
           class="search-option-btn"
           :class="{ active: caseSensitive }"
-          title="区分大小写"
+          :title="t('editor.search.matchCase')"
           @click="caseSensitive = !caseSensitive"
         >
           <CaseSensitive :size="16" />
@@ -35,7 +35,7 @@
         <button
           class="search-option-btn"
           :class="{ active: useRegexp }"
-          title="使用正则表达式"
+          :title="t('editor.search.useRegexp')"
           @click="useRegexp = !useRegexp"
         >
           <Regex :size="16" />
@@ -45,7 +45,7 @@
 
         <button
           class="search-nav-btn"
-          title="上一个"
+          :title="t('editor.search.prev')"
           :disabled="matches.length === 0"
           @click="handleFindPrev"
         >
@@ -53,7 +53,7 @@
         </button>
         <button
           class="search-nav-btn"
-          title="下一个"
+          :title="t('editor.search.next')"
           :disabled="matches.length === 0"
           @click="handleFindNext"
         >
@@ -65,7 +65,7 @@
         <button
           class="search-option-btn"
           :class="{ active: showReplace }"
-          title="替换"
+          :title="t('editor.search.replace')"
           @click="showReplace = !showReplace"
         >
           <Replace :size="16" />
@@ -82,7 +82,7 @@
           v-model="replaceText"
           type="text"
           class="search-input"
-          placeholder="替换为"
+          :placeholder="t('editor.search.replacePlaceholder')"
           @keydown.enter="handleReplace"
         />
       </div>
@@ -92,14 +92,14 @@
           :disabled="matches.length === 0"
           @click="handleReplace"
         >
-          替换
+          {{ t('editor.search.replace') }}
         </button>
         <button
           class="btn-text"
           :disabled="matches.length === 0"
           @click="handleReplaceAll"
         >
-          全部替换
+          {{ t('editor.search.replaceAll') }}
         </button>
       </div>
     </div>
@@ -111,6 +111,9 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { EditorView } from '@codemirror/view';
 import { EditorSelection } from '@codemirror/state';
 import { X, ChevronUp, ChevronDown, Replace, CaseSensitive, Regex } from 'lucide-vue-next';
+import { useI18n } from '../../i18n';
+
+const { t } = useI18n();
 
 interface Match {
   from: number;
@@ -132,12 +135,12 @@ const showReplace = ref(false);
 const hasSearched = ref(false);
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
-// 聚焦搜索输入框
+// Focus search input / 聚焦搜索输入框
 onMounted(() => {
   searchInputRef.value?.focus();
 });
 
-// 执行搜索
+// Execute search / 执行搜索
 const doSearch = () => {
   if (!searchText.value) {
     matches.value = [];
@@ -169,14 +172,14 @@ const doSearch = () => {
       }
     }
   } catch {
-    // 正则表达式错误，忽略
+    // Regex error, ignore / 正则表达式错误，忽略
   }
 
   matches.value = foundMatches;
   currentIndex.value = 0;
   hasSearched.value = true;
 
-  // 跳转到第一个匹配项
+  // Jump to first match / 跳转到第一个匹配项
   if (foundMatches.length > 0) {
     const match = foundMatches[0];
     props.view.dispatch({
@@ -186,19 +189,19 @@ const doSearch = () => {
   }
 };
 
-// 输入变化时重置搜索状态
+// Reset search status on input change / 输入变化时重置搜索状态
 const handleInputChange = () => {
   hasSearched.value = false;
 };
 
-// 监听搜索条件变化
+// Watch search options changes / 监听搜索条件变化
 watch([caseSensitive, useRegexp], () => {
   if (hasSearched.value) {
     doSearch();
   }
 });
 
-// 高亮当前匹配项并滚动到视图
+// Highlight current match and scroll into view / 高亮当前匹配项并滚动到视图
 watch(currentIndex, (newIndex: number) => {
   if (hasSearched.value && matches.value.length > 0 && newIndex >= 0 && newIndex < matches.value.length) {
     const match = matches.value[newIndex];
@@ -233,7 +236,7 @@ const handleReplace = () => {
     scrollIntoView: true,
   });
   
-  // 替换后重新搜索
+  // Re-search after replacement / 替换后重新搜索
   nextTick(() => {
     doSearch();
   });
@@ -253,7 +256,7 @@ const handleReplaceAll = () => {
     scrollIntoView: true,
   });
   
-  // 替换后重新搜索
+  // Re-search after replacement / 替换后重新搜索
   nextTick(() => {
     doSearch();
   });
@@ -393,7 +396,7 @@ const handleReplaceAll = () => {
   padding-right: 12px;
 }
 
-/* 自定义快速 Tooltip */
+/* Custom quick tooltip / 自定义快速 Tooltip */
 .search-option-btn,
 .search-nav-btn,
 .search-close-btn {

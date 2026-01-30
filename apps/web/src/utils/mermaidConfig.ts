@@ -22,14 +22,16 @@ export interface MermaidConfig {
 }
 
 /**
+ * Generate Mermaid initialization config based on designer variables
  * 根据设计器变量生成 Mermaid 初始化配置
- * @param designerVariables 主题设计器变量
- * @returns Mermaid 初始化配置对象
+ * @param designerVariables Theme designer variables / 主题设计器变量
+ * @returns Mermaid initialization config object / Mermaid 初始化配置对象
  */
 export const getMermaidConfig = (
   designerVariables?: DesignerVariables,
   isDarkMode = false,
 ): MermaidConfig => {
+  // If dark mode, force use dark theme as base, unless user explicitly specified other dark-compatible theme
   // 如果是深色模式，强制使用 dark 主题作为基准，除非用户明确指定了其他兼容深色的主题
   const userTheme = (designerVariables?.mermaidTheme as string) || "base";
   const mermaidTheme = isDarkMode ? "dark" : userTheme;
@@ -44,7 +46,7 @@ export const getMermaidConfig = (
   // 构建基础变量
   // 模仿 Obsidian 的处理方式：主要依赖 Mermaid 的 base/dark 主题默认行为
   // 仅注入核心的主题色变量，不做过多的颜色计算和覆盖
-  const themeVariables: Record<string, unknown> = {
+  const themeVariables: any = {
     fontFamily: mermaidFontFamily,
     fontSize: fontSizeStr,
     edgeLabelBackground: isDarkMode ? undefined : "#ECEDFE",

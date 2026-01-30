@@ -18,14 +18,14 @@ const buildCopyCss = (themeCss: string) => {
 };
 
 /**
- * 将 HTML 中的 checkbox 转换为 emoji
- * 微信公众号会过滤 <input> 标签，需要转为 emoji 替代
+ * Convert checkbox in HTML to emoji / 将 HTML 中的 checkbox 转换为 emoji
+ * WeChat Official Account filters <input> tags, need to convert to emoji / 微信公众号会过滤 <input> 标签，需要转为 emoji 替代
  */
 const convertCheckboxesToEmoji = (html: string): string => {
-  // 使用 &nbsp; 确保空格不被微信吞掉
-  // 先替换选中的 checkbox（包含 checked 属性）
+  // Use &nbsp; to ensure spaces are not swallowed by WeChat / 使用 &nbsp; 确保空格不被微信吞掉
+  // Replace checked checkbox first (containing checked attribute) / 先替换选中的 checkbox（包含 checked 属性）
   let result = html.replace(/<input[^>]*checked[^>]*>/gi, "✅&nbsp;");
-  // 再替换未选中的 checkbox
+  // Then replace unchecked checkbox / 再替换未选中的 checkbox
   result = result.replace(
     /<input[^>]*type=["']checkbox["'][^>]*>/gi,
     "⬜&nbsp;",
@@ -85,10 +85,10 @@ const getSvgDimensions = (svgElement: SVGElement) => {
 };
 
 /**
- * 将 SVG 转换为 PNG Data URL
- * 使用 Canvas 渲染，确保微信完全兼容
- * @param svgMarkup - 原始 SVG 字符串
- * @returns PNG 图片的 Data URL
+ * Convert SVG to PNG Data URL / 将 SVG 转换为 PNG Data URL
+ * Render using Canvas to ensure full WeChat compatibility / 使用 Canvas 渲染，确保微信完全兼容
+ * @param svgMarkup - Original SVG string / 原始 SVG 字符串
+ * @returns PNG image Data URL / PNG 图片的 Data URL
  */
 const svgMarkupToPng = async (svgMarkup: string): Promise<string> => {
   const parser = new DOMParser();
@@ -102,11 +102,11 @@ const svgMarkupToPng = async (svgMarkup: string): Promise<string> => {
     svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   }
 
-  // 序列化 SVG
+  // Serialize SVG / 序列化 SVG
   const svgData = new XMLSerializer().serializeToString(svgElement);
   const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgData)}`;
 
-  // 加载图片
+  // Load image / 加载图片
   const img = new Image();
   img.src = svgDataUrl;
 
@@ -139,16 +139,16 @@ const renderMermaidBlocks = async (container: HTMLElement): Promise<void> => {
 
   ensureMermaidInitialized();
   const rawVariables = getThemeInfo();
-  // 使用浅拷贝避免修改 Store 中的原始数据
+  // Use shallow copy to avoid modifying original data in Store / 使用浅拷贝避免修改 Store 中的原始数据
   const designerVariables = rawVariables ? { ...rawVariables } : undefined;
 
-  // 强制在复制时使用浅色主题渲染 Mermaid，以兼容微信深色模式（通过反色实现）
+  // Force using light theme for Mermaid when copying, to be compatible with WeChat dark mode (via color inversion) / 强制在复制时使用浅色主题渲染 Mermaid，以兼容微信深色模式（通过反色实现）
   if (designerVariables) {
     designerVariables.mermaidTheme = "base";
   }
   const renderIdBase = `mdb-mermaid-${Date.now()}`;
 
-  // 构建 Mermaid 配置
+  // Build Mermaid configuration / 构建 Mermaid 配置
   const initConfig = getMermaidConfig(designerVariables, false);
 
   for (const [index, block] of mermaidBlocks.entries()) {
@@ -217,7 +217,7 @@ const renderMermaidBlocks = async (container: HTMLElement): Promise<void> => {
   }
 };
 
-export async function copyToWechat(
+export async function copyToEditor(
   markdown: string,
   css: string,
 ): Promise<void> {

@@ -11,7 +11,7 @@
       @contextmenu.prevent="(e) => $emit('context-menu', e, item)"
     >
       <div class="history-item-main">
-        <!-- 文件夹折叠图标 -->
+        <!-- Folder toggle icon / 文件夹折叠图标 -->
         <button
           v-if="item.isDirectory"
           class="fs-folder-toggle"
@@ -21,7 +21,7 @@
           <ChevronDown v-else :size="14" />
         </button>
 
-        <!-- 文件/文件夹图标 -->
+        <!-- File/Folder icon / 文件/文件夹图标 -->
         <Folder v-if="item.isDirectory" :size="14" class="fs-icon" />
         <FileText v-else :size="14" class="fs-icon" />
 
@@ -38,8 +38,8 @@
               @keydown.esc="$emit('cancel-rename')"
               v-focus
             />
-            <button @click="$emit('submit-rename')">确认</button>
-            <button @click="$emit('cancel-rename')">取消</button>
+            <button @click="$emit('submit-rename')">{{ t('common.confirm') }}</button>
+            <button @click="$emit('cancel-rename')">{{ t('common.cancel') }}</button>
           </div>
           <template v-else>
             <span v-if="!item.isDirectory" class="history-time">
@@ -62,7 +62,7 @@
       </div>
     </div>
 
-    <!-- 递归渲染子项 -->
+    <!-- Recursively render children / 递归渲染子项 -->
     <template v-if="item.isDirectory && isExpanded && item.children">
       <FileSystemTreeItem
         v-for="child in item.children"
@@ -86,7 +86,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { ChevronRight, ChevronDown, Folder, FileText, MoreHorizontal } from 'lucide-vue-next';
+import { useI18n } from '../../i18n';
 import type { FileItem as StorageFileItem } from '../../storage/types';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   item: StorageFileItem;
@@ -111,7 +114,7 @@ const handleClick = () => {
   emit('open-file', props.item);
 };
 
-// Custom directive for auto-focus
+// Custom directive for auto-focus / 自定义自动聚焦指令
 const vFocus = {
   mounted: (el: HTMLInputElement) => el.focus()
 };

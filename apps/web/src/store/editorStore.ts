@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { getDefaultMarkdown } from "@mdb/core";
 import { useThemeStore } from "./themeStore";
 // import { createMarkdownParser } from "@mdb/core";
-import { copyToWechat as execCopyToWechat } from "../services/wechatCopyService";
+import { copyToEditor as execCopyToEditor } from "../services/wechatCopyService";
 
 // const parser = createMarkdownParser();
 
@@ -14,8 +14,15 @@ export interface ResetOptions {
   themeName?: string;
 }
 
-const resolvedLocale =
-  typeof navigator !== "undefined" ? navigator.language : "en";
+const getInitialLocale = () => {
+  if (typeof localStorage !== "undefined") {
+    const saved = localStorage.getItem("mdb-locale");
+    if (saved) return saved;
+  }
+  return typeof navigator !== "undefined" ? navigator.language : "en";
+};
+
+const resolvedLocale = getInitialLocale();
 export const defaultMarkdown = getDefaultMarkdown(resolvedLocale);
 
 export const useEditorStore = defineStore("editor", () => {
@@ -63,7 +70,7 @@ export const useEditorStore = defineStore("editor", () => {
       markdown.value = defaultMarkdown;
     }
 
-    // 重置主题（通过 themeStore）
+    // Reset theme (via themeStore) / 重置主题（通过 themeStore）
     const themeStore = useThemeStore();
     const targetTheme = options?.theme ?? "default";
     themeStore.selectTheme(targetTheme);
@@ -74,8 +81,8 @@ export const useEditorStore = defineStore("editor", () => {
     }
   }
 
-  async function copyToWechat(css: string) {
-    await execCopyToWechat(markdown.value, css);
+  async function copyToEditor(css: string) {
+    await execCopyToEditor(markdown.value, css);
   }
 
   function setFixedWidthPreview(value: boolean) {
@@ -145,6 +152,6 @@ export const useEditorStore = defineStore("editor", () => {
     setPreviewManualScale,
     setSyncScroll,
     resetDocument,
-    copyToWechat,
+    copyToEditor,
   };
 });

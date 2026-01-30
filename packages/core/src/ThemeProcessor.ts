@@ -1,10 +1,11 @@
 import juice from "juice";
+import { t } from "./i18n";
 
-// 常量定义
+// Constant definitions / 常量定义
 const DATA_TOOL = "MD Beautify";
 const SECTION_ID = "mdb";
 
-// 需要添加 data-tool 属性的块级元素
+// Block-level elements requiring data-tool attribute / 需要添加 data-tool 属性的块级元素
 const BLOCK_TAGS = [
   "p",
   "h1",
@@ -24,13 +25,14 @@ const BLOCK_TAGS = [
 ] as const;
 
 /**
+ * Process HTML, add data-tool attribute and apply CSS styles
  * 处理 HTML，添加 data-tool 属性并应用 CSS 样式
- * @param html - 原始 HTML 字符串
- * @param css - CSS 样式字符串
- * @param inlineStyles - 是否内联样式 (使用 juice)，默认为 true。预览模式建议设为 false 以提高性能。
- * @param inlinePseudoElements - 是否内联伪元素内容（如 ::before / ::after），默认为 false。复制到微信时建议设为 true。
- * @param replaceLocalImages - 是否替换本地图片为占位图，默认为 false。预览模式建议设为 true。
- * @returns 处理后的 HTML 字符串
+ * @param html - Original HTML string / 原始 HTML 字符串
+ * @param css - CSS style string / CSS 样式字符串
+ * @param inlineStyles - Whether to inline styles (using juice), default true. Recommended false for preview mode to improve performance. / 是否内联样式 (使用 juice)，默认为 true。预览模式建议设为 false 以提高性能。
+ * @param inlinePseudoElements - Whether to inline pseudo-element content (e.g. ::before / ::after), default false. Recommended true when copying to WeChat. / 是否内联伪元素内容（如 ::before / ::after），默认为 false。复制到微信时建议设为 true。
+ * @param replaceLocalImages - Whether to replace local images with placeholders, default false. Recommended true for preview mode. / 是否替换本地图片为占位图，默认为 false。预览模式建议设为 true。
+ * @returns Processed HTML string / 处理后的 HTML 字符串
  */
 export const processHtml = (
   html: string,
@@ -43,7 +45,7 @@ export const processHtml = (
     return html || "";
   }
 
-  // 替换本地图片为占位图
+  // Replace local images with placeholders / 替换本地图片为占位图
   if (replaceLocalImages) {
     const placeholderUrl =
       "https://img.wemd.app/mdb/local-image-placeholder.png";
@@ -55,25 +57,26 @@ export const processHtml = (
           !src.startsWith("https://") &&
           !src.startsWith("data:")
         ) {
-          return `<img ${p1}src="${placeholderUrl}"${p3} data-original-src="${src}" title="Local image - Upload required for WeChat">`;
+          const title = t("export", "localImageTitle");
+          return `<img ${p1}src="${placeholderUrl}"${p3} data-original-src="${src}" title="${title}">`;
         }
         return match;
       },
     );
   }
 
-  // 为顶级块元素添加 data-tool 属性
+  // Add data-tool attribute to top-level block elements / 为顶级块元素添加 data-tool 属性
   BLOCK_TAGS.forEach((tag) => {
     const regex = new RegExp(`<${tag}(\\s+[^>]*|)>`, "gi");
     html = html.replace(regex, (match, attributes) => {
-      // 检查 data-tool 是否已存在，避免重复
+      // Check if data-tool already exists to avoid duplication / 检查 data-tool 是否已存在，避免重复
       if (match.includes("data-tool=")) return match;
-      // attributes 包含前导空格（如果存在），或者为空字符串
+      // attributes contains leading space (if exists) or is empty string / attributes 包含前导空格（如果存在），或者为空字符串
       return `<${tag} data-tool="${DATA_TOOL}"${attributes}>`;
     });
   });
 
-  // 处理 MathJax 相关的替换
+  // Handle MathJax related replacements / 处理 MathJax 相关的替换
   html = html.replace(
     /<mjx-container (class="inline.+?)<\/mjx-container>/g,
     "<span $1</span>",
@@ -84,7 +87,7 @@ export const processHtml = (
   html = html.replace(/class="mjx-solid"/g, 'fill="none" stroke-width="70"');
   html = html.replace(/<mjx-assistive-mml.+?<\/mjx-assistive-mml>/g, "");
 
-  // 保护代码块中的空格，防止微信清洗时删除
+  // Protect spaces in code blocks to prevent removal by WeChat cleaning / 保护代码块中的空格，防止微信清洗时删除
   html = html.replace(
     /<code([^>]*class="[^"]*\bhljs\b[^"]*"[^>]*)>([\s\S]*?)<\/code>/g,
     (match, attrs: string, inner: string) => {
@@ -101,12 +104,12 @@ export const processHtml = (
     },
   );
 
-  // 检测 Mac 风格控制栏：同时检测伪元素选择器和红绿灯颜色
+  // Detect Mac-style control bar: check pseudo-element selectors and traffic light colors / 检测 Mac 风格控制栏：同时检测伪元素选择器和红绿灯颜色
   const hasMacBarPseudo =
     css.includes("pre.custom::before") || css.includes("pre::before");
   const hasMacBar = hasMacBarPseudo && css.includes("#ff5f56");
 
-  // 复制到微信时，将 CSS 伪元素替换为真实 HTML（微信会清洗伪元素）
+  // Replace CSS pseudo-elements with real HTML when copying to WeChat (WeChat cleans pseudo-elements) / 复制到微信时，将 CSS 伪元素替换为真实 HTML（微信会清洗伪元素）
   if (hasMacBar && inlinePseudoElements) {
     const macBarHtml = `<span style="display:block;line-height:1;"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ff5f56;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffbd2e;margin-right:8px;"></span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#27c93f;"></span></span>`;
     html = html.replace(
@@ -114,16 +117,16 @@ export const processHtml = (
       `<code$1>${macBarHtml}`,
     );
 
-    // 移除 CSS 伪元素规则，避免重复
+    // Remove CSS pseudo-element rules to avoid duplication / 移除 CSS 伪元素规则，避免重复
     css = css.replace(
       /#mdb[^{]*pre[^{]*::before\s*\{[^}]*#ff5f56[^}]*\}/gi,
       "",
     );
   }
 
-  // 处理引用的伪元素 (大引号、直角边框等)
+  // Handle pseudo-elements for blockquotes (large quotes, corner frames, etc.) / 处理引用的伪元素 (大引号、直角边框等)
   if (inlinePseudoElements) {
-    // 1. 大引号样式 (Quotation Marks)
+    // 1. Quotation Marks style / 1. 大引号样式 (Quotation Marks)
     if (css.includes("blockquote::before") && css.includes('content: "“"')) {
       const quoteColorMatch = css.match(
         /#mdb\s+blockquote::before\s*\{[^}]*color:\s*([^;}]+)/i,
@@ -135,20 +138,20 @@ export const processHtml = (
       html = html.replace(
         /<blockquote([^>]*)>([\s\S]*?)<\/blockquote>/gi,
         (match, attrs, content) => {
-          // 如果已经有 data-tool 或其他标识，说明可能是我们处理过的
+          // If data-tool or other markers exist, it might have been processed / 如果已经有 data-tool 或其他标识，说明可能是我们处理过的
           const beforeHtml = `<span style="display:block;height:0;font-size:60px;color:${quoteColor};font-family:Georgia,serif;line-height:1;margin-left:-40px;margin-top:-6px;opacity:0.3;pointer-events:none;">“</span>`;
           return `<blockquote${attrs} style="position:relative;">${beforeHtml}<section style="position:relative;z-index:1;">${content}</section></blockquote>`;
         },
       );
 
-      // 移除 CSS 中的伪元素规则
+      // Remove pseudo-element rules from CSS / 移除 CSS 中的伪元素规则
       css = css.replace(
         /#mdb\s+blockquote::before\s*\{[^}]*content:\s*"“"[^}]*\}/gi,
         "",
       );
     }
 
-    // 2. 直角边框样式 (Corner Frame)
+    // 2. Corner Frame style / 2. 直角边框样式 (Corner Frame)
     if (
       css.includes("blockquote::before") &&
       css.includes("border-top") &&
@@ -180,7 +183,7 @@ export const processHtml = (
           },
         );
 
-        // 移除 CSS 中的伪元素规则
+        // Remove pseudo-element rules from CSS / 移除 CSS 中的伪元素规则
         css = css.replace(
           /#mdb\s+blockquote::before\s*\{[^}]*border-top:[^}]*border-left:[^}]*\}/gi,
           "",
@@ -192,7 +195,7 @@ export const processHtml = (
       }
     }
 
-    // 3. 中心强调样式 (Center Accent)
+    // 3. Center Accent style / 3. 中心强调样式 (Center Accent)
     if (
       css.includes("blockquote::before") &&
       css.includes("margin: 0 auto 15px")
@@ -223,7 +226,7 @@ export const processHtml = (
           },
         );
 
-        // 移除 CSS 中的伪元素规则
+        // Remove pseudo-element rules from CSS / 移除 CSS 中的伪元素规则
         css = css.replace(
           /#mdb\s+blockquote::before\s*\{[^}]*margin:\s*0\s+auto\s+15px[^}]*\}/gi,
           "",
@@ -300,7 +303,7 @@ export const processHtml = (
         },
       );
 
-      // 4. 术语列表 (Definition List) 伪元素转换
+      // 4. Definition List pseudo-element conversion / 4. 术语列表 (Definition List) 伪元素转换
       if (css.includes("dt::after") && css.includes('content: "："')) {
         res = res.replace(
           /<dt([^>]*)(style="[^"]*")([^>]*)>([\s\S]*?)<\/dt>/gi,
@@ -320,7 +323,7 @@ export const processHtml = (
     return res;
   } catch (e) {
     console.error("Juice inline error:", e);
-    // 返回包装后的 HTML，即使 juice 处理失败
+    // Return wrapped HTML even if juice processing fails / 返回包装后的 HTML，即使 juice 处理失败
     return wrappedHtml;
   }
 };

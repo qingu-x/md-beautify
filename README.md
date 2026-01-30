@@ -174,7 +174,22 @@ If you have questions or suggestions, please submit an [Issue](https://github.co
 
 If you find this project helpful, you can buy me a coffee!
 
+### ☕️ International Support
+
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/pax_z)
+
+### 🧧 WeChat / Alipay
+
+<div style="display: flex; gap: 20px;">
+  <div style="text-align: center">
+    <img src=".github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
+    <p>WeChat Pay</p>
+  </div>
+  <div style="text-align: center">
+    <img src=".github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
+    <p>Alipay</p>
+  </div>
+</div>
 
 ---
 

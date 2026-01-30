@@ -16,7 +16,7 @@ function wrapSelection(
 ): boolean {
   const selection = view.state.selection.main;
   const selectedText = view.state.doc.sliceString(selection.from, selection.to);
-  const wrapped = prefix + (selectedText || "文本") + suffix;
+  const wrapped = prefix + (selectedText || "text") + suffix;
 
   view.dispatch({
     changes: { from: selection.from, to: selection.to, insert: wrapped },
@@ -69,7 +69,7 @@ function toggleHeader(view: EditorView, level: number): boolean {
   return true;
 }
 
-// 辅助函数：插入或包裹块级元素
+// Helper: Insert or wrap block element / 辅助函数：插入或包裹块级元素
 function wrapBlock(view: EditorView, prefix: string, suffix: string): boolean {
   const { state, dispatch } = view;
   const { from, to } = state.selection.main;

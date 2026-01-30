@@ -3,7 +3,7 @@
     <button
       class="win-btn win-minimize"
       @click="minimize?.()"
-      aria-label="最小化"
+      :aria-label="t('electron.menu.minimize')"
     >
       <svg width="10" height="1" viewBox="0 0 10 1">
         <rect width="10" height="1" fill="currentColor" />
@@ -12,7 +12,7 @@
     <button
       class="win-btn win-maximize"
       @click="maximize?.()"
-      aria-label="最大化"
+      :aria-label="t('electron.menu.maximize')"
     >
       <svg width="10" height="10" viewBox="0 0 10 10">
         <rect
@@ -29,7 +29,7 @@
     <button
       class="win-btn win-close"
       @click="close?.()"
-      aria-label="关闭"
+      :aria-label="t('electron.menu.close')"
     >
       <svg width="10" height="10" viewBox="0 0 10 10">
         <path
@@ -45,6 +45,9 @@
 
 <script setup lang="ts">
 import { useWindowControls } from "../../hooks/useWindowControls";
+import { useI18n } from "../../i18n";
+
+const { t } = useI18n();
 
 defineProps<{
   fixed?: boolean;

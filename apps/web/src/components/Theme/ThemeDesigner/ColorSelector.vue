@@ -1,15 +1,28 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { Plus } from "lucide-vue-next";
+import { useI18n } from "../../../i18n";
 
+const { t } = useI18n();
+
+const windowHeight = ref(typeof window !== "undefined" ? window.innerHeight : 800);
+onMounted(() => {
+  const updateHeight = () => {
+    windowHeight.value = window.innerHeight;
+  };
+  window.addEventListener("resize", updateHeight);
+  onUnmounted(() => {
+    window.removeEventListener("resize", updateHeight);
+  });
+});
 /**
- * 标准化颜色值，统一转为 6 位大写 Hex。
- * 支持 #333 -> #333333 等转换。
+ * Normalize color value, convert to 6-digit uppercase Hex. / 标准化颜色值，统一转为 6 位大写 Hex。
+ * Supports conversions like #333 -> #333333. / 支持 #333 -> #333333 等转换。
  */
 function normalizeColor(color: string): string {
   if (!color) return "";
   const trimmed = color.trim().toUpperCase();
-  if (!trimmed.startsWith("#")) return trimmed; // 非 hex 关键词保持原样
+  if (!trimmed.startsWith("#")) return trimmed; // Keep non-hex keywords as is / 非 hex 关键词保持原样
 
   let hex = trimmed.slice(1);
   if (hex.length === 3) {
@@ -18,7 +31,7 @@ function normalizeColor(color: string): string {
   return `#${hex}`;
 }
 
-// HSL 转 Hex
+// HSL to Hex / HSL 转 Hex
 function hslToHex(h: number, s: number, l: number): string {
   l /= 100;
   const a = (s * Math.min(l, 1 - l)) / 100;
@@ -32,7 +45,7 @@ function hslToHex(h: number, s: number, l: number): string {
   return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
 }
 
-// Hex 转 HSL
+// Hex to HSL / Hex 转 HSL
 function hexToHsl(hex: string): { h: number; s: number; l: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return { h: 0, s: 0, l: 0 };
@@ -70,6 +83,7 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
 }
 
 interface ColorPreset {
+  id?: string;
   label?: string;
   value: string;
   displayColor?: string;
@@ -180,7 +194,7 @@ const handleHexInput = (e: Event) => {
       }"
       :style="{ backgroundColor: normalizeColor(item.displayColor || item.value) }"
       @click="emit('change', item.value)"
-      :title="item.label || item.value"
+      :title="item.id ? t(`designer.options.colorSelector.${item.id}`) : (item.label || item.value)"
     />
 
     <button
@@ -192,14 +206,14 @@ const handleHexInput = (e: Event) => {
           : 'transparent',
       }"
       @click="emit('change', customColor)"
-      title="自定义颜色"
+      :title="t('common.custom')"
     />
 
     <div class="custom-color-wrapper" style="position: relative">
       <button
         ref="triggerRef"
         class="color-btn custom-color-picker"
-        title="选择新颜色"
+        :title="t('common.selectColor')"
         @click="showColorPicker = !showColorPicker"
       >
         <Plus :size="14" class="plus-icon" />
@@ -216,7 +230,7 @@ const handleHexInput = (e: Event) => {
             class="custom-color-popover"
             :style="{
               position: 'fixed',
-              bottom: `${window.innerHeight - popoverPos.top + 10}px`,
+              bottom: `${windowHeight - popoverPos.top + 10}px`,
               left: `${popoverPos.left}px`,
               transform: 'translateX(-50%)',
               zIndex: 1000,
@@ -308,7 +322,7 @@ const handleHexInput = (e: Event) => {
               :disabled="!isValidTempColor"
               @click="handleConfirm"
             >
-              确定
+              {{ t('common.confirm') }}
             </button>
           </div>
         </template>

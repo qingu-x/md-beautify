@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -10,11 +13,11 @@ const emit = defineEmits<{
 }>();
 
 const themes = [
-  { id: "base", label: "基础 (Base)" },
-  { id: "default", label: "默认 (Default)" },
-  { id: "forest", label: "森林 (Forest)" },
-  { id: "neutral", label: "中性 (Neutral)" },
-  { id: "dark", label: "深色 (Dark)" },
+  { id: "base", label: t("designer.options.mermaidTheme.base") },
+  { id: "default", label: t("designer.options.mermaidTheme.default") },
+  { id: "forest", label: t("designer.options.mermaidTheme.forest") },
+  { id: "neutral", label: t("designer.options.mermaidTheme.neutral") },
+  { id: "dark", label: t("designer.options.mermaidTheme.dark") },
 ] as const;
 
 const updateVariable = <K extends keyof DesignerVariables>(
@@ -27,10 +30,10 @@ const updateVariable = <K extends keyof DesignerVariables>(
 
 <template>
   <div class="designer-section">
-    <div class="designer-group-label">Mermaid 设置</div>
+    <div class="designer-group-label">{{ t('designer.sections.mermaid') }}</div>
 
     <div class="designer-field">
-      <label>基准主题</label>
+      <label>{{ t('designer.fields.baseTheme') }}</label>
       <div class="designer-options col-2">
         <button
           v-for="opt in themes"

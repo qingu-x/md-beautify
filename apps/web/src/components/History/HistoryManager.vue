@@ -1,21 +1,23 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from '../../i18n';
 import { useEditorStore, defaultMarkdown } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useHistoryStore } from '../../store/historyStore';
 
-const AUTO_SAVE_INTERVAL = 10 * 1000; // 10 秒
-const UNTITLED_TITLE = "未命名文章";
+const { t } = useI18n();
+
+const AUTO_SAVE_INTERVAL = 10 * 1000; // 10 seconds / 10 秒
 
 function deriveTitle(markdown: string) {
   const trimmed = markdown.trim();
-  if (!trimmed) return UNTITLED_TITLE;
+  if (!trimmed) return t('history.unnamed');
   const headingMatch = trimmed.match(/^(#+)\s*(.+)$/m);
   if (headingMatch) {
-    return headingMatch[2].trim().slice(0, 50) || UNTITLED_TITLE;
+    return headingMatch[2].trim().slice(0, 50) || t('history.unnamed');
   }
   const firstLine = trimmed.split(/\r?\n/).find((line) => line.trim());
-  return firstLine ? firstLine.trim().slice(0, 50) : UNTITLED_TITLE;
+  return firstLine ? firstLine.trim().slice(0, 50) : t('history.unnamed');
 }
 
 const editorStore = useEditorStore();
@@ -33,12 +35,12 @@ const restoringContent = ref<string | null>(null);
 
 const prevMarkdown = ref(editorStore.markdown);
 
-// 加载历史记录
+// Load history / 加载历史记录
 onMounted(() => {
   historyStore.loadHistory();
 });
 
-// 跟踪加载生命周期
+// Track loading lifecycle / 跟踪加载生命周期
 watch(() => historyStore.loading, (loading: boolean) => {
   if (loading) {
     wasLoading.value = true;
@@ -47,7 +49,7 @@ watch(() => historyStore.loading, (loading: boolean) => {
   }
 });
 
-// 监听内容变化并保存快照
+// Watch content changes and save snapshot / 监听内容变化并保存快照
 watch(
   [() => editorStore.markdown, () => themeStore.themeId, () => themeStore.customCSS, () => themeStore.themeName] as const,
   ([markdown, themeId, customCSS, themeName]) => {
@@ -59,7 +61,7 @@ watch(
       return;
     }
 
-    // 检查当前变化是否与正在恢复的内容匹配
+    // Check if current change matches content being restored / 检查当前变化是否与正在恢复的内容匹配
     if (restoringContent.value !== null && markdown === restoringContent.value) {
       restoringContent.value = null;
       return;
@@ -98,118 +100,41 @@ watch(
 
 const persistLatestSnapshot = async () => {
   const markdown = editorStore.markdown;
-  if (!markdown.trim()) return;
+  const themeId = themeStore.themeId;
+  const customCSS = themeStore.customCSS;
+  const themeName = themeStore.themeName;
 
-  if (!hasUserEdited.value || isRestoring.value) {
-    return;
-  }
+  if (markdown.trim() === '') return;
 
-  if (historyStore.loading) return;
-
-  if (!historyStore.activeId) {
-    if (historyStore.history.length === 0) {
-      await historyStore.saveSnapshot(
-        {
-          markdown,
-          theme: themeStore.themeId,
-          customCSS: themeStore.customCSS,
-          title: deriveTitle(markdown),
-          themeName: themeStore.themeName,
-        },
-        { force: true }
-      );
-    }
-    return;
-  }
-
-  await historyStore.persistActiveSnapshot({
+  await historyStore.saveSnapshot({
     markdown,
-    theme: themeStore.themeId,
-    customCSS: themeStore.customCSS,
-    themeName: themeStore.themeName,
+    theme: themeId,
+    customCSS,
+    title: deriveTitle(markdown),
+    themeName,
   });
 };
 
-let intervalId: number;
+// Periodic save / 定期保存
+let autoSaveTimer: number | null = null;
 onMounted(() => {
-  intervalId = window.setInterval(() => {
-    void persistLatestSnapshot();
+  autoSaveTimer = window.setInterval(() => {
+    if (hasUserEdited.value && !historyStore.loading) {
+      hasUserEdited.value = false;
+      persistLatestSnapshot();
+    }
   }, AUTO_SAVE_INTERVAL);
-
-  const handleBeforeUnload = () => {
-    void persistLatestSnapshot();
-  };
-  window.addEventListener("beforeunload", handleBeforeUnload);
-
-  onUnmounted(() => {
-    window.clearInterval(intervalId);
-    window.removeEventListener("beforeunload", handleBeforeUnload);
-  });
 });
 
-// 应用历史记录
-watch(
-  [() => historyStore.history, () => historyStore.activeId] as const,
-  ([history, activeId]) => {
-    if (!history.length) {
-      hasAppliedInitialHistory.value = false;
-      if (hasLoadedHistory.value) {
-        if (editorStore.markdown !== defaultMarkdown) {
-          editorStore.setMarkdown(defaultMarkdown);
-        }
-      }
-      return;
-    }
+onUnmounted(() => {
+  if (autoSaveTimer) clearInterval(autoSaveTimer);
+});
 
-    const candidateEntry = history.find((entry: any) => entry.id === activeId) ?? history[0];
-    if (!candidateEntry) return;
-
-    const matchesLatest =
-      editorStore.markdown === candidateEntry.markdown &&
-      themeStore.themeId === candidateEntry.theme &&
-      themeStore.customCSS === candidateEntry.customCSS &&
-      themeStore.themeName === candidateEntry.themeName;
-
-    if (matchesLatest) {
-      if (candidateEntry.id !== activeId) {
-        historyStore.setActiveId(candidateEntry.id);
-      }
-      hasAppliedInitialHistory.value = true;
-      return;
-    }
-
-    if (candidateEntry.id !== activeId) {
-      historyStore.setActiveId(candidateEntry.id);
-    }
-
-    isRestoring.value = true;
-    restoringContent.value = candidateEntry.markdown;
-    editorStore.setMarkdown(candidateEntry.markdown);
-    themeStore.selectTheme(candidateEntry.theme);
-    themeStore.setCustomCSS(candidateEntry.customCSS);
-    editorStore.setFilePath(candidateEntry.filePath || undefined);
-    
-    if (candidateEntry.filePath) {
-      const last = Math.max(
-        candidateEntry.filePath.lastIndexOf("/"),
-        candidateEntry.filePath.lastIndexOf("\\")
-      );
-      if (last >= 0) {
-        const dir = candidateEntry.filePath.slice(0, last);
-        if (dir) {
-          editorStore.setWorkspaceDir(dir);
-        }
-      }
-    }
-    
-    hasUserEdited.value = false;
-    isRestoring.value = false;
-    hasAppliedInitialHistory.value = true;
-  },
-  { immediate: true }
-);
+defineExpose({
+  persistLatestSnapshot,
+});
 </script>
 
 <template>
-  <!-- Renderless component -->
+  <!-- Logic-only component / 纯逻辑组件 -->
 </template>

@@ -9,6 +9,7 @@ export interface SyncScrollDetail {
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
+import { useI18n } from "../../i18n";
 import mermaid from "mermaid";
 import { createMarkdownParser, processHtml } from "@mdb/core";
 import { useEditorStore } from "../../store/editorStore";
@@ -28,6 +29,7 @@ import {
 const editorStore = useEditorStore();
 const themeStore = useThemeStore();
 const uiThemeStore = useUIThemeStore();
+const { t } = useI18n();
 
 const html = ref("");
 const linkToFootnoteEnabled = ref(getLinkToFootnoteEnabled());
@@ -40,16 +42,16 @@ const showDeviceMenu = ref(false);
 const showCustomMenu = ref(false);
 const showScaleMenu = ref(false);
 
-const devices = [
-  { id: 'custom', label: '自定义', width: '100%', height: '100%' },
-  { id: 'iphone16pro', label: 'iPhone 16 Pro', width: '430px', height: '932px' },
-  { id: 'iphone16', label: 'iPhone 16', width: '390px', height: '844px' },
-  { id: 'ipad', label: 'iPad', width: '768px', height: '1024px' },
-  { id: 'desktop', label: '桌面端', width: '1280px', height: '720px' },
-];
+const devices = computed(() => [
+  { id: 'custom', label: t('editor.preview.devices.custom'), width: '100%', height: '100%' },
+  { id: 'iphone16pro', label: t('editor.preview.devices.iphone16pro'), width: '430px', height: '932px' },
+  { id: 'iphone16', label: t('editor.preview.devices.iphone16'), width: '390px', height: '844px' },
+  { id: 'ipad', label: t('editor.preview.devices.ipad'), width: '768px', height: '1024px' },
+  { id: 'desktop', label: t('editor.preview.devices.desktop'), width: '1280px', height: '720px' },
+]);
 
 const currentDevice = computed(() => 
-  devices.find(d => d.id === editorStore.previewDevice) || devices[0]
+  devices.value.find(d => d.id === editorStore.previewDevice) || devices.value[0]
 );
 
 const previewContentWidth = computed(() => {
@@ -83,16 +85,16 @@ const updateAutoScale = () => {
 
   const container = scrollContainerRef.value;
   
-  // 获取容器实际可用尺寸
+  // Get actual available container size / 获取容器实际可用尺寸
   const containerWidth = container.clientWidth - 48;
   const containerHeight = container.clientHeight - 48;
 
-  // 如果容器尺寸尚未准备好，跳过缩放计算
+  // Skip scale calculation if container size is not ready / 如果容器尺寸尚未准备好，跳过缩放计算
   if (containerWidth <= 0 || containerHeight <= 0) {
     return;
   }
 
-  // 处理百分比宽高
+  // Handle percentage width/height / 处理百分比宽高
   let contentWidthPx: number;
   let contentHeightPx: number;
 
@@ -119,14 +121,14 @@ const updateAutoScale = () => {
   autoScaleRatio.value = Math.min(scaleX, scaleY, 1);
 };
 
-// 创建 parser 实例
+// Create parser instance / 创建 parser 实例
 const parser = createMarkdownParser();
 
 const themeCSS = computed(() => {
   return themeStore.getThemeCSS(themeStore.themeId, uiThemeStore.theme === "dark");
 });
 
-// 获取当前主题
+// Get current theme / 获取当前主题
 const currentTheme = computed(() => {
   return (
     themeStore.customThemes.find((t: any) => t.id === themeStore.themeId) ||
@@ -158,12 +160,12 @@ watch(
   { immediate: true }
 );
 
-// KaTeX 渲染
+// KaTeX rendering / KaTeX 渲染
 watch(html, () => {
   if (!previewRef.value || !html.value) return;
 
   if (!hasMathFormula(editorStore.markdown)) return;
-
+  
   nextTick(() => {
     setTimeout(() => {
       if (previewRef.value) {
@@ -173,7 +175,7 @@ watch(html, () => {
   });
 });
 
-// 自动缩放监听
+// Auto-scale listener / 自动缩放监听
 watch([previewContentWidth, previewContentHeight, () => editorStore.previewAutoScale], () => {
   if (editorStore.previewAutoScale) {
     nextTick(() => {
@@ -192,16 +194,18 @@ const renderMermaidBlocks = async () => {
   const renderToken = ++mermaidRenderId.value;
 
   // 使用 nextTick 确保 DOM 已更新
+  // Use nextTick to ensure DOM is updated / 使用 nextTick 确保 DOM 已更新
   await nextTick();
   
   // 给一小段时间让 v-html 完成渲染
+  // Wait a short time for v-html to finish rendering / 给一小段时间让 v-html 完成渲染
   await new Promise(resolve => setTimeout(resolve, 100));
 
   if (!previewRef.value) return;
 
   const mermaidBlocks = Array.from(
     previewRef.value.querySelectorAll<HTMLElement>(
-      ".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
+      ".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
     )
   );
   
@@ -212,12 +216,12 @@ const renderMermaidBlocks = async () => {
     uiThemeStore.theme === "dark",
   );
 
-  // 确保 mermaid 已初始化
-  try {
-    mermaid.initialize({ startOnLoad: false });
-  } catch (e) {
-    // 忽略重复初始化错误
-  }
+  // Ensure mermaid is initialized / 确保 mermaid 已初始化
+    try {
+      mermaid.initialize({ startOnLoad: false });
+    } catch (e) {
+      // Ignore duplicate initialization error / 忽略重复初始化错误
+    }
 
   for (const [index, block] of mermaidBlocks.entries()) {
     if (!block.dataset.mermaidRaw) {
@@ -234,7 +238,7 @@ const renderMermaidBlocks = async () => {
       if (mermaidRenderId.value !== renderToken) return;
       
       block.innerHTML = svg;
-      block.classList.add("mermaid"); // 确保类名存在
+      block.classList.add("mermaid"); // 确保类名存在 / Ensure class name exists
       const svgEl = block.querySelector("svg");
       if (svgEl) {
         const defs = svgEl.querySelector("defs");
@@ -263,19 +267,19 @@ const renderMermaidBlocks = async () => {
   }
 };
 
-// Mermaid 渲染监听
+// Mermaid render watcher / Mermaid 渲染监听
 watch([html, mermaidTheme, designerVars, () => uiThemeStore.theme], () => {
   renderMermaidBlocks();
 }, { immediate: true });
 
-// 监听预览容器变化
+// Watch preview container changes / 监听预览容器变化
 watch(previewRef, (newVal) => {
   if (newVal) {
     renderMermaidBlocks();
   }
 });
 
-// 处理预览栏滚动事件
+// Handle preview scroll event / 处理预览栏滚动事件
 const handlePreviewScroll = () => {
   if (!editorStore.syncScroll || isSyncing.value || !previewContentRef.value) return;
 
@@ -294,7 +298,7 @@ const handlePreviewScroll = () => {
   );
 };
 
-// 接收编辑器的同步事件
+// Receive sync event from editor / 接收编辑器的同步事件
 const handleSync = (event: Event) => {
   if (!editorStore.syncScroll) return;
   
@@ -376,7 +380,7 @@ onMounted(() => {
     console.error("Mermaid initialization failed:", e);
   }
   
-  // 确保初次挂载时也尝试渲染 Mermaid
+  // Ensure Mermaid is rendered on initial mount / 确保初次挂载时也尝试渲染 Mermaid
   renderMermaidBlocks();
 
   if (previewContentRef.value) {
@@ -413,15 +417,15 @@ onUnmounted(() => {
   <div class="markdown-preview">
     <div class="preview-header">
       <div class="header-left">
-        <span class="preview-title">预览</span>
+        <span class="preview-title">{{ t('editor.preview.title') }}</span>
       </div>
       <div class="header-spacer"></div>
       <div class="header-controls">
-        <button 
+        <button
           class="sync-button"
           :class="{ active: editorStore.syncScroll }"
           @click="editorStore.setSyncScroll(!editorStore.syncScroll)"
-          :title="editorStore.syncScroll ? '关闭同步滚动' : '开启同步滚动'"
+          :title="editorStore.syncScroll ? t('editor.preview.syncScroll.off') : t('editor.preview.syncScroll.on')"
         >
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
@@ -450,12 +454,12 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-      <button 
+      <button
         v-if="editorStore.previewDevice !== 'custom'"
         class="rotate-button" 
         :class="{ rotated: editorStore.previewRotated }"
         @click="toggleRotation"
-        title="旋转"
+        :title="t('editor.preview.rotate')"
       >
         <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
           <path d="M15.55 5.55L11 1v3.07C7.06 4.56 4 7.92 4 12s3.05 7.44 7 7.93v-2.02c-2.84-.48-5-2.94-5-5.91s2.16-5.43 5-5.91V10l4.55-4.45zM19.93 11c-.17-1.39-.72-2.73-1.62-3.89l-1.42 1.42c.54.75.88 1.6 1.02 2.47h2.02zM13 17.9v2.02c1.39-.17 2.74-.71 3.9-1.61l-1.44-1.44c-.75.54-1.59.89-2.46 1.03zm3.89-2.42l1.42 1.41c.9-1.16 1.45-2.5 1.62-3.89h-2.02c-.14.87-.48 1.72-1.02 2.48z"/>
@@ -466,25 +470,25 @@ onUnmounted(() => {
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
           </svg>
-          <span>尺寸</span>
+          <span>{{ t('editor.preview.customSize.label') }}</span>
         </button>
         <div v-if="showCustomMenu" class="custom-menu">
           <div class="custom-menu-item">
-            <label>宽度</label>
+            <label>{{ t('editor.preview.customSize.width') }}</label>
             <input
               type="text"
               :value="editorStore.customPreviewWidth"
               @input="handleCustomWidthInput"
-              placeholder="如: 500px 或 80%"
+              :placeholder="t('editor.preview.customSize.widthPlaceholder')"
             />
           </div>
           <div class="custom-menu-item">
-            <label>高度</label>
+            <label>{{ t('editor.preview.customSize.height') }}</label>
             <input
               type="text"
               :value="editorStore.customPreviewHeight"
               @input="handleCustomHeightInput"
-              placeholder="如: 800px 或 auto"
+              :placeholder="t('editor.preview.customSize.heightPlaceholder')"
             />
           </div>
         </div>
@@ -501,11 +505,11 @@ onUnmounted(() => {
           <div class="scale-mode">
             <label class="scale-mode-item">
               <input type="radio" :checked="editorStore.previewAutoScale" @change="toggleAutoScale" />
-              <span>自动缩放</span>
+              <span>{{ t('editor.preview.scale.auto') }}</span>
             </label>
             <label class="scale-mode-item">
               <input type="radio" :checked="!editorStore.previewAutoScale" @change="toggleAutoScale" />
-              <span>手动缩放</span>
+              <span>{{ t('editor.preview.scale.manual') }}</span>
             </label>
           </div>
           <div v-if="!editorStore.previewAutoScale" class="scale-slider">
@@ -932,7 +936,7 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* 滚动条样式 */
+/* Scrollbar styles / 滚动条样式 */
 .preview-content::-webkit-scrollbar {
   width: 12px;
   height: 12px;
@@ -963,7 +967,7 @@ onUnmounted(() => {
   border-radius: 0 0 var(--radius-lg) 0;
 }
 
-/* 响应式 */
+/* Responsive / 响应式 */
 @media (max-width: 768px) {
   .preview-header {
     padding: 6px 8px;
@@ -1037,7 +1041,7 @@ onUnmounted(() => {
   }
 }
 
-/* 深色模式 */
+/* Dark mode / 深色模式 */
 [data-ui-theme="dark"] .markdown-preview,
 [data-ui-theme="dark"] .preview-container {
   background: #1e1e1e;
@@ -1048,7 +1052,7 @@ onUnmounted(() => {
   background: #0f1113;
 }
 
-/* 深色模式滚动条 */
+/* Dark mode scrollbar / 深色模式滚动条 */
 [data-ui-theme="dark"] .preview-content::-webkit-scrollbar-track {
   background: #1a1c1e;
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
@@ -1074,24 +1078,24 @@ onUnmounted(() => {
 </style>
 
 <style>
-/* 以下样式需要全局生效，以便作用于 v-html 注入的内容 */
-
-/* 确保斜体样式生效 */
-#mdb em {
-  font-style: italic;
-  font-synthesis: style;
+/* Styles below must be global to affect content injected by v-html / 以下样式需要全局生效，以便作用于 v-html 注入的内容 */
+.markdown-body em {
+  font-style: italic !important;
 }
 
-/* 强制图片自适应 */
-#mdb img {
+/* Ensure italic styles work / 确保斜体样式生效 */
+.markdown-preview em {
+  font-style: italic !important;
+}
+
+/* Force image responsiveness / 强制图片自适应 */
+.markdown-preview img {
   max-width: 100%;
   height: auto;
-  display: block;
-  margin: 10px auto;
 }
 
-/* 针对整个预览容器启用字体合成 */
-#mdb {
-  font-synthesis: style weight;
+/* Enable font synthesis for preview container / 针对整个预览容器启用字体合成 */
+.markdown-preview {
+  font-synthesis: style weight; /* Allow browser to synthesize italic/bold / 允许浏览器合成斜体/粗体 */
 }
 </style>

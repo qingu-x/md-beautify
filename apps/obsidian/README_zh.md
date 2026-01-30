@@ -19,13 +19,13 @@
 
 ### 📸 插件截图
 
-![MD Beautify for Obsidian](https://raw.githubusercontent.com/qingu-x/md-beautify/main/vue/.github/assets/screenshot.png)
+![MD Beautify for Obsidian](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/screenshot.jpg)
 
 ### 🖼️ 效果预览
 
-| 浅色模式                      | 深色模式                     |
-| ----------------------------- | ---------------------------- |
-| ![浅色模式](assets/light.jpg) | ![深色模式](assets/dark.jpg) |
+| 浅色模式                                                                                       | 深色模式                                                                                      |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| ![浅色模式](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/light.jpg) | ![深色模式](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/dark.jpg) |
 
 ### 🚀 使用方法
 
@@ -69,9 +69,24 @@
 
 如果你喜欢这个插件，请在 [GitHub](https://github.com/qingu-x/obsidian-md-beautify-plugin) 上给它一个 ⭐！
 
-如果你觉得这个插件对你有帮助，想要支持后续的开发，可以请我喝杯咖啡！
+如果你觉得这个插件对你有帮助，想要支持后续的开发，欢迎请作者喝杯咖啡！
+
+### ☕️ 国际赞助
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/pax_z)
+
+### 🧧 国内赞助
+
+<div style="display: flex; gap: 20px;">
+  <div style="text-align: center">
+    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
+    <p>微信支付</p>
+  </div>
+  <div style="text-align: center">
+    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
+    <p>支付宝</p>
+  </div>
+</div>
 
 如果有 Bug 或功能建议，请 [提交 Issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues)。
 

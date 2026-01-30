@@ -8,7 +8,7 @@
       >
         <div class="modal-header">
           <h3>{{ title }}</h3>
-          <button class="modal-close" @click="$emit('close')" aria-label="关闭">
+          <button class="modal-close" @click="$emit('close')" :aria-label="t('common.close')">
             ×
           </button>
         </div>
@@ -21,6 +21,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '../../i18n';
+
+const { t } = useI18n();
+
 defineProps<{
   open: boolean;
   title: string;

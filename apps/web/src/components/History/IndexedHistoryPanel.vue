@@ -1,7 +1,7 @@
 <template>
   <aside class="history-sidebar">
     <div class="history-header">
-      <h3>历史记录</h3>
+      <h3>{{ t('history.title') }}</h3>
       <div class="history-actions">
         <button 
           class="btn-secondary btn-icon-only" 
@@ -11,14 +11,14 @@
           @touchstart="handleTouchStart"
           @touchend="handleTouchEnd"
           @touchcancel="handleTouchCancel"
-          :data-tooltip="isLongPressing ? '松开创建示例文章' : '新增文章 (长按创建示例)'"
+          :data-tooltip="isLongPressing ? t('history.longPressReleaseTip') : t('history.longPressTip')"
         >
           <Plus :size="16" />
         </button>
         <button
           class="btn-secondary btn-icon-only"
           @click="showClearConfirm = true"
-          data-tooltip="清空历史"
+          :data-tooltip="t('history.clearHistory')"
         >
           <Trash2 :size="16" />
         </button>
@@ -29,15 +29,15 @@
         <Search :size="14" class="search-icon" />
         <input
           type="text"
-          placeholder="搜索..."
+          :placeholder="t('history.searchPlaceholder')"
           :value="filter"
           @input="e => setFilter((e.target as HTMLInputElement).value)"
         />
       </div>
     </div>
-    <div v-if="loading" class="history-empty">正在加载...</div>
+    <div v-if="loading" class="history-empty">{{ t('history.loading') }}</div>
     <div v-else-if="!hasEntries" class="history-empty">
-      {{ filter ? '无匹配结果' : '暂无记录' }}
+      {{ filter ? t('history.noResults') : t('history.empty') }}
     </div>
     <div v-else class="history-body">
       <div class="history-list">
@@ -57,26 +57,26 @@
                   @keydown.enter="confirmRename(entry)"
                   @keydown.esc="renamingId = null"
                 />
-                <button @click="confirmRename(entry)">确认</button>
-                <button @click="renamingId = null">取消</button>
+                <button @click="confirmRename(entry)">{{ t('common.confirm') }}</button>
+                <button @click="renamingId = null">{{ t('common.cancel') }}</button>
               </div>
-              <span v-else class="history-title">{{ entry.title || '未命名文章' }}</span>
-              <span class="history-theme">{{ entry.themeName || '未命名主题' }}</span>
+              <span v-else class="history-title">{{ entry.title || t('history.unnamed') }}</span>
+              <span class="history-theme">{{ getThemeName(entry) }}</span>
             </div>
             <div class="history-actions-menu-wrapper">
               <button
                 class="history-action-trigger"
                 @click.stop="e => handleMenuToggle(e, entry)"
-                aria-label="操作菜单"
+                :aria-label="t('history.menu')"
               >
                 <MoreHorizontal :size="16" />
               </button>
             </div>
           </div>
         </div>
-        <!-- 无限滚动触发器 -->
+        <!-- Infinite scroll trigger / 无限滚动触发器 -->
         <div v-if="hasMore" ref="loadMoreRef" class="history-load-more">
-          <span>加载更多...</span>
+          <span>{{ t('history.loadMore') }}</span>
         </div>
       </div>
     </div>
@@ -92,15 +92,15 @@
     >
       <button @click="copyTitle(menuEntry); closeActionMenu()">
         <Copy :size="14" />
-        复制标题
+        {{ t('history.copyTitle') }}
       </button>
       <button @click="startRename(menuEntry); closeActionMenu()">
         <Edit2 :size="14" />
-        重命名
+        {{ t('history.rename') }}
       </button>
       <button class="danger" @click="deleteTarget = menuEntry; closeActionMenu()">
         <Trash2 :size="14" />
-        删除
+        {{ t('history.delete') }}
       </button>
     </div>
   </Teleport>
@@ -109,18 +109,18 @@
   <Teleport to="body">
     <div v-if="deleteTarget" class="history-confirm-backdrop" @click="!deleting && (deleteTarget = null)">
       <div class="history-confirm-modal" @click.stop>
-        <h4>删除记录</h4>
-        <p>确定要删除“{{ deleteTarget.title || '未命名文章' }}”吗？此操作不可撤销。</p>
+        <h4>{{ t('history.deleteConfirmTitle') }}</h4>
+        <p>{{ t('history.deleteConfirmText', { title: deleteTarget.title || t('history.unnamed') }) }}</p>
         <div class="history-confirm-actions">
           <button class="btn-secondary" @click="deleteTarget = null" :disabled="deleting">
-            取消
+            {{ t('common.cancel') }}
           </button>
           <button
             class="btn-danger"
             @click="handleDeleteConfirm"
             :disabled="deleting"
           >
-            {{ deleting ? '删除中...' : '确认删除' }}
+            {{ deleting ? t('history.deleting') : t('history.confirmDelete') }}
           </button>
         </div>
       </div>
@@ -131,18 +131,18 @@
   <Teleport to="body">
     <div v-if="showClearConfirm" class="history-confirm-backdrop" @click="!clearing && (showClearConfirm = false)">
       <div class="history-confirm-modal" @click.stop>
-        <h4>清空历史</h4>
-        <p>确定要清空所有历史记录吗？此操作不可撤销。</p>
+        <h4>{{ t('history.clearConfirmTitle') }}</h4>
+        <p>{{ t('history.clearConfirmText') }}</p>
         <div class="history-confirm-actions">
           <button class="btn-secondary" @click="showClearConfirm = false" :disabled="clearing">
-            取消
+            {{ t('common.cancel') }}
           </button>
           <button
             class="btn-danger"
             @click="handleClearConfirm"
             :disabled="clearing"
           >
-            {{ clearing ? '清空中...' : '确认清空' }}
+            {{ clearing ? t('history.clearing') : t('history.confirmClear') }}
           </button>
         </div>
       </div>
@@ -153,6 +153,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Search, Plus, Trash2, MoreHorizontal, Edit2, Copy } from 'lucide-vue-next';
+import { useI18n } from '../../i18n';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useHistoryStore } from '../../store/historyStore';
@@ -166,6 +167,17 @@ const LONG_PRESS_DURATION = 500;
 const editorStore = useEditorStore();
 const themeStore = useThemeStore();
 const historyStore = useHistoryStore();
+const { t } = useI18n();
+
+const getThemeName = (entry: HistorySnapshot): string => {
+  if (!entry.theme) return entry.themeName || t('history.defaultTheme');
+  // Check if it is a built-in theme / 检查是否是内置主题
+  const isBuiltIn = themeStore.allThemes.find(th => th.id === entry.theme)?.isBuiltIn;
+  if (isBuiltIn) {
+    return t(`theme.names.${entry.theme}`);
+  }
+  return entry.themeName || t('history.defaultTheme');
+};
 
 const history = computed(() => historyStore.history);
 const loading = computed(() => historyStore.loading);
@@ -175,7 +187,7 @@ const activeId = computed(() => historyStore.activeId);
 const setFilter = (val: string) => historyStore.setFilter(val);
 
 const renamingId = ref<string | null>(null);
-const tempTitle = ref('未命名文章');
+const tempTitle = ref(t('history.unnamed'));
 const actionMenuId = ref<string | null>(null);
 const menuPosition = ref({ top: 0, left: 0 });
 const menuEntry = ref<HistorySnapshot | null>(null);
@@ -204,9 +216,9 @@ const handleRestore = async (entry: HistorySnapshot) => {
     historyStore.setActiveId(entry.id);
     renamingId.value = null;
     actionMenuId.value = null;
-    toast.success('已恢复至该版本');
+    toast.success(t('history.restoreSuccess'));
   } catch (error) {
-    toast.error('恢复失败');
+    toast.error(t('history.restoreError'));
     console.error(error);
   }
 };
@@ -230,9 +242,9 @@ const handleDeleteConfirm = async () => {
         editorStore.resetDocument();
       }
     }
-    toast.success('删除成功');
+    toast.success(t('history.deleteSuccess'));
   } catch (error) {
-    toast.error('删除失败');
+    toast.error(t('history.deleteError'));
     console.error(error);
   } finally {
     deleting.value = false;
@@ -241,11 +253,11 @@ const handleDeleteConfirm = async () => {
 };
 
 const handleCreateArticle = async (withExample = false) => {
-  const initial = withExample ? defaultMarkdown : '# 新文章\n\n';
-  const title = withExample ? '示例文章' : '新文章';
+  const initial = withExample ? defaultMarkdown : '# ' + t('history.newArticle') + '\n\n';
+  const title = withExample ? t('history.exampleArticle') : t('history.newArticle');
   
   try {
-    // 1. 保存当前文章的状态
+    // 1. Save current article state / 1. 保存当前文章的状态
     await historyStore.persistActiveSnapshot({
       markdown: editorStore.markdown,
       theme: themeStore.themeId,
@@ -253,38 +265,38 @@ const handleCreateArticle = async (withExample = false) => {
       themeName: themeStore.themeName,
     });
 
-    // 2. 重置编辑器和主题状态
+    // 2. Reset editor and theme state / 2. 重置编辑器和主题状态
     editorStore.resetDocument({ 
       markdown: initial, 
       theme: 'default', 
       customCSS: '',
-      themeName: '默认主题' 
+      themeName: t('theme.defaultTheme') 
     });
 
-    // 3. 创建新的历史记录条目
+    // 3. Create new history entry / 3. 创建新的历史记录条目
     const newEntry = await historyStore.saveSnapshot(
       { 
         markdown: initial, 
         theme: 'default', 
         customCSS: '', 
         title, 
-        themeName: '默认主题' 
+        themeName: t('theme.defaultTheme') 
       },
       { force: true }
     );
 
-    // 4. 设置新条目为激活状态
+    // 4. Set new entry as active / 4. 设置新条目为激活状态
     if (newEntry) {
       historyStore.setActiveId(newEntry.id);
     }
     
-    toast.success(withExample ? '已创建示例文章' : '已创建新文章');
+    toast.success(withExample ? t('history.createExampleSuccess') : t('history.createSuccess'));
 
-    // 5. 关闭重命名等临时状态
+    // 5. Close rename and other temporary states / 5. 关闭重命名等临时状态
     renamingId.value = null;
     actionMenuId.value = null;
   } catch (error) {
-    toast.error('创建失败');
+    toast.error(t('history.createError'));
     console.error(error);
   }
 };
@@ -337,7 +349,7 @@ const handleTouchCancel = () => {
 
 const startRename = (entry: HistorySnapshot) => {
   renamingId.value = entry.id;
-  tempTitle.value = entry.title || '未命名文章';
+  tempTitle.value = entry.title || t('history.unnamed');
   actionMenuId.value = null;
   menuEntry.value = null;
 };
@@ -346,19 +358,19 @@ const confirmRename = async (entry: HistorySnapshot) => {
   try {
     await historyStore.updateTitle(entry.id, tempTitle.value);
     renamingId.value = null;
-    toast.success('重命名成功');
+    toast.success(t('history.renameSuccess'));
   } catch (error) {
-    toast.error('重命名失败');
+    toast.error(t('history.renameError'));
     console.error(error);
   }
 };
 
 const copyTitle = async (entry: HistorySnapshot) => {
   try {
-    await navigator.clipboard.writeText(entry.title || '未命名文章');
-    toast.success('标题已复制');
+    await navigator.clipboard.writeText(entry.title || t('history.unnamed'));
+    toast.success(t('history.copySuccess'));
   } catch (error) {
-    toast.error('复制失败');
+    toast.error(t('history.copyError'));
     console.error(error);
   }
 };
@@ -404,7 +416,7 @@ const keyword = computed(() => filter.value.trim().toLowerCase());
 const filteredHistory = computed(() => {
   if (!keyword.value) return history.value;
   return history.value.filter((entry) =>
-    (entry.title || '未命名文章').toLowerCase().includes(keyword.value)
+    (entry.title || t('history.unnamed')).toLowerCase().includes(keyword.value)
   );
 });
 

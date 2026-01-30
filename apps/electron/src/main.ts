@@ -3,6 +3,112 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { checkForUpdates, openReleasesPage } from './updater';
 
+// --- Internationalization Support / 国际化支持 ---
+const translations = {
+    zh: {
+        exportHtml: '导出 HTML',
+        exportPdf: '导出 PDF',
+        selectWorkspace: '选择 MD Beautify 工作区文件夹',
+        about: '关于 MD Beautify',
+        hide: '隐藏 MD Beautify',
+        hideOthers: '隐藏其他',
+        showAll: '显示全部',
+        quit: '退出 MD Beautify',
+        file: '文件',
+        newArticle: '新建文章',
+        save: '保存',
+        switchWorkspace: '切换工作区...',
+        edit: '编辑',
+        undo: '撤销',
+        redo: '重做',
+        cut: '剪切',
+        copy: '复制',
+        paste: '粘贴',
+        selectAll: '全选',
+        view: '查看',
+        reload: '重新加载',
+        forceReload: '强制重新加载',
+        toggleDevTools: '开发者工具',
+        resetZoom: '实际大小',
+        zoomIn: '放大',
+        zoomOut: '缩小',
+        toggleFullscreen: '全屏',
+        window: '窗口',
+        minimize: '最小化',
+        zoom: '缩放',
+        front: '前置全部窗口',
+        help: '帮助',
+        checkForUpdates: '检查更新...',
+        visitWebsite: '访问官网',
+        githubRepo: 'GitHub 仓库',
+        fileExisted: '文件名已存在',
+        cannotReadDir: '无法将文件夹作为文件读取',
+        noWorkspace: '未选择工作区',
+        filePathRequired: '需要文件路径',
+        invalidArgs: '参数无效',
+        defaultTheme: '默认主题',
+        untitled: '未命名文章',
+    },
+    en: {
+        exportHtml: 'Export HTML',
+        exportPdf: 'Export PDF',
+        selectWorkspace: 'Select MD Beautify Workspace Folder',
+        about: 'About MD Beautify',
+        hide: 'Hide MD Beautify',
+        hideOthers: 'Hide Others',
+        showAll: 'Show All',
+        quit: 'Quit MD Beautify',
+        file: 'File',
+        newArticle: 'New Article',
+        save: 'Save',
+        switchWorkspace: 'Switch Workspace...',
+        edit: 'Edit',
+        undo: 'Undo',
+        redo: 'Redo',
+        cut: 'Cut',
+        copy: 'Copy',
+        paste: 'Paste',
+        selectAll: 'Select All',
+        view: 'View',
+        reload: 'Reload',
+        forceReload: 'Force Reload',
+        toggleDevTools: 'Developer Tools',
+        resetZoom: 'Actual Size',
+        zoomIn: 'Zoom In',
+        zoomOut: 'Zoom Out',
+        toggleFullscreen: 'Toggle Full Screen',
+        window: 'Window',
+        minimize: 'Minimize',
+        zoom: 'Zoom',
+        front: 'Bring All to Front',
+        help: 'Help',
+        checkForUpdates: 'Check for Updates...',
+        visitWebsite: 'Visit Website',
+        githubRepo: 'GitHub Repository',
+        fileExisted: 'File already exists',
+        cannotReadDir: 'Cannot read directory as file',
+        noWorkspace: 'No workspace selected',
+        filePathRequired: 'File path required',
+        invalidArgs: 'Invalid arguments',
+        defaultTheme: 'Default Theme',
+        untitled: 'Untitled Article',
+    }
+};
+
+// 获取当前语言 (默认为中文)
+const getLocale = () => {
+    try {
+        return app.getLocale().startsWith('zh') ? 'zh' : 'en';
+    } catch (e) {
+        return 'zh';
+    }
+};
+
+const t = (key: keyof typeof translations['zh']) => {
+    const locale = getLocale();
+    return translations[locale][key] || key;
+};
+
 // 判断是否为开发模式 - 使用 app.isPackaged 是最可靠的方式
 // 注意：app.isPackaged 只能在 app ready 之后使用，这里用延迟判断
 let isDev = !app.isPackaged || process.argv.includes('--dev') || !!process.env.ELECTRON_START_URL;
@@ -140,7 +246,7 @@ function scanWorkspace(dir: string, level: number = 0, parentPath: string = ''):
                 const stats = fs.statSync(fullPath);
 
                 // 尝试读取 Frontmatter 获取 themeName
-                let themeName = '默认主题';
+                let themeName = t('defaultTheme');
                 try {
                     const fd = fs.openSync(fullPath, 'r');
                 const buffer = Buffer.alloc(500);
@@ -275,7 +381,7 @@ ipcMain.handle('window:isMaximized', () => mainWindow?.isMaximized());
 ipcMain.handle('export:html', async (_event, { content, title }) => {
     if (!mainWindow) return;
     const { filePath } = await dialog.showSaveDialog(mainWindow, {
-        title: '导出 HTML',
+        title: t('exportHtml'),
         defaultPath: `${title || 'export'}.html`,
         filters: [{ name: 'HTML Files', extensions: ['html'] }]
     });
@@ -366,7 +472,7 @@ ipcMain.handle('export:pdf', async (_event, { content, title }) => {
         });
 
         const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
-            title: '导出 PDF',
+            title: t('exportPdf'),
             defaultPath: `${title || 'export'}.pdf`,
             filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
         });
@@ -397,7 +503,7 @@ ipcMain.handle('workspace:select', async () => {
     if (!mainWindow) return { success: false, error: 'Window not initialized' };
     const result = await dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory', 'createDirectory'],
-        message: '选择 MD Beautify 工作区文件夹'
+        message: t('selectWorkspace')
     });
     if (result.canceled || result.filePaths.length === 0) {
         return { success: false, canceled: true };
@@ -436,7 +542,7 @@ ipcMain.handle('file:read', async (_event: IpcMainInvokeEvent, filePath: string)
         }
         const stats = fs.statSync(filePath);
         if (stats.isDirectory()) {
-            return { success: false, error: 'Cannot read directory as file' };
+            return { success: false, error: t('cannotReadDir') };
         }
         const content = fs.readFileSync(filePath, 'utf-8');
         return { success: true, content, filePath };
@@ -446,9 +552,9 @@ ipcMain.handle('file:read', async (_event: IpcMainInvokeEvent, filePath: string)
 });
 
 ipcMain.handle('file:create', async (_event: IpcMainInvokeEvent, payload: { filename?: string; content?: string }) => {
-    if (!workspaceDir) return { success: false, error: 'No workspace' };
+    if (!workspaceDir) return { success: false, error: t('noWorkspace') };
     const { filename, content } = payload || {};
-    const safeName = filename ? filename.trim() : '未命名文章.md';
+    const safeName = filename ? filename.trim() : `${t('untitled')}.md`;
 
     try {
         // 检查文件名是否包含子目录
@@ -477,7 +583,7 @@ ipcMain.handle('file:create', async (_event: IpcMainInvokeEvent, payload: { file
 
 ipcMain.handle('file:save', async (_event: IpcMainInvokeEvent, payload: { filePath: string; content: string }) => {
     const { filePath, content } = payload;
-    if (!filePath) return { success: false, error: 'File path required' };
+    if (!filePath) return { success: false, error: t('filePathRequired') };
 
     try {
         // 检查内容是否变更，避免不必要的写入
@@ -499,13 +605,13 @@ ipcMain.handle('file:save', async (_event: IpcMainInvokeEvent, payload: { filePa
 
 ipcMain.handle('file:rename', async (_event: IpcMainInvokeEvent, payload: { oldPath: string; newPath: string }) => {
     const { oldPath, newPath } = payload;
-    if (!oldPath || !newPath) return { success: false, error: 'Invalid arguments' };
+    if (!oldPath || !newPath) return { success: false, error: t('invalidArgs') };
 
     if (oldPath === newPath) return { success: true, filePath: newPath };
 
     // 检查目标是否存在 (且不是大小写变名)
     if (fs.existsSync(newPath) && oldPath.toLowerCase() !== newPath.toLowerCase()) {
-        return { success: false, error: '文件名已存在' };
+        return { success: false, error: t('fileExisted') };
     }
 
     try {
@@ -566,32 +672,32 @@ function createMenu() {
         {
             label: 'MD Beautify',
             submenu: [
-                { role: 'about', label: '关于 MD Beautify' },
+                { role: 'about', label: t('about') },
                 { type: 'separator' },
-                { role: 'hide', label: '隐藏 MD Beautify' },
-                { role: 'hideOthers', label: '隐藏其他' },
-                { role: 'unhide', label: '显示全部' },
+                { role: 'hide', label: t('hide') },
+                { role: 'hideOthers', label: t('hideOthers') },
+                { role: 'unhide', label: t('showAll') },
                 { type: 'separator' },
-                { role: 'quit', label: '退出 MD Beautify' },
+                { role: 'quit', label: t('quit') },
             ],
         },
         {
-            label: '文件',
+            label: t('file'),
             submenu: [
                 {
-                    label: '新建文章',
+                    label: t('newArticle'),
                     accelerator: 'CmdOrCtrl+N',
                     click: () => mainWindow && mainWindow.webContents.send('menu:new-file')
                 },
                 { type: 'separator' },
                 {
-                    label: '保存',
+                    label: t('save'),
                     accelerator: 'CmdOrCtrl+S',
                     click: () => mainWindow && mainWindow.webContents.send('menu:save')
                 },
                 { type: 'separator' },
                 {
-                    label: '切换工作区...',
+                    label: t('switchWorkspace'),
                     click: async () => {
                         mainWindow && mainWindow.webContents.send('menu:switch-workspace');
                     }
@@ -599,54 +705,54 @@ function createMenu() {
             ],
         },
         {
-            label: '编辑',
+            label: t('edit'),
             submenu: [
-                { role: 'undo', label: '撤销' },
-                { role: 'redo', label: '重做' },
+                { role: 'undo', label: t('undo') },
+                { role: 'redo', label: t('redo') },
                 { type: 'separator' },
-                { role: 'cut', label: '剪切' },
-                { role: 'copy', label: '复制' },
-                { role: 'paste', label: '粘贴' },
-                { role: 'selectAll', label: '全选' },
+                { role: 'cut', label: t('cut') },
+                { role: 'copy', label: t('copy') },
+                { role: 'paste', label: t('paste') },
+                { role: 'selectAll', label: t('selectAll') },
             ],
         },
         {
-            label: '查看',
+            label: t('view'),
             submenu: [
-                { role: 'reload', label: '重新加载' },
-                { role: 'forceReload', label: '强制重新加载' },
-                { role: 'toggleDevTools', label: '开发者工具' },
+                { role: 'reload', label: t('reload') },
+                { role: 'forceReload', label: t('forceReload') },
+                { role: 'toggleDevTools', label: t('toggleDevTools') },
                 { type: 'separator' },
-                { role: 'resetZoom', label: '实际大小' },
-                { role: 'zoomIn', label: '放大' },
-                { role: 'zoomOut', label: '缩小' },
+                { role: 'resetZoom', label: t('resetZoom') },
+                { role: 'zoomIn', label: t('zoomIn') },
+                { role: 'zoomOut', label: t('zoomOut') },
                 { type: 'separator' },
-                { role: 'togglefullscreen', label: '全屏' },
+                { role: 'togglefullscreen', label: t('toggleFullscreen') },
             ],
         },
         {
-            label: '窗口',
+            label: t('window'),
             submenu: [
-                { role: 'minimize', label: '最小化' },
-                { role: 'zoom', label: '缩放' },
+                { role: 'minimize', label: t('minimize') },
+                { role: 'zoom', label: t('zoom') },
                 { type: 'separator' },
-                { role: 'front', label: '前置全部窗口' },
+                { role: 'front', label: t('front') },
             ],
         },
         {
-            label: '帮助',
+            label: t('help'),
             submenu: [
                 {
-                    label: '检查更新...',
+                    label: t('checkForUpdates'),
                     click: () => checkForUpdates(mainWindow, true),
                 },
                 { type: 'separator' },
                 {
-                    label: '访问官网',
+                    label: t('visitWebsite'),
                     click: () => shell.openExternal('https://mdb.app'),
                 },
                 {
-                    label: 'GitHub 仓库',
+                    label: t('githubRepo'),
                     click: () => shell.openExternal('https://github.com/qingu-x/md-beautify'),
                 },
             ],

@@ -1,9 +1,9 @@
 <template>
   <div>
-    <!-- 隐藏状态下的持久化窗口控制 (Windows only) -->
+    <!-- Persistent window controls in hidden state (Windows only) / 隐藏状态下的持久化窗口控制 (Windows only) -->
     <WindowControls v-if="autoHide && isWindows" fixed />
 
-    <!-- 隐藏状态下的浮动工具栏 (仅桌面端显示) -->
+    <!-- Floating toolbar in hidden state (Desktop only) / 隐藏状态下的浮动工具栏 (仅桌面端显示) -->
     <Transition name="toolbar-expand">
         <div 
           v-if="autoHide && !isMobile" 
@@ -14,14 +14,14 @@
           <div class="floating-more-wrapper" :style="{ maxHeight: showFloatingMore ? '500px' : '0' }">
             <div class="floating-more-actions">
               <FloatingToolbarButton
-                label="显示标题栏"
+                :label="t('header.showHeader')"
                 @click="autoHide = false"
                 highlight
               >
                 <template #icon><ChevronsUp :size="18" :strokeWidth="2" /></template>
               </FloatingToolbarButton>
               <FloatingToolbarButton
-                :label="uiTheme === 'dark' ? '亮色模式' : '暗色模式'"
+                :label="uiTheme === 'dark' ? t('header.toggleLight') : t('header.toggleDark')"
                 @click="setTheme(uiTheme === 'dark' ? 'default' : 'dark')"
               >
                 <template #icon>
@@ -32,21 +32,21 @@
 
               <FloatingToolbarButton
                 v-if="!isElectron"
-                label="存储模式"
+                :label="t('header.storageMode')"
                 @click="showStorageModal = true"
               >
                 <template #icon><Layers :size="18" :strokeWidth="2" /></template>
               </FloatingToolbarButton>
 
               <FloatingToolbarButton
-                label="图床设置"
+                :label="t('header.imageHost')"
                 @click="showImageHostModal = true"
               >
                 <template #icon><ImageIcon :size="18" :strokeWidth="2" /></template>
               </FloatingToolbarButton>
 
               <FloatingToolbarButton
-                label="主题管理"
+                :label="t('header.themeManagement')"
                 @click="showThemePanel = true"
               >
                 <template #icon><Palette :size="18" :strokeWidth="2" /></template>
@@ -54,7 +54,7 @@
 
               <div class="floating-submenu-container">
                 <FloatingToolbarButton
-                  label="导出功能"
+                  :label="t('header.export')"
                   @click="showFloatingExportMenu = !showFloatingExportMenu"
                   :active="showFloatingExportMenu"
                 >
@@ -64,18 +64,18 @@
                 <div v-if="showFloatingExportMenu" class="floating-submenu">
                   <button class="submenu-item" @click="() => exportHtml()">
                     <Download :size="14" :strokeWidth="2" />
-                    <span>导出 HTML</span>
+                    <span>{{ t('header.exportHtml') }}</span>
                   </button>
                   <button class="submenu-item" @click="() => exportPdf()">
                     <FileText :size="14" :strokeWidth="2" />
-                    <span>导出 PDF</span>
+                    <span>{{ t('header.exportPdf') }}</span>
                   </button>
                 </div>
               </div>
 
               <FloatingToolbarButton
-                label="复制到公众号"
-                @click="copyToWechat"
+                :label="t('header.copyButton')"
+                @click="copyToEditor"
                 primary
               >
                 <template #icon><Send :size="18" :strokeWidth="2" /></template>
@@ -84,7 +84,7 @@
           </div>
 
           <FloatingToolbarButton
-            :label="showFloatingMore ? '收起' : '更多功能'"
+            :label="showFloatingMore ? t('header.collapse') : t('header.more')"
             @click="toggleFloatingMore"
             :class="['floating-more-btn', { 'active': showFloatingMore }]"
           >
@@ -105,7 +105,7 @@
           <DefaultLogoMark v-else />
           <div class="logo-info">
             <span class="logo-text">MD Beautify</span>
-            <span class="logo-subtitle">公众号 Markdown 排版编辑器</span>
+            <span class="logo-subtitle">{{ t('header.subtitle') }}</span>
           </div>
         </div>
       </div>
@@ -117,47 +117,47 @@
             @click="showThemePanel = true"
           >
             <Palette :size="18" :strokeWidth="2" />
-            <span>主题管理</span>
+            <span>{{ t('header.themeManagement') }}</span>
           </button>
 
           <div class="dropdown-container">
             <button
               class="btn-secondary"
               @click="showExportMenu = !showExportMenu"
-              title="导出文件"
+              :title="t('header.export')"
             >
               <Download :size="18" :strokeWidth="2" />
-              <span>导出</span>
+              <span>{{ t('header.export') }}</span>
               <ChevronDown :size="14" :strokeWidth="2" class="chevron-icon" />
             </button>
             <div v-if="showExportMenu" class="dropdown-menu">
               <button class="dropdown-item" @click="() => exportHtml()">
                 <div class="item-title">
                   <Download :size="16" :strokeWidth="2" />
-                  <span>导出 HTML</span>
+                  <span>{{ t('header.exportHtml') }}</span>
                 </div>
-                <span class="item-desc">包含完整样式的 HTML 文件</span>
+                <span class="item-desc">{{ t('header.exportHtmlDesc') }}</span>
               </button>
               <button class="dropdown-item" @click="() => exportPdf()">
                 <div class="item-title">
                   <FileText :size="16" :strokeWidth="2" />
-                  <span>导出 PDF</span>
+                  <span>{{ t('header.exportPdf') }}</span>
                 </div>
-                <span class="item-desc">矢量格式，支持选中文字</span>
+                <span class="item-desc">{{ t('header.exportPdfDesc') }}</span>
               </button>
             </div>
           </div>
 
-          <button class="btn-primary" @click="copyToWechat">
+          <button class="btn-primary" @click="copyToEditor">
             <Send :size="18" :strokeWidth="2" />
-            <span>复制到公众号</span>
+            <span>{{ t('header.copyToEditor') }}</span>
           </button>
 
           <div class="dropdown-container">
             <button
               class="btn-icon-only"
               @click="isMobile ? autoHide = true : showSettingsMenu = !showSettingsMenu"
-              :title="isMobile ? '隐藏标题栏' : '设置'"
+              :title="isMobile ? t('header.hideHeader') : t('header.settings')"
             >
               <ChevronsDown v-if="isMobile" :size="18" :strokeWidth="2" />
               <Settings v-else :size="18" :strokeWidth="2" />
@@ -170,9 +170,9 @@
               >
                 <div class="item-title">
                   <Layers :size="16" :strokeWidth="2" />
-                  <span>存储模式</span>
+                  <span>{{ t('header.storageMode') }}</span>
                 </div>
-                <span class="item-desc">选择本地或云端存储</span>
+                <span class="item-desc">{{ t('header.storageModeDesc') }}</span>
               </button>
               <button
                 class="dropdown-item"
@@ -180,9 +180,9 @@
               >
                 <div class="item-title">
                   <ImageIcon :size="16" :strokeWidth="2" />
-                  <span>图床设置</span>
+                  <span>{{ t('header.imageHost') }}</span>
                 </div>
-                <span class="item-desc">配置图片上传服务</span>
+                <span class="item-desc">{{ t('header.imageHostDesc') }}</span>
               </button>
               <button
                 class="dropdown-item"
@@ -191,7 +191,16 @@
                 <div class="item-title">
                   <Sun v-if="uiTheme === 'dark'" :size="16" :strokeWidth="2" />
                   <Moon v-else :size="16" :strokeWidth="2" />
-                  <span>{{ uiTheme === 'dark' ? '切换到亮色模式' : '切换到暗色模式' }}</span>
+                  <span>{{ uiTheme === 'dark' ? t('header.toggleLight') : t('header.toggleDark') }}</span>
+                </div>
+              </button>
+              <button
+                class="dropdown-item"
+                @click="locale = locale === 'zh' ? 'en' : 'zh'; showSettingsMenu = false"
+              >
+                <div class="item-title">
+                  <Languages :size="16" :strokeWidth="2" />
+                  <span>{{ t('header.toggleLanguage') }}</span>
                 </div>
               </button>
               <button
@@ -200,9 +209,9 @@
               >
                 <div class="item-title">
                   <ChevronsDown :size="16" :strokeWidth="2" />
-                  <span>隐藏标题栏</span>
+                  <span>{{ t('header.hideHeader') }}</span>
                 </div>
-                <span class="item-desc">专注写作，可通过悬浮按钮恢复</span>
+                <span class="item-desc">{{ t('header.hideHeaderDesc') }}</span>
               </button>
             </div>
           </div>
@@ -224,7 +233,7 @@
       v-if="showStorageModal"
       :open="showStorageModal"
       @close="showStorageModal = false"
-      title="选择存储模式"
+      :title="t('modal.storageMode')"
     >
       <StorageModeSelector />
     </Modal>
@@ -233,7 +242,7 @@
       v-if="showImageHostModal"
       :open="showImageHostModal"
       @close="showImageHostModal = false"
-      title="图床设置"
+      :title="t('modal.imageHost')"
       className="modal-narrow"
     >
       <ImageHostSettings />
@@ -265,14 +274,18 @@ import {
   ChevronDown,
   Settings,
   MoreHorizontal,
+  Languages,
 } from "lucide-vue-next";
+import { useI18n } from "../../i18n";
+
+const { t, locale } = useI18n();
 
 // Components
 const ThemePanel = defineAsyncComponent(() => import("../Theme/ThemePanel.vue"));
 
 const AsyncLoading = () => h('div', { 
   style: { padding: "20px", textAlign: "center", color: "var(--text-secondary)" } 
-}, '正在加载...');
+}, t('modal.loading'));
 
 const StorageModeSelector = defineAsyncComponent({
   loader: () => import("../StorageModeSelector/StorageModeSelector.vue"),
@@ -290,9 +303,8 @@ const ImageHostSettings = defineAsyncComponent({
 const DefaultLogoMark = () => h('svg', {
   width: "40", height: "40", viewBox: "0 0 200 200", xmlns: "http://www.w3.org/2000/svg", "aria-hidden": "true"
 }, [
-  h('path', { d: "M40 20 H160 C171 20 180 29 180 40 V140 C180 151 171 160 160 160 H140 L140 185 L110 160 H40 C29 160 20 151 20 140 V40 C20 29 29 20 40 20 Z", fill: "#1A1A1A" }),
-  h('rect', { x: "50", y: "50", width: "100", height: "12", rx: "6", fill: "#07C160" }),
-  h('path', { d: "M60 85 L60 130 H80 L80 110 L100 130 L120 110 L120 130 H140 L140 85 L120 85 L100 105 L80 85 Z", fill: "#FFFFFF" })
+  h('rect', { x: "20", y: "20", width: "160", height: "160", rx: "32", fill: "#07C160" }),
+  h('path', { d: "M50 60 L50 140 L80 140 L80 100 L100 130 L120 100 L120 140 L150 140 L150 60 L120 60 L100 90 L80 60 Z", fill: "white" })
 ]);
 
 const structuralismLogoSrc = (import.meta as any).env.BASE_URL + "favicon-light.svg";
@@ -368,10 +380,10 @@ const isStructuralismUI = computed(() => uiTheme.value === "dark");
 
 const setTheme = (theme: 'default' | 'dark') => uiThemeStore.setTheme(theme);
 
-const copyToWechat = () => {
+const copyToEditor = () => {
   const isDarkMode = uiThemeStore.theme === "dark";
   const css = themeStore.getThemeCSS(themeStore.themeId, isDarkMode);
-  editorStore.copyToWechat(css);
+  editorStore.copyToEditor(css);
 };
 
 const exportHtml = async () => {

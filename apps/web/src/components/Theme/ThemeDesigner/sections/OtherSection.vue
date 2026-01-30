@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import ColorSelector from "../ColorSelector.vue";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -20,10 +23,10 @@ const updateVariable = <K extends keyof DesignerVariables>(
 
 <template>
   <div class="designer-section">
-    <!-- 链接 -->
-    <div class="designer-group-label">链接</div>
+    <!-- Link / 链接 -->
+    <div class="designer-group-label">{{ t('designer.sections.link') }}</div>
     <div class="designer-field">
-      <label>链接颜色</label>
+      <label>{{ t('designer.fields.linkColor') }}</label>
       <ColorSelector
         :value="variables.linkColor || variables.primaryColor"
         :presets="[variables.primaryColor, '#0070f3', '#0366d6', '#40a9ff']"
@@ -31,7 +34,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field-row">
-      <span>显示下划线</span>
+      <span>{{ t('designer.fields.showUnderline') }}</span>
       <label class="designer-switch">
         <input
           type="checkbox"
@@ -47,10 +50,10 @@ const updateVariable = <K extends keyof DesignerVariables>(
       </label>
     </div>
 
-    <!-- 文本样式 -->
-    <div class="designer-group-label mt-4">文本样式</div>
+    <!-- Text Style / 文本样式 -->
+    <div class="designer-group-label mt-4">{{ t('designer.sections.textStyle') }}</div>
     <div class="designer-field">
-      <label>斜体颜色</label>
+      <label>{{ t('designer.fields.italicColor') }}</label>
       <ColorSelector
         :value="variables.italicColor"
         :presets="['inherit', variables.primaryColor, '#666', '#999']"
@@ -58,7 +61,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field">
-      <label>删除线颜色</label>
+      <label>{{ t('designer.fields.delColor') }}</label>
       <ColorSelector
         :value="variables.delColor"
         :presets="['#999', '#ccc', '#666', variables.primaryColor]"
@@ -66,7 +69,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field">
-      <label>加粗颜色</label>
+      <label>{{ t('designer.fields.strongColor') }}</label>
       <ColorSelector
         :value="variables.strongColor || 'inherit'"
         :presets="['inherit', variables.primaryColor, '#333']"
@@ -75,7 +78,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
     <div class="designer-row">
       <div class="designer-field half">
-        <label>高亮背景</label>
+        <label>{{ t('designer.fields.markBackground') }}</label>
         <ColorSelector
           :value="variables.markBackground"
           :presets="['#fff5b1', '#ffe4e1', '#e6f7ff', '#f6ffed']"
@@ -83,7 +86,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
         />
       </div>
       <div class="designer-field half">
-        <label>高亮文字</label>
+        <label>{{ t('designer.fields.markColor') }}</label>
         <ColorSelector
           :value="variables.markColor"
           :presets="['inherit', '#333', variables.primaryColor]"
@@ -92,27 +95,27 @@ const updateVariable = <K extends keyof DesignerVariables>(
       </div>
     </div>
 
-    <!-- 脚注 -->
-    <div class="designer-group-label mt-4">脚注</div>
+    <!-- Footnote / 脚注 -->
+    <div class="designer-group-label mt-4">{{ t('designer.sections.footnote') }}</div>
     <div class="designer-field">
-      <label>脚注颜色</label>
+      <label>{{ t('designer.fields.footnoteColor') }}</label>
       <ColorSelector
         :value="variables.footnoteColor || variables.primaryColor"
         :presets="[
           {
-            label: '跟随主题',
+            label: t('designer.options.color.followTheme'),
             value: '',
             displayColor: variables.primaryColor,
           },
-          { label: '深灰', value: '#333333' },
-          { label: '灰', value: '#666666' },
-          { label: '细灰', value: '#999999' },
+          { label: t('designer.options.color.darkGray'), value: '#333333' },
+          { label: t('designer.options.color.gray'), value: '#666666' },
+          { label: t('designer.options.color.lightGray'), value: '#999999' },
         ]"
         @change="updateVariable('footnoteColor', $event)"
       />
     </div>
     <div class="designer-field">
-      <label>详情字号</label>
+      <label>{{ t('designer.fields.fontSize') }}</label>
       <div class="designer-options col-4">
         <button
           v-for="size in [11, 12, 13, 14]"
@@ -126,7 +129,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       </div>
     </div>
     <div class="designer-field">
-      <label>栏目标题</label>
+      <label>{{ t('designer.fields.footnoteHeader') }}</label>
       <input
         type="text"
         class="designer-input"
@@ -137,11 +140,11 @@ const updateVariable = <K extends keyof DesignerVariables>(
             ($event.target as HTMLInputElement).value
           )
         "
-        placeholder="留空则不显示标题..."
+        :placeholder="t('designer.placeholders.footnoteHeader')"
       />
     </div>
     <div class="designer-field">
-      <label>标题颜色</label>
+      <label>{{ t('designer.fields.headerColor') }}</label>
       <ColorSelector
         :value="variables.footnoteHeaderColor || variables.primaryColor"
         :presets="[variables.primaryColor]"
@@ -149,22 +152,22 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field">
-      <label>标题样式</label>
+      <label>{{ t('designer.fields.headerStyle') }}</label>
       <div class="designer-options col-5">
         <button
           v-for="style in [
-            { id: 'simple', label: '简约' },
-            { id: 'left-border', label: '竖线' },
-            { id: 'bottom-border', label: '下划线' },
-            { id: 'background', label: '背景块' },
-            { id: 'pill', label: '胶囊' },
+            { id: 'simple', label: 'Simple' },
+            { id: 'left-border', label: 'Vertical Line' },
+            { id: 'bottom-border', label: 'Underline' },
+            { id: 'background', label: 'Background' },
+            { id: 'pill', label: 'Pill' },
           ]"
           :key="style.id"
           class="option-btn"
           :class="{ active: variables.footnoteHeaderStyle === style.id }"
           @click="updateVariable('footnoteHeaderStyle', style.id)"
         >
-          {{ style.label }}
+          {{ t(`designer.options.footnoteHeaderStyle.${style.id}`) }}
         </button>
       </div>
     </div>

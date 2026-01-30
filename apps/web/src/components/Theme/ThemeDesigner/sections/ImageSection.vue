@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import ColorSelector from "../ColorSelector.vue";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -21,7 +24,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
 <template>
   <div class="designer-section">
     <div class="designer-field">
-      <label>边距: {{ variables.imageMargin }}px</label>
+      <label>{{ t('designer.fields.margin') }}: {{ variables.imageMargin }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -39,7 +42,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>圆角: {{ variables.imageBorderRadius }}px</label>
+      <label>{{ t('designer.fields.borderRadius') }}: {{ variables.imageBorderRadius }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -55,9 +58,9 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
 
-    <div class="designer-group-label mt-4">图片说明</div>
+    <div class="designer-group-label mt-4">{{ t('designer.sections.imageCaption') }}</div>
     <div class="designer-field">
-      <label>说明文字颜色</label>
+      <label>{{ t('designer.fields.textColor') }}</label>
       <ColorSelector
         :value="variables.imageCaptionColor"
         :presets="['#999', '#666', '#333', variables.primaryColor]"
@@ -66,7 +69,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>说明文字大小</label>
+      <label>{{ t('designer.fields.fontSize') }}</label>
       <div class="designer-options col-4">
         <button
           v-for="size in [12, 13, 14, 15]"
@@ -81,20 +84,20 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>说明文字对齐</label>
+      <label>{{ t('designer.fields.textAlign') }}</label>
       <div class="designer-options col-3">
         <button
           v-for="opt in [
-            { id: 'left', label: '居左' },
-            { id: 'center', label: '居中' },
-            { id: 'right', label: '居右' },
+            { id: 'left', label: 'Left' },
+            { id: 'center', label: 'Center' },
+            { id: 'right', label: 'Right' },
           ]"
           :key="opt.id"
           class="option-btn"
           :class="{ active: variables.imageCaptionTextAlign === opt.id }"
           @click="updateVariable('imageCaptionTextAlign', opt.id)"
         >
-          {{ opt.label }}
+          {{ t(`common.align.${opt.id}`) }}
         </button>
       </div>
     </div>

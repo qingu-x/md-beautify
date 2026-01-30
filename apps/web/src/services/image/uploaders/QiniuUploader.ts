@@ -1,23 +1,26 @@
 import * as qiniu from "qiniu-js";
 import CryptoJS from "crypto-js";
+import { t } from "../../../i18n";
 import type { ImageUploader } from "../ImageUploader";
 
 interface QiniuConfig {
   accessKey: string;
   secretKey: string;
   bucket: string;
-  domain: string; // CDN 域名
-  region?: string; // 存储区域
+  domain: string; // CDN Domain / CDN 域名
+  region?: string; // Storage Region / 存储区域
 }
 
 type QiniuRegion = "z0" | "z1" | "z2" | "na0" | "as0" | "cn-east-2";
 
 /**
- * 七牛云图床
- * 使用官方 SDK：qiniu-js
+ * Qiniu Cloud Image Host / 七牛云图床
+ * Uses official SDK: qiniu-js / 使用官方 SDK：qiniu-js
  */
 export class QiniuUploader implements ImageUploader {
-  name = "七牛云";
+  get name() {
+    return t("imageHost.tabs.qiniu");
+  }
   private config: QiniuConfig;
 
   constructor(config: QiniuConfig) {
@@ -30,7 +33,7 @@ export class QiniuUploader implements ImageUploader {
 
   async validate(): Promise<boolean> {
     try {
-      // 验证配置是否完整
+      // Validate configuration completeness / 验证配置是否完整
       if (
         !this.config.accessKey ||
         !this.config.secretKey ||
@@ -40,7 +43,7 @@ export class QiniuUploader implements ImageUploader {
         return false;
       }
 
-      // 尝试上传一个极小的测试文件来验证配置
+      // Try to upload a tiny test file to validate config / 尝试上传一个极小的测试文件来验证配置
       const testContent = new Blob(["test"], { type: "text/plain" });
       const testFile = new File([testContent], "test-connection.txt", {
         type: "text/plain",
@@ -63,7 +66,7 @@ export class QiniuUploader implements ImageUploader {
         observable.subscribe({
           next: () => {},
           error: (err) => {
-            console.error("验证失败:", err);
+            console.error("Validation failed / 验证失败:", err);
             resolve(false);
           },
           complete: () => {
@@ -72,16 +75,16 @@ export class QiniuUploader implements ImageUploader {
         });
       });
     } catch (e) {
-      console.error("验证失败:", e);
+      console.error("Validation failed / 验证失败:", e);
       return false;
     }
   }
 
   async upload(file: File): Promise<string> {
-    // 生成文件名
+    // Generate filename / 生成文件名
     const fileName = `${Date.now()}_${file.name}`;
 
-    // 获取上传 Token
+    // Get upload Token / 获取上传 Token
     const token = await this.getUploadToken();
 
     return new Promise((resolve, reject) => {
@@ -97,11 +100,17 @@ export class QiniuUploader implements ImageUploader {
 
       observable.subscribe({
         error: (err: any) => {
-          console.error("上传失败:", err);
-          reject(new Error(`上传失败: ${err.message}`));
+          console.error("Upload failed / 上传失败:", err);
+          reject(
+            new Error(
+              t("editor.imageUpload.error", {
+                message: err.message || String(err),
+              }),
+            ),
+          );
         },
         complete: (res: any) => {
-          // 返回 CDN 地址
+          // Return CDN URL / 返回 CDN 地址
           resolve(`${this.config.domain}/${res.key}`);
         },
       });
@@ -109,7 +118,7 @@ export class QiniuUploader implements ImageUploader {
   }
 
   private getRegion(): QiniuRegion {
-    // 将配置的字符串区域映射到 SDK 的 Region 对象
+    // Map configured string region to SDK Region object / 将配置的字符串区域映射到 SDK 的 Region 对象
     const regionMap: Record<string, QiniuRegion> = {
       z0: "z0",
       z1: "z1",
@@ -124,35 +133,35 @@ export class QiniuUploader implements ImageUploader {
   }
 
   private async getUploadToken(): Promise<string> {
-    // 1. 准备密钥
+    // 1. Prepare keys / 1. 准备密钥
     const accessKey = this.config.accessKey?.trim();
     const secretKey = this.config.secretKey?.trim();
     const bucket = this.config.bucket?.trim();
 
     if (!accessKey || !secretKey || !bucket) {
-      throw new Error("七牛云配置不完整");
+      throw new Error("Qiniu config incomplete / 七牛云配置不完整");
     }
 
-    // 2. 构造上传策略
+    // 2. Construct upload policy / 2. 构造上传策略
     const putPolicy = {
       scope: bucket,
-      deadline: Math.floor(Date.now() / 1000) + 3600, // 1小时有效期
+      deadline: Math.floor(Date.now() / 1000) + 3600, // Valid for 1 hour / 1小时有效期
     };
 
-    // 3. 编码上传策略 (使用 doocs/md 的算法)
+    // 3. Encode upload policy (using doocs/md algorithm) / 3. 编码上传策略 (使用 doocs/md 的算法)
     const policy = JSON.stringify(putPolicy);
     const encoded = this.base64encode(this.utf16to8(policy));
 
-    // 4. 生成签名
+    // 4. Generate signature / 4. 生成签名
     const hash = CryptoJS.HmacSHA1(encoded, secretKey);
     const encodedSigned = hash.toString(CryptoJS.enc.Base64);
     const safeEncodedSigned = this.safe64(encodedSigned);
 
-    // 5. 拼接 Token
+    // 5. Concatenate Token / 5. 拼接 Token
     return `${accessKey}:${safeEncodedSigned}:${encoded}`;
   }
 
-  // 以下是 doocs/md 的 tokenTools 实现
+  // Implementation of tokenTools from doocs/md / 以下是 doocs/md 的 tokenTools 实现
   private utf16to8(str: string): string {
     let out = "";
     const len = str.length;

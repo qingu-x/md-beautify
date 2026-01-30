@@ -38,7 +38,7 @@ export const createMarkdownParser = () => {
     html: true,
     highlight: (str: string, lang: string): string => {
       const language = (lang || "").trim().toLowerCase();
-      // Mermaid 图表：输出 pre.mermaid 让前端渲染
+      // Mermaid diagrams: output pre.mermaid for frontend rendering / Mermaid 图表：输出 pre.mermaid 让前端渲染
       if (language === "mermaid") {
         const escaped = markdownParser.utils.escapeHtml(str);
         return `<pre class="mermaid">\n${escaped}\n</pre>\n`;
@@ -47,7 +47,7 @@ export const createMarkdownParser = () => {
       if (language === undefined || language === "") {
         lang = "bash";
       }
-      // 加上custom则表示自定义样式，而非微信专属，避免被remove pre
+      // Add custom to indicate custom style, not WeChat specific, avoid being removed pre / 加上custom则表示自定义样式，而非微信专属，避免被remove pre
       if (lang && highlightjs.getLanguage(lang)) {
         try {
           const formatted = highlightjs.highlight(str, {
@@ -198,6 +198,41 @@ export const createMarkdownParser = () => {
     }
 
     return defaultImageRender(tokens, idx, options, env, self);
+  };
+
+  // Disable client-side html processing / 禁用客户端 html 处理
+  // markdownParser.validateLink = () => true;
+
+  // Use customized link renderer / 使用自定义的 link 渲染器
+  const defaultLinkOpenRender =
+    markdownParser.renderer.rules.link_open ||
+    function (tokens, idx, options, env, self) {
+      return self.renderToken(tokens, idx, options);
+    };
+
+  markdownParser.renderer.rules.link_open = function (
+    tokens,
+    idx,
+    options,
+    env,
+    self,
+  ) {
+    const token = tokens[idx];
+    const hrefIndex = token.attrIndex("href");
+
+    if (hrefIndex >= 0) {
+      const href = token.attrs![hrefIndex][1];
+
+      // Check if it is an external link / 检查是否为外部链接
+      if (href && (href.startsWith("http://") || href.startsWith("https://"))) {
+        // Add target="_blank" / 添加 target="_blank"
+        token.attrPush(["target", "_blank"]);
+        // Add rel="noopener noreferrer" for security / 添加 rel="noopener noreferrer" 安全性
+        token.attrPush(["rel", "noopener noreferrer"]);
+      }
+    }
+
+    return defaultLinkOpenRender(tokens, idx, options, env, self);
   };
 
   // 增强图片语法支持：拦截 render 方法进行预处理

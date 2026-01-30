@@ -8,6 +8,9 @@ import {
   boldStyleOptions,
 } from "@/config/styleOptions";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -33,7 +36,7 @@ const handlePrimaryColorChange = (color: string) => {
 <template>
   <div class="designer-section">
     <div class="designer-field">
-      <label>字体</label>
+      <label>{{ t('designer.fields.fontFamily') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in fontFamilyOptions"
@@ -41,14 +44,15 @@ const handlePrimaryColorChange = (color: string) => {
           class="option-btn"
           :class="{ active: variables.fontFamily === opt.value }"
           @click="updateVariable('fontFamily', opt.value)"
+          :title="opt.id ? t(`designer.options.fontFamily.${opt.id}Desc`) : opt.desc"
         >
-          {{ opt.label }}
+          {{ opt.id ? t(`designer.options.fontFamily.${opt.id}`) : opt.label }}
         </button>
       </div>
     </div>
 
     <div class="designer-field">
-      <label>正文字号</label>
+      <label>{{ t('designer.fields.fontSize') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in fontSizeOptions"
@@ -56,6 +60,7 @@ const handlePrimaryColorChange = (color: string) => {
           class="option-btn"
           :class="{ active: variables.fontSize === opt.value }"
           @click="updateVariable('fontSize', opt.value)"
+          :title="opt.id ? t(`designer.options.fontSize.${opt.id}`) : opt.desc"
         >
           {{ opt.label }}
         </button>
@@ -63,7 +68,7 @@ const handlePrimaryColorChange = (color: string) => {
     </div>
 
     <div class="designer-field">
-      <label>行高</label>
+      <label>{{ t('designer.fields.lineHeight') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in lineHeightOptions"
@@ -71,6 +76,7 @@ const handlePrimaryColorChange = (color: string) => {
           class="option-btn"
           :class="{ active: variables.lineHeight === opt.value }"
           @click="updateVariable('lineHeight', opt.value)"
+          :title="opt.id ? t(`designer.options.lineHeight.${opt.id}`) : opt.desc"
         >
           {{ opt.label }}
         </button>
@@ -78,7 +84,7 @@ const handlePrimaryColorChange = (color: string) => {
     </div>
 
     <div class="designer-field">
-      <label>段落内部间距: {{ variables.paragraphPadding ?? 0 }}px</label>
+      <label>{{ t('designer.fields.paragraphPadding') }}: {{ variables.paragraphPadding ?? 0 }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -91,7 +97,7 @@ const handlePrimaryColorChange = (color: string) => {
     </div>
 
     <div class="designer-field">
-      <label>页面两侧间距: {{ variables.pagePadding }}px</label>
+      <label>{{ t('designer.fields.pagePadding') }}: {{ variables.pagePadding }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -104,7 +110,7 @@ const handlePrimaryColorChange = (color: string) => {
     </div>
 
     <div class="designer-field">
-      <label>全局字间距: {{ variables.globalLetterSpacing ?? 0 }}px</label>
+      <label>{{ t('designer.fields.globalLetterSpacing') }}: {{ variables.globalLetterSpacing ?? 0 }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -117,29 +123,29 @@ const handlePrimaryColorChange = (color: string) => {
     </div>
 
     <div class="designer-field">
-      <label>正文颜色</label>
+      <label>{{ t('designer.fields.paragraphColor') }}</label>
       <ColorSelector
         :value="variables.paragraphColor"
         :presets="[
-          { label: '深灰 (推荐)', value: '#333333' },
-          { label: '纯黑', value: '#000000' },
-          { label: '灰色', value: '#666666' },
+          { id: 'deepGray', label: t('designer.options.colorSelector.deepGray'), value: '#333333' },
+          { id: 'pureBlack', label: t('designer.options.colorSelector.pureBlack'), value: '#000000' },
+          { id: 'gray', label: t('designer.options.colorSelector.gray'), value: '#666666' },
         ]"
         @change="updateVariable('paragraphColor', $event)"
       />
     </div>
 
     <div class="designer-field">
-      <label>主题色</label>
+      <label>{{ t('designer.fields.primaryColor') }}</label>
       <ColorSelector
         :value="variables.primaryColor"
-        :presets="primaryColorOptions"
+        :presets="primaryColorOptions.map(opt => ({ ...opt, label: t(`designer.options.primaryColor.${opt.id}`) }))"
         @change="handlePrimaryColorChange"
       />
     </div>
 
     <div class="designer-field">
-      <label>加粗样式</label>
+      <label>{{ t('designer.fields.strongStyle') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in boldStyleOptions"
@@ -148,19 +154,19 @@ const handlePrimaryColorChange = (color: string) => {
           :class="{ active: variables.strongStyle === opt.id }"
           @click="updateVariable('strongStyle', opt.id)"
         >
-          {{ opt.label }}
+          {{ t(`designer.options.boldStyle.${opt.id}`) }}
         </button>
       </div>
     </div>
 
     <div class="designer-field">
-      <label>加粗颜色</label>
+      <label>{{ t('designer.fields.strongColor') }}</label>
       <ColorSelector
         :value="variables.strongColor || 'inherit'"
         :presets="[
-          { label: '跟随主题', value: 'inherit' },
-          { label: '深灰', value: '#333333' },
-          { label: '纯黑', value: '#000000' },
+          { id: 'followPrimary', label: t('designer.options.colorSelector.followPrimary'), value: 'inherit' },
+          { id: 'deepGray', label: t('designer.options.colorSelector.deepGray'), value: '#333333' },
+          { id: 'pureBlack', label: t('designer.options.colorSelector.pureBlack'), value: '#000000' },
           variables.primaryColor,
         ]"
         @change="updateVariable('strongColor', $event)"

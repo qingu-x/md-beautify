@@ -4,25 +4,25 @@
       <div
         class="fs-workspace-info"
         @click="selectWorkspace"
-        :title="workspacePath || '选择工作区'"
+        :title="workspacePath || t('sidebar.selectWorkspace')"
       >
         <FolderOpen :size="14" />
         <span>
-          {{ workspacePath ? workspacePath.split("/").pop() : "选择工作区" }}
+          {{ workspacePath ? workspacePath.split("/").pop() : t("sidebar.selectWorkspace") }}
         </span>
       </div>
       <div class="fs-actions">
         <button
           class="fs-btn-secondary fs-btn-icon-only"
           @click="createFile"
-          title="新建文章"
+          :title="t('sidebar.newArticle')"
         >
           <FileText :size="16" />
         </button>
         <button
           class="fs-btn-secondary fs-btn-icon-only"
           @click="createFolder"
-          title="新建文件夹"
+          :title="t('sidebar.newFolder')"
         >
           <FolderPlus :size="16" />
         </button>
@@ -34,7 +34,7 @@
         <Search :size="14" class="fs-search-icon" />
         <input
           type="text"
-          placeholder="搜索文件..."
+          :placeholder="t('sidebar.searchPlaceholder')"
           v-model="filter"
         />
       </div>
@@ -59,15 +59,15 @@
           />
         </template>
 
-        <!-- 无限滚动触发器 -->
+        <!-- Infinite Scroll Trigger / 无限滚动触发器 -->
         <div v-if="hasMore" ref="loadMoreRef" class="fs-load-more">
-          <span>加载更多...</span>
+          <span>{{ t('sidebar.loadMore') }}</span>
         </div>
-        <div v-if="flattenedFiles.length === 0" class="fs-empty">暂无文件</div>
+        <div v-if="flattenedFiles.length === 0" class="fs-empty">{{ t('sidebar.empty') }}</div>
       </div>
     </div>
 
-    <!-- Context Menu -->
+    <!-- Context Menu / 上下文菜单 -->
     <Teleport to="body">
       <div v-if="menuOpen" class="fs-context-menu-overlay" @click="closeMenu">
         <div
@@ -76,36 +76,36 @@
         >
           <template v-if="menuTarget?.isDirectory">
             <button @click="createFileInFolder">
-              <FileText :size="14" /> 新建文件
+              <FileText :size="14" /> {{ t('sidebar.newFile') }}
             </button>
             <button @click="createFolderInFolder">
-              <FolderPlus :size="14" /> 新建文件夹
+              <FolderPlus :size="14" /> {{ t('sidebar.newFolder') }}
             </button>
             <div class="fs-menu-divider"></div>
           </template>
           <button v-if="!menuTarget?.isDirectory" @click="copyTitleAction">
-            <Copy :size="14" /> 复制标题
+            <Copy :size="14" /> {{ t('sidebar.copyTitle') }}
           </button>
           <button @click="startRenameAction">
-            <Edit2 :size="14" /> 重命名
+            <Edit2 :size="14" /> {{ t('sidebar.rename') }}
           </button>
           <button class="danger" @click="confirmDelete">
-            <Trash2 :size="14" /> 删除
+            <Trash2 :size="14" /> {{ t('sidebar.delete') }}
           </button>
         </div>
       </div>
     </Teleport>
 
-    <!-- Delete Confirmation -->
+    <!-- Delete Confirmation / 删除确认 -->
     <Teleport to="body">
       <div v-if="deleteTarget" class="history-confirm-backdrop" @click="!deleting && (deleteTarget = null)">
         <div class="history-confirm-modal" @click.stop>
-          <h4>删除{{ deleteTarget.isDirectory ? '文件夹' : '文件' }}</h4>
-          <p>确定要删除"{{ deleteTarget.name }}"吗？{{ deleteTarget.isDirectory ? '文件夹内的所有文件也会被删除。' : '' }}此操作不可撤销。</p>
+          <h4>{{ t('sidebar.deleteConfirmTitle', { type: deleteTarget.isDirectory ? t('sidebar.deleteFolder') : t('sidebar.deleteFile') }) }}</h4>
+          <p>{{ t('sidebar.deleteConfirmText', { name: deleteTarget.name, extra: deleteTarget.isDirectory ? t('sidebar.deleteConfirmExtra') : '' }) }}</p>
           <div class="history-confirm-actions">
-            <button class="btn-secondary" @click="deleteTarget = null" :disabled="deleting">取消</button>
+            <button class="btn-secondary" @click="deleteTarget = null" :disabled="deleting">{{ t('sidebar.cancel') }}</button>
             <button class="btn-danger" @click="handleDelete" :disabled="deleting">
-              {{ deleting ? '删除中...' : '确认删除' }}
+              {{ deleting ? t('sidebar.deleting') : t('sidebar.confirmDelete') }}
             </button>
           </div>
         </div>
@@ -116,6 +116,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from "../../i18n";
 import { useFileSystem } from "../../hooks/useFileSystem";
 import { toast } from "../../hooks/useToast";
 import { useThemeStore } from "../../store/themeStore";
@@ -147,6 +148,7 @@ const {
 
 const themeStore = useThemeStore();
 const storageStore = useStorageStore();
+const { t } = useI18n();
 const currentThemeName = computed(() => themeStore.themeName);
 
 const electron = (window as any).electron;
@@ -164,7 +166,7 @@ const menuTarget = ref<FileItem | null>(null);
 const deleteTarget = ref<FileItem | null>(null);
 const deleting = ref(false);
 
-// 排序函数：文件夹优先，然后按名称排序
+// Sort function: Folders first, then sort by name / 排序函数：文件夹优先，然后按名称排序
 const sortFiles = (items: FileItem[]): FileItem[] => {
   return items.slice().sort((a, b) => {
     if (a.isDirectory && !b.isDirectory) return -1;
@@ -178,7 +180,7 @@ const sortFiles = (items: FileItem[]): FileItem[] => {
   });
 };
 
-// 扁平化文件列表（用于搜索）
+// Flatten file list (for search) / 扁平化文件列表（用于搜索）
 const flattenedFiles = computed(() => {
   const flatten = (items: FileItem[]): FileItem[] => {
     return items.reduce((acc: FileItem[], item) => {
@@ -192,12 +194,12 @@ const flattenedFiles = computed(() => {
   return flatten(files.value || []);
 });
 
-// 排序后的文件列表
+// Sorted file list / 排序后的文件列表
 const sortedFiles = computed(() => {
   return sortFiles(files.value || []);
 });
 
-// 过滤后的文件列表
+// Filtered file list / 过滤后的文件列表
 const filteredItems = computed(() => {
   if (!filter.value) return sortedFiles.value;
   
@@ -206,22 +208,22 @@ const filteredItems = computed(() => {
     !f.isDirectory && f.name.toLowerCase().includes(searchLower)
   );
   
-  // 如果有搜索，返回扁平列表
+  // If searching, return flattened list / 如果有搜索，返回扁平列表
   return matchedFiles;
 });
 
-// 展开所有包含匹配文件的文件夹
+// Expand all folders containing matched files / 展开所有包含匹配文件的文件夹
 watch(filter, (newFilter) => {
   if (newFilter) {
-    // 搜索时展开所有文件夹
+    // Expand all folders when searching / 搜索时展开所有文件夹
     const allFolders = flattenedFiles.value.filter(f => f.isDirectory).map(f => f.path);
     expandedFolders.value = new Set(allFolders);
   } else {
-    // 清空搜索时保持当前展开状态
+    // Keep current expansion state when clearing search / 清空搜索时保持当前展开状态
   }
 });
 
-// 可见的项（分页）
+// Visible items (pagination) / 可见的项（分页）
 const visibleItems = computed(() => {
   return filteredItems.value.slice(0, visibleCount.value);
 });
@@ -267,7 +269,7 @@ const toggleFolder = (path: string) => {
   } else {
     expandedFolders.value.add(path);
   }
-  // 触发响应式更新
+  // Trigger reactive update / 触发响应式更新
   expandedFolders.value = new Set(expandedFolders.value);
 };
 
@@ -287,9 +289,9 @@ const copyTitleAction = async () => {
   try {
     const title = menuTarget.value.name.replace(".md", "");
     await navigator.clipboard.writeText(title);
-    toast.success("标题已复制");
+    toast.success(t("sidebar.copySuccess"));
   } catch {
-    toast.error("复制失败");
+    toast.error(t("sidebar.copyError"));
   }
   closeMenu();
 };
@@ -334,10 +336,10 @@ const handleDelete = async () => {
 };
 
 const createFile = async () => {
-  const defaultName = "未命名文章";
+  const defaultName = t("sidebar.untitled");
   let fileName = defaultName;
   let counter = 1;
-  const initialContent = `---\ntheme: default\nthemeName: 默认主题\n---\n\n# ${fileName}\n\n`;
+  const initialContent = `---\ntheme: default\nthemeName: ${t('sidebar.defaultTheme')}\n---\n\n# ${fileName}\n\n`;
   
   try {
     if (electron) {
@@ -355,7 +357,7 @@ const createFile = async () => {
           renameValue.value = fileName;
         }
       } else {
-        toast.error(res.error || "创建失败");
+        toast.error(res.error || t("sidebar.createError"));
       }
     } else if (storageStore.adapter && storageStore.adapter.writeFile) {
       // Browser mode
@@ -379,16 +381,16 @@ const createFile = async () => {
         renameValue.value = fileName;
       }
     } else {
-      toast.error("存储未就绪");
+      toast.error(t("sidebar.storageNotReady"));
     }
   } catch (error) {
     console.error(error);
-    toast.error("创建失败");
+    toast.error(t("sidebar.createError"));
   }
 };
 
 const createFolder = async () => {
-  const defaultName = "新建文件夹";
+  const defaultName = t("sidebar.newFolder");
   let folderName = defaultName;
   let counter = 1;
   
@@ -403,7 +405,7 @@ const createFolder = async () => {
   
   try {
     if (electron) {
-      // Electron mode: 创建占位文件
+      // Electron mode: Create placeholder file / Electron mode: 创建占位文件
       const initialPath = `${folderName}/.gitkeep`;
       
       const res = await electron.fs.createFile({
@@ -420,10 +422,10 @@ const createFolder = async () => {
           renameValue.value = folderName;
         }
       } else {
-        toast.error(res.error || "创建失败");
+        toast.error(res.error || t("sidebar.createError"));
       }
     } else if (storageStore.adapter && storageStore.adapter.writeFile) {
-      // Browser mode
+      // Browser mode / 浏览器模式
       const initialPath = `${folderName}/.gitkeep`;
       await storageStore.adapter.writeFile(initialPath, '');
       await refreshFiles();
@@ -434,11 +436,11 @@ const createFolder = async () => {
         renameValue.value = folderName;
       }
     } else {
-      toast.error("暂不支持创建文件夹");
+      toast.error(t("sidebar.folderNotSupported"));
     }
   } catch (error) {
     console.error(error);
-    toast.error("创建失败");
+    toast.error(t("sidebar.createError"));
   }
 };
 
@@ -447,18 +449,18 @@ const createFileInFolder = async () => {
   const targetFolder = menuTarget.value;
   closeMenu();
   
-  const defaultName = "未命名文章";
+  const defaultName = t("sidebar.untitled");
   let fileName = defaultName;
   let counter = 1;
-  const initialContent = `---\ntheme: default\nthemeName: 默认主题\n---\n\n# ${fileName}\n\n`;
+  const initialContent = `---\ntheme: default\nthemeName: ${t('sidebar.defaultTheme')}\n---\n\n# ${fileName}\n\n`;
   
   try {
     if (electron) {
-      // Electron mode: 使用相对路径
+      // Electron mode: Use relative path / Electron mode: 使用相对路径
       let relativePath = '';
       if (workspacePath.value) {
-        // 移除 workspacePath，只保留相对部分
-        const workspaceWithSep = workspacePath.value.replace(/[\/\\]$/, ''); // 移除末尾的分隔符
+        // Remove workspacePath, keep only relative part / 移除 workspacePath，只保留相对部分
+        const workspaceWithSep = workspacePath.value.replace(/[\/\\]$/, ''); // Remove trailing separator / 移除末尾的分隔符
         if (targetFolder.path.startsWith(workspaceWithSep)) {
           relativePath = targetFolder.path.substring(workspaceWithSep.length).replace(/^[\/\\]/, '');
         }
@@ -508,11 +510,11 @@ const createFileInFolder = async () => {
         renameValue.value = fileName;
       }
     } else {
-      toast.error("创建失败");
+      toast.error(t("sidebar.createError"));
     }
   } catch (error) {
     console.error(error);
-    toast.error("创建失败");
+    toast.error(t("sidebar.createError"));
   }
 };
 
@@ -521,7 +523,7 @@ const createFolderInFolder = async () => {
   const targetFolder = menuTarget.value;
   closeMenu();
   
-  const defaultName = "新建文件夹";
+  const defaultName = t("sidebar.newFolder");
   let folderName = defaultName;
   let counter = 1;
   
@@ -539,7 +541,7 @@ const createFolderInFolder = async () => {
   
   try {
     if (electron) {
-      // Electron mode: 使用相对路径
+      // Electron mode: Use relative path / Electron mode: 使用相对路径
       let relativePath = '';
       if (workspacePath.value) {
         const workspaceWithSep = workspacePath.value.replace(/[\/\\]$/, '');
@@ -584,11 +586,11 @@ const createFolderInFolder = async () => {
         renameValue.value = folderName;
       }
     } else {
-      toast.error("创建失败");
+      toast.error(t("sidebar.createError"));
     }
   } catch (error) {
     console.error(error);
-    toast.error("创建失败");
+    toast.error(t("sidebar.createError"));
   }
 };
 

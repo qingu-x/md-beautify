@@ -7,6 +7,9 @@ import {
   headingStylePresets,
 } from "@/config/styleOptions";
 import type { DesignerVariables, HeadingLevel, HeadingStyle } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -46,9 +49,9 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
 
     <div class="designer-field">
       <div class="designer-field-header">
-        <label>样式预设</label>
+        <label>{{ t('designer.fields.stylePreset') }}</label>
         <div class="compact-switch">
-          <span>居中</span>
+          <span>{{ t('designer.fields.centered') }}</span>
           <label class="designer-switch">
             <input
               type="checkbox"
@@ -73,7 +76,7 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
           }"
           @click="updateHeading(activeHeading, { preset: 'simple' })"
         >
-          无样式
+          {{ t('designer.options.headingStyle.simple') }}
         </button>
         <template v-for="preset in headingStylePresets">
           <button
@@ -83,14 +86,14 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
             :class="{ active: variables[activeHeading].preset === preset.id }"
             @click="updateHeading(activeHeading, { preset: preset.id })"
           >
-            {{ preset.label }}
+            {{ t(`designer.options.headingStyle.${preset.id}`) }}
           </button>
         </template>
       </div>
     </div>
 
     <div class="designer-field">
-      <label>字号: {{ variables[activeHeading].fontSize }}px</label>
+      <label>{{ t('designer.fields.fontSize') }}: {{ variables[activeHeading].fontSize }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -106,27 +109,27 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
     </div>
 
     <div class="designer-field">
-      <label>字重</label>
+      <label>{{ t('designer.fields.fontWeight') }}</label>
       <div class="designer-options mini">
         <button
           class="option-btn"
           :class="{ active: variables[activeHeading].fontWeight !== 'normal' }"
           @click="updateHeading(activeHeading, { fontWeight: 'bold' })"
         >
-          加粗
+          {{ t('designer.options.fontWeight.bold') }}
         </button>
         <button
           class="option-btn"
           :class="{ active: variables[activeHeading].fontWeight === 'normal' }"
           @click="updateHeading(activeHeading, { fontWeight: 'normal' })"
         >
-          常规
+          {{ t('designer.options.fontWeight.normal') }}
         </button>
       </div>
     </div>
 
     <div class="designer-field">
-      <label>字间距: {{ variables[activeHeading].letterSpacing }}px</label>
+      <label>{{ t('designer.fields.letterSpacing') }}: {{ variables[activeHeading].letterSpacing }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -143,7 +146,7 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
     </div>
 
     <div class="designer-field">
-      <label>文字颜色</label>
+      <label>{{ t('designer.fields.textColor') }}</label>
       <ColorSelector
         :value="variables[activeHeading].color"
         :presets="['#000', '#333', '#666', variables.primaryColor]"
@@ -152,7 +155,7 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
     </div>
 
     <div class="designer-field">
-      <label>上边距: {{ variables[activeHeading].marginTop }}px</label>
+      <label>{{ t('designer.fields.marginTop') }}: {{ variables[activeHeading].marginTop }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -169,7 +172,7 @@ const updateHeading = (level: HeadingLevel, style: Partial<HeadingStyle>) => {
     </div>
 
     <div class="designer-field">
-      <label>下边距: {{ variables[activeHeading].marginBottom }}px</label>
+      <label>{{ t('designer.fields.marginBottom') }}: {{ variables[activeHeading].marginBottom }}px</label>
       <input
         type="range"
         class="designer-slider"

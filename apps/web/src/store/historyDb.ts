@@ -47,7 +47,7 @@ export async function loadHistoryFromDb() {
     const db = await getDB();
     const history = (await db.getAll("history")).map((entry) => ({
       ...entry,
-      title: entry.title || "未命名文章",
+      title: entry.title || "Untitled Article / 未命名文章",
       createdAt: entry.createdAt || entry.savedAt,
       filePath: entry.filePath,
     }));

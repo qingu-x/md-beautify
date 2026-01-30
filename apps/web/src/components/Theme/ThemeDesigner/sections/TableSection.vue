@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import ColorSelector from "../ColorSelector.vue";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -20,10 +23,10 @@ const updateVariable = <K extends keyof DesignerVariables>(
 
 <template>
   <div class="designer-section">
-    <div class="designer-group-label">表格</div>
+    <div class="designer-group-label">{{ t('designer.sections.table') }}</div>
     <div class="designer-row">
       <div class="designer-field half">
-        <label>表头背景</label>
+        <label>{{ t('designer.fields.tableHeaderBackground') }}</label>
         <ColorSelector
           :value="variables.tableHeaderBackground"
           :presets="['#f8f8f8', '#f0f0f0', '#e8e8e8', variables.primaryColor + '15']"
@@ -31,7 +34,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
         />
       </div>
       <div class="designer-field half">
-        <label>表头文字</label>
+        <label>{{ t('designer.fields.tableHeaderColor') }}</label>
         <ColorSelector
           :value="variables.tableHeaderColor"
           :presets="['inherit', '#333', '#000', variables.primaryColor]"
@@ -40,7 +43,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       </div>
     </div>
     <div class="designer-field">
-      <label>边框颜色</label>
+      <label>{{ t('designer.fields.borderColor') }}</label>
       <ColorSelector
         :value="variables.tableBorderColor"
         :presets="['#dfe2e5', '#e8e8e8', '#ccc', variables.primaryColor + '50']"
@@ -48,7 +51,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field-row">
-      <span>斑马纹</span>
+      <span>{{ t('designer.fields.tableZebra') }}</span>
       <label class="designer-switch">
         <input
           type="checkbox"

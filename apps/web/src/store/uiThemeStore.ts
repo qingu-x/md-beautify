@@ -32,7 +32,7 @@ const hydrateThemeFromStorage = (): UITheme => {
   if (typeof window === "undefined") return "default";
   try {
     const stored = window.localStorage?.getItem(THEME_STORAGE_KEY);
-    // 兼容旧值 structuralism 迁移到 dark
+    // Migrate legacy value 'structuralism' to 'dark' / 兼容旧值 structuralism 迁移到 dark
     if (stored === "structuralism") {
       applyThemeSideEffects("dark");
       return "dark";
@@ -42,7 +42,7 @@ const hydrateThemeFromStorage = (): UITheme => {
       return stored as UITheme;
     }
 
-    // 如果没有存储，尝试使用系统主题
+    // Try system theme if no storage / 如果没有存储，尝试使用系统主题
     if (
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -80,11 +80,11 @@ export const useUIThemeStore = defineStore("uiTheme", () => {
     }
   }
 
-  // 监听系统主题变化
+  // Monitor system theme changes / 监听系统主题变化
   if (typeof window !== "undefined" && window.matchMedia) {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
-    // 如果没有本地存储的主题设置，则跟随系统
+    // Follow system if no local storage theme set / 如果没有本地存储的主题设置，则跟随系统
     if (!window.localStorage.getItem(THEME_STORAGE_KEY)) {
       const systemTheme: UITheme = mediaQuery.matches ? "dark" : "default";
       if (theme.value !== systemTheme) {
@@ -94,7 +94,7 @@ export const useUIThemeStore = defineStore("uiTheme", () => {
     }
 
     mediaQuery.addEventListener("change", (e) => {
-      // 只有在用户没有手动设置过主题的情况下，才跟随系统变化
+      // Follow system changes only if user hasn't manually set a theme / 只有在用户没有手动设置过主题的情况下，才跟随系统变化
       if (!window.localStorage.getItem(THEME_STORAGE_KEY)) {
         const newTheme = e.matches ? "dark" : "default";
         theme.value = newTheme;

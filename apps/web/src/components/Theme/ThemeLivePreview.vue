@@ -1,13 +1,13 @@
 <template>
   <div class="theme-live-preview">
     <div class="preview-header-mini">
-      <span>实时预览</span>
+      <span>{{ t('theme.livePreview') }}</span>
     </div>
     <iframe
       ref="iframeRef"
       class="preview-iframe"
       :srcdoc="shellDoc"
-      title="主题预览"
+      :title="t('theme.livePreview')"
       sandbox="allow-same-origin"
     />
   </div>
@@ -18,6 +18,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import mermaid from "mermaid";
 import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, getDefaultMarkdown } from "@mdb/core";
 import { useUIThemeStore } from "../../store/uiThemeStore";
+import { useI18n } from "../../i18n";
 import type { DesignerVariables } from "./ThemeDesigner/types";
 import {
   getMermaidConfig,
@@ -29,8 +30,7 @@ const props = defineProps<{
   designerVariables?: DesignerVariables;
 }>();
 
-const resolvedLocale = typeof navigator !== "undefined" ? navigator.language : "en";
-const PREVIEW_MARKDOWN = getDefaultMarkdown(resolvedLocale);
+const { locale, t } = useI18n();
 
 const uiThemeStore = useUIThemeStore();
 const isDarkMode = computed(() => uiThemeStore.theme === "dark");
@@ -52,8 +52,9 @@ const shellDoc = `
       font-size: 14px;
       line-height: 1.6;
       transition: background 0.2s, color 0.2s;
+      min-height: 100vh;
     }
-    /* 隐藏滚动条直到内容加载 */
+    /* Hide scrollbar until content loads / 隐藏滚动条直到内容加载 */
     body:empty { display: none; }
   </style>
   <style id="theme-style"></style>
@@ -62,7 +63,10 @@ const shellDoc = `
 </html>
 `;
 
-const rawHtml = computed(() => parser.render(PREVIEW_MARKDOWN));
+const rawHtml = computed(() => {
+  const md = getDefaultMarkdown(locale.value);
+  return parser.render(md);
+});
 
 const finalCss = computed(() => (isDarkMode.value ? convertCssToWeChatDarkMode(props.css) : props.css));
 
@@ -77,7 +81,7 @@ const normalizeMermaidText = (text: string): string => {
 const renderMermaid = async (doc: Document) => {
   const blocks = Array.from(
     doc.querySelectorAll<HTMLElement>(
-      ".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
+      ".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
     ),
   );
   if (blocks.length === 0) return;
@@ -129,7 +133,7 @@ const renderMermaid = async (doc: Document) => {
         ];
         const lineGroups = Array.from(svgEl.querySelectorAll(selectors.join(", ")));
         for (const g of lineGroups) {
-          // 确保 g 和 refNode 是 svgEl 的直接子节点
+          // Ensure g and refNode are direct children of svgEl / 确保 g 和 refNode 是 svgEl 的直接子节点
           if (g.parentNode === svgEl && (!refNode || refNode.parentNode === svgEl)) {
             if (refNode) {
               svgEl.insertBefore(g, refNode);
@@ -160,21 +164,21 @@ const updateContent = (() => {
       const root = doc.getElementById("preview-root");
 
       if (themeStyle && root) {
-        // 保存当前滚动位置
+        // Save current scroll position / 保存当前滚动位置
         const scrollY = iframe.contentWindow?.scrollY || 0;
 
-        // 更新颜色
+        // Update colors / 更新颜色
         doc.body.style.background = isDarkMode.value ? "#252526" : "#fff";
         doc.body.style.color = isDarkMode.value ? "#d4d4d4" : "#000";
 
-        // 更新样式和 HTML
+        // Update styles and HTML / 更新样式和 HTML
         themeStyle.textContent = finalCss.value;
         root.innerHTML = html.value;
 
-        // 恢复滚动位置
+        // Restore scroll position / 恢复滚动位置
         iframe.contentWindow?.scrollTo(0, scrollY);
         
-        // 渲染 Mermaid
+        // Render Mermaid / 渲染 Mermaid
         void renderMermaid(doc);
       }
     }, 100);

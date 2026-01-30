@@ -2,6 +2,9 @@
 import ColorSelector from "../ColorSelector.vue";
 import { quoteStylePresets } from "@/config/styleOptions";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -22,7 +25,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
 <template>
   <div class="designer-section">
     <div class="designer-field">
-      <label>样式预设</label>
+      <label>{{ t('designer.fields.stylePreset') }}</label>
       <div class="designer-options">
         <button
           v-for="opt in quoteStylePresets"
@@ -31,13 +34,13 @@ const updateVariable = <K extends keyof DesignerVariables>(
           :class="{ active: variables.quotePreset === opt.id }"
           @click="updateVariable('quotePreset', opt.id)"
         >
-          {{ opt.label }}
+          {{ t(`designer.options.quoteStyle.${opt.id}`) }}
         </button>
       </div>
     </div>
 
     <div class="designer-field">
-      <label>引用背景</label>
+      <label>{{ t('designer.fields.quoteBackground') }}</label>
       <ColorSelector
         :value="variables.quoteBackground"
         :presets="['#f5f5f5', '#f0f9ff', '#f0fdf4', '#fef3c7', '#fce7f3']"
@@ -46,7 +49,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>边框颜色</label>
+      <label>{{ t('designer.fields.borderColor') }}</label>
       <ColorSelector
         :value="variables.quoteBorderColor"
         :presets="[
@@ -62,7 +65,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field">
-      <label>引用文字颜色</label>
+      <label>{{ t('designer.fields.quoteTextColor') }}</label>
       <ColorSelector
         :value="variables.quoteTextColor"
         :presets="['#666', '#333', '#000', variables.primaryColor]"

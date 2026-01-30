@@ -23,10 +23,13 @@ import SaveIndicator from "./SaveIndicator.vue";
 import { SYNC_SCROLL_EVENT, type SyncScrollDetail } from '../Preview/MarkdownPreview.vue';
 import { toast } from '../../hooks/useToast';
 import { customKeymap } from "./editorShortcuts";
+import { useI18n } from "../../i18n";
 
-// 从 markdown 中提取标题的工具函数
+const { t } = useI18n();
+
+// Utility function to derive title from markdown / 从 markdown 中提取标题的工具函数
 function deriveTitle(markdown: string): string {
-  const UNTITLED_TITLE = "未命名文章";
+  const UNTITLED_TITLE = t('editor.untitled');
   const trimmed = markdown.trim();
   if (!trimmed) return UNTITLED_TITLE;
   const headingMatch = trimmed.match(/^(#+)\s*(.+)$/m);
@@ -55,7 +58,7 @@ const showSearch = ref(false);
 const wordCount = ref(0);
 const lineCount = ref(0);
 
-// Cmd/Ctrl+F 打开搜索面板
+// Cmd/Ctrl+F to open search panel / Cmd/Ctrl+F 打开搜索面板
 const handleGlobalKeyDown = async (e: KeyboardEvent) => {
   if (e.metaKey || e.ctrlKey) {
     if (e.key === "f") {
@@ -64,11 +67,11 @@ const handleGlobalKeyDown = async (e: KeyboardEvent) => {
     } else if (e.key === "s") {
       e.preventDefault();
       if (fileStore.currentFile) {
-        // 文件系统模式：保存文件
+        // File system mode: save file / 文件系统模式：保存文件
         await saveFile();
       } else if (historyStore.activeId) {
-        // 浏览器存储模式（IndexedDB）：保存到历史记录
-        // 注意：不传 title，保留用户已修改的标题
+        // Browser storage mode (IndexedDB): save to history / 浏览器存储模式（IndexedDB）：保存到历史记录
+        // Note: do not pass title, preserve user-modified title / 注意：不传 title，保留用户已修改的标题
         try {
           await historyStore.persistActiveSnapshot({
             markdown: editorStore.markdown,
@@ -76,13 +79,13 @@ const handleGlobalKeyDown = async (e: KeyboardEvent) => {
             themeName: themeStore.themeName,
             customCSS: themeStore.customCSS,
           });
-          toast.success("保存成功");
+          toast.success(t('editor.saveSuccess'));
         } catch (error) {
           console.error("Failed to save to history:", error);
-          toast.error("保存失败");
+          toast.error(t('editor.saveError'));
         }
       } else {
-        // 没有激活的历史记录，创建新的快照
+        // No active history, create new snapshot / 没有激活的历史记录，创建新的快照
         try {
           const title = deriveTitle(editorStore.markdown);
           await historyStore.saveSnapshot({
@@ -92,10 +95,10 @@ const handleGlobalKeyDown = async (e: KeyboardEvent) => {
             customCSS: themeStore.customCSS,
             title,
           });
-          toast.success("保存成功");
+          toast.success(t('editor.saveSuccess'));
         } catch (error) {
           console.error("Failed to save snapshot:", error);
-          toast.error("保存失败");
+          toast.error(t('editor.saveError'));
         }
       }
     }
@@ -117,7 +120,7 @@ onUnmounted(() => {
 function initEditor() {
   if (!editorRef.value) return;
 
-  // 如果已经有编辑器实例，先获取当前内容并销毁
+  // If editor instance exists, get current content and destroy / 如果已经有编辑器实例，先获取当前内容并销毁
   const currentContent = viewRef.value
     ? viewRef.value.state.doc.toString()
     : editorStore.markdown;
@@ -148,12 +151,12 @@ function initEditor() {
               const file = item.getAsFile();
               if (!file) continue;
 
-              // 检查图片大小，超过 2MB 拒绝上传
+              // Check image size, reject if over 2MB / 检查图片大小，超过 2MB 拒绝上传
               const MAX_SIZE_MB = 2;
               const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
               if (file.size > MAX_SIZE_BYTES) {
                 const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-                toast.error(`请压缩图片后再试，公众号不支持超过 2MB 的图片外链(当前 ${sizeMB}MB)`, 4000);
+                toast.error(t('editor.imageUpload.sizeLimit', { size: sizeMB }), 4000);
                 continue;
               }
 
@@ -234,7 +237,7 @@ function initEditor() {
 }
 
 async function handleImageUpload(file: File, view: EditorView) {
-  const loadingText = `![上传中... ${file.name}]()`;
+  const loadingText = t('editor.imageUpload.uploadingPlaceholder', { name: file.name });
   const range = view.state.selection.main;
 
   view.dispatch({
@@ -253,7 +256,7 @@ async function handleImageUpload(file: File, view: EditorView) {
   })();
 
   toast.promise(uploadPromise, {
-    loading: "正在上传图片...",
+    loading: t('editor.imageUpload.loading'),
     success: (result: any) => {
       const imageText = `![](${result.url})`;
       const currentDoc = view.state.doc.toString();
@@ -268,7 +271,7 @@ async function handleImageUpload(file: File, view: EditorView) {
           },
         });
       }
-      return "图片上传成功";
+      return t('editor.imageUpload.success');
     },
     error: (err: any) => {
       const currentDoc = view.state.doc.toString();
@@ -278,12 +281,12 @@ async function handleImageUpload(file: File, view: EditorView) {
           changes: { from: index, to: index + loadingText.length, insert: "" },
         });
       }
-      return `上传失败: ${err.message}`;
+      return t('editor.imageUpload.error', { message: err.message });
     },
   });
 }
 
-// 监听主题变化，重新初始化编辑器
+// Watch for theme changes, re-initialize editor / 监听主题变化，重新初始化编辑器
 watch(() => uiThemeStore.theme, () => {
   if (viewRef.value) {
     viewRef.value.destroy();
@@ -291,7 +294,7 @@ watch(() => uiThemeStore.theme, () => {
   }
 });
 
-// 监听外部内容变化
+// Watch for external content changes / 监听外部内容变化
 watch(() => editorStore.markdown, (newContent: string) => {
   const view = viewRef.value;
   if (!view) return;
@@ -302,7 +305,7 @@ watch(() => editorStore.markdown, (newContent: string) => {
   });
 });
 
-// 处理工具栏文本插入
+// Handle toolbar text insertion / 处理工具栏文本插入
 const handleInsert = (prefix: string, suffix: string, placeholder: string) => {
   const view = viewRef.value;
   if (!view) return;
@@ -327,7 +330,7 @@ const handleInsert = (prefix: string, suffix: string, placeholder: string) => {
 <template>
   <div class="markdown-editor" :data-ui-theme="uiThemeStore.theme">
     <div class="editor-header">
-      <span class="editor-title">Markdown 编辑器</span>
+      <span class="editor-title">{{ t('editor.title') }}</span>
     </div>
     <Toolbar @insert="handleInsert" />
     <SearchPanel
@@ -340,8 +343,8 @@ const handleInsert = (prefix: string, suffix: string, placeholder: string) => {
     </div>
     <div class="editor-footer">
       <div class="editor-stats">
-        <span class="editor-stat">行数: {{ lineCount }}</span>
-        <span class="editor-stat">字数: {{ wordCount }}</span>
+        <span class="editor-stat">{{ t('editor.lines') }}: {{ lineCount }}</span>
+        <span class="editor-stat">{{ t('editor.words') }}: {{ wordCount }}</span>
       </div>
       <SaveIndicator />
     </div>

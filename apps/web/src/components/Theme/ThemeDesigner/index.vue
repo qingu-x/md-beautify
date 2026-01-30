@@ -4,7 +4,10 @@ import { styleCategories } from "@/config/styleOptions";
 import type { DesignerVariables, HeadingLevel, HeadingStyle } from "./types";
 import { defaultVariables } from "./defaults";
 import { generateCSS } from "./generateCSS";
+import { useI18n } from "../../../i18n";
 import "../ThemeDesigner.css";
+
+const { t } = useI18n();
 
 const GlobalSection = defineAsyncComponent(() => import("./sections/GlobalSection.vue"));
 const HeadingSection = defineAsyncComponent(() => import("./sections/HeadingSection.vue"));
@@ -33,7 +36,7 @@ const variables = ref<DesignerVariables>(
 const activeTab = ref<string>("global");
 const activeHeading = ref<HeadingLevel>("h1");
 
-// 同步初始变量
+// Sync initial variables / 同步初始变量
 watch(() => props.initialVariables, (newVars: DesignerVariables | undefined) => {
   if (newVars) {
     variables.value = { ...newVars };
@@ -42,16 +45,16 @@ watch(() => props.initialVariables, (newVars: DesignerVariables | undefined) => 
   }
 }, { deep: true });
 
-// 当变量改变时，生成 CSS 并通知父组件
+// Generate CSS and notify parent when variables change / 当变量改变时，生成 CSS 并通知父组件
 let cssUpdateTimer: ReturnType<typeof setTimeout> | null = null;
 watch(variables, (newVars: DesignerVariables) => {
   if (cssUpdateTimer) {
     clearTimeout(cssUpdateTimer);
   }
   cssUpdateTimer = setTimeout(() => {
-  const css = generateCSS(newVars);
-  emit("css-change", css);
-  emit("variables-change", newVars);
+    const css = generateCSS(newVars);
+    emit("css-change", css);
+    emit("variables-change", newVars);
     cssUpdateTimer = null;
   }, 16);
 }, { deep: true, immediate: true });
@@ -85,7 +88,7 @@ const handlePrimaryColorChange = (newColor: string) => {
 
 <template>
   <div class="theme-designer">
-    <!-- 分类 Tabs -->
+    <!-- Category Tabs / 分类 Tabs -->
     <div class="designer-tabs">
       <button
         v-for="cat in styleCategories"
@@ -93,13 +96,13 @@ const handlePrimaryColorChange = (newColor: string) => {
         class="designer-tab"
         :class="{ active: activeTab === cat.id }"
         @click="activeTab = cat.id"
-        :title="cat.description"
+        :title="t(`designer.sections.${cat.id}`)"
       >
-        {{ cat.label }}
+        {{ t(`designer.sections.${cat.id}`) }}
       </button>
     </div>
 
-    <!-- 内容区 -->
+    <!-- Content Area / 内容区 -->
     <div class="designer-content">
       <div class="designer-section">
         <GlobalSection

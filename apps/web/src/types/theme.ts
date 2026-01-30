@@ -8,7 +8,7 @@ import type {
 export type { DesignerVariables, HeadingStyle };
 
 /**
- * 自定义主题接口
+ * Custom Theme Interface / 自定义主题接口
  */
 export interface CustomTheme {
   id: string;
@@ -17,14 +17,14 @@ export interface CustomTheme {
   isBuiltIn: boolean;
   createdAt: string;
   updatedAt: string;
-  /** 编辑模式：创建时确定，不可更改 */
+  /** Editor Mode: Determined at creation, immutable / 编辑模式：创建时确定，不可更改 */
   editorMode?: "visual" | "css";
-  /** 可视化设计器变量，仅 visual 模式存在 */
+  /** Visual Designer Variables, exists only in visual mode / 可视化设计器变量，仅 visual 模式存在 */
   designerVariables?: DesignerVariables;
 }
 
 /**
- * 主题定义接口（简化版，用于向后兼容）
+ * Theme Definition Interface (Simplified, for backward compatibility) / 主题定义接口（简化版，用于向后兼容）
  */
 export interface ThemeDefinition {
   id: string;

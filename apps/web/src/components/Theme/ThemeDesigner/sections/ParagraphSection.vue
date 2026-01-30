@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import type { DesignerVariables } from "../types";
 import ColorSelector from "../ColorSelector.vue";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -21,7 +24,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
 <template>
   <div class="designer-section">
     <div class="designer-field">
-      <label>段落间距: {{ variables.paragraphMargin }}px</label>
+      <label>{{ t('designer.fields.paragraphMargin') }}: {{ variables.paragraphMargin }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -39,7 +42,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field-row">
-      <span>段落首行缩进</span>
+      <span>{{ t('designer.fields.textIndent') }}</span>
       <label class="designer-switch">
         <input
           type="checkbox"
@@ -53,7 +56,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
     </div>
 
     <div class="designer-field-row">
-      <span>两端对齐</span>
+      <span>{{ t('designer.fields.textJustify') }}</span>
       <label class="designer-switch">
         <input
           type="checkbox"
@@ -69,29 +72,29 @@ const updateVariable = <K extends keyof DesignerVariables>(
       </label>
     </div>
 
-    <div class="designer-group-label mt-4">分割线</div>
+    <div class="designer-group-label mt-4">{{ t('designer.sections.hr') }}</div>
     <div class="designer-field">
-      <label>样式</label>
+      <label>{{ t('designer.fields.style') }}</label>
       <div class="designer-options col-3">
         <button
           v-for="style in [
-            { id: 'solid', label: '实线' },
-            { id: 'dashed', label: '虚线' },
-            { id: 'dotted', label: '点线' },
-            { id: 'double', label: '双线' },
-            { id: 'pill', label: '短线' },
+            { id: 'simple', label: 'Solid' },
+            { id: 'dashed', label: 'Dashed' },
+            { id: 'dotted', label: 'Dotted' },
+            { id: 'double', label: 'Double' },
+            { id: 'pill', label: 'Pill' },
           ]"
           :key="style.id"
           class="option-btn"
           :class="{ active: variables.hrStyle === style.id }"
           @click="updateVariable('hrStyle', style.id)"
         >
-          {{ style.label }}
+          {{ t(`designer.options.hrStyle.${style.id}`) }}
         </button>
       </div>
     </div>
     <div class="designer-field">
-      <label>颜色</label>
+      <label>{{ t('designer.fields.color') }}</label>
       <ColorSelector
         :value="variables.hrColor"
         :presets="['#eee', '#ddd', '#ccc', variables.primaryColor]"
@@ -99,7 +102,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field">
-      <label>高度: {{ variables.hrHeight }}px</label>
+      <label>{{ t('designer.fields.height') }}: {{ variables.hrHeight }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -112,7 +115,7 @@ const updateVariable = <K extends keyof DesignerVariables>(
       />
     </div>
     <div class="designer-field">
-      <label>上下边距: {{ variables.hrMargin }}px</label>
+      <label>{{ t('designer.fields.margin') }}: {{ variables.hrMargin }}px</label>
       <input
         type="range"
         class="designer-slider"

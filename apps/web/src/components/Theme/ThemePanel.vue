@@ -3,43 +3,43 @@
     <div class="theme-modal" @click.stop>
       <div class="theme-header">
         <div class="theme-header-left">
-          <h3>主题管理</h3>
+          <h3>{{ t('theme.title') }}</h3>
           <div class="ui-theme-selector">
-            <span class="ui-theme-label">编辑器主题</span>
+            <span class="ui-theme-label">{{ t('theme.uiTheme') }}</span>
             <div class="ui-theme-options">
               <button 
                 class="ui-theme-option" 
                 :class="{ active: uiTheme === 'default' }"
                 @click="setUITheme('default')"
               >
-                <Sun :size="14" /> 浅色
+                <Sun :size="14" /> {{ t('theme.light') }}
               </button>
               <button 
                 class="ui-theme-option" 
                 :class="{ active: uiTheme === 'dark' }"
                 @click="setUITheme('dark')"
               >
-                <Moon :size="14" /> 深色
+                <Moon :size="14" /> {{ t('theme.dark') }}
               </button>
             </div>
           </div>
         </div>
-        <button class="close-btn" @click="$emit('close')" aria-label="关闭">
+        <button class="close-btn" @click="$emit('close')" :aria-label="t('common.close')">
           <X :size="20" />
         </button>
       </div>
 
       <div class="theme-body">
-        <!-- 左侧主题列表 -->
+        <!-- Left theme list / 左侧主题列表 -->
         <div class="theme-sidebar">
           <button class="btn-new-theme" @click="handleCreateNew">
-            <Plus :size="16" /> 新建自定义主题
+            <Plus :size="16" /> {{ t('theme.newTheme') }}
           </button>
           <button
             class="btn-import-theme"
             @click="fileInputRef?.click()"
           >
-            <Upload :size="16" /> 导入主题
+            <Upload :size="16" /> {{ t('theme.importTheme') }}
           </button>
           <input
             type="file"
@@ -51,7 +51,7 @@
 
           <div class="theme-list-scroll">
             <div v-if="customThemes.length > 0" class="theme-group">
-              <div class="theme-group-title">自定义主题</div>
+              <div class="theme-group-title">{{ t('theme.customThemes') }}</div>
               <button
                 v-for="item in customThemes"
                 :key="item.id"
@@ -64,7 +64,7 @@
             </div>
 
             <div class="theme-group">
-              <div class="theme-group-title">内置主题</div>
+              <div class="theme-group-title">{{ t('theme.builtInThemes') }}</div>
               <button
                 v-for="item in builtInThemes"
                 :key="item.id"
@@ -72,45 +72,45 @@
                 :class="{ active: item.id === selectedThemeId }"
                 @click="handleSelectTheme(item.id)"
               >
-                {{ item.name }}
+                {{ getThemeName(item) }}
               </button>
             </div>
           </div>
         </div>
 
-        <!-- 右侧编辑区 -->
+        <!-- Right editing area / 右侧编辑区 -->
         <div class="theme-editor" style="position: relative">
           <div v-if="showDeleteConfirm" class="delete-confirm-overlay">
             <div class="delete-confirm-box">
               <div class="confirm-icon-wrapper">
                 <AlertTriangle :size="24" color="#ef4444" />
               </div>
-              <h4>确认删除</h4>
+              <h4>{{ t('theme.confirmDelete') }}</h4>
               <p>
-                确定要删除主题 "{{ selectedTheme?.name }}" 吗？此操作无法撤销。
+                {{ t('theme.deleteWarning').replace('{name}', selectedTheme?.name || '') }}
               </p>
               <div class="delete-confirm-actions">
                 <button
                   class="btn-secondary"
                   @click="showDeleteConfirm = false"
                 >
-                  取消
+                  {{ t('common.cancel') }}
                 </button>
                 <button
                   class="btn-primary"
                   style="background: #ef4444; box-shadow: none"
                   @click="handleConfirmDelete"
                 >
-                  确认删除
+                  {{ t('common.delete') }}
                 </button>
               </div>
             </div>
           </div>
 
           <div class="theme-form">
-            <!-- 模式选择步骤 - 新建时首先选择编辑方式 -->
+            <!-- Mode selection step - Select editing mode first when creating / 模式选择步骤 - 新建时首先选择编辑方式 -->
             <div v-if="isCreating && creationStep === 'select-mode'" class="mode-selection">
-              <h3>选择创建方式</h3>
+              <h3>{{ t('theme.creationMode') }}</h3>
               <div class="mode-cards">
                 <button
                   class="mode-card"
@@ -119,11 +119,11 @@
                   <span class="mode-icon">
                     <Palette :size="32" />
                   </span>
-                  <span class="mode-title">可视化设计</span>
+                  <span class="mode-title">{{ t('theme.visualMode') }}</span>
                   <span class="mode-desc">
-                    通过可视化控件快速定制主题样式
+                    {{ t('theme.visualModeDesc') }}
                   </span>
-                  <span class="mode-tag">适合快速上手</span>
+                  <span class="mode-tag">{{ t('theme.visualModeTag') }}</span>
                 </button>
                 <button
                   class="mode-card"
@@ -132,31 +132,31 @@
                   <span class="mode-icon">
                     <Code :size="32" />
                   </span>
-                  <span class="mode-title">手写 CSS</span>
+                  <span class="mode-title">{{ t('theme.cssMode') }}</span>
                   <span class="mode-desc">
-                    直接编写 CSS 代码，完全自由控制
+                    {{ t('theme.cssModeDesc') }}
                   </span>
-                  <span class="mode-tag">适合高级用户</span>
+                  <span class="mode-tag">{{ t('theme.cssModeTag') }}</span>
                 </button>
               </div>
             </div>
 
-            <!-- 正式编辑区 - 选择模式后或编辑已有主题时显示 -->
+            <!-- Main editing area - Show after mode selection or when editing existing theme / 正式编辑区 - 选择模式后或编辑已有主题时显示 -->
             <template v-if="!isCreating || (isCreating && creationStep === 'editing')">
-              <!-- 实时预览区 -->
+              <!-- Live Preview Area / 实时预览区 -->
               <div class="theme-form-preview">
                 <ThemeLivePreview :css="previewCss" />
               </div>
 
               <div class="theme-form-fields">
-                <label>主题名称</label>
+                <label>{{ t('theme.themeName') }}</label>
                 <input
                   v-model="nameInput"
-                  placeholder="输入主题名称..."
+                  :placeholder="t('theme.themeNamePlaceholder')"
                   :disabled="!isCreating && !isCustomTheme"
                 />
 
-                <!-- 可视化设计器 - 可视化模式 -->
+                <!-- Visual Designer - Visual Mode / 可视化设计器 - 可视化模式 -->
                 <div 
                   v-if="((isCreating && editorMode === 'visual') || (!isCreating && isCustomTheme && selectedTheme?.editorMode === 'visual'))"
                   class="visual-designer-container"
@@ -168,20 +168,19 @@
                   />
                 </div>
 
-                <!-- CSS 编辑器 - CSS 模式或编辑旧版/CSS 主题 -->
+                <!-- CSS Editor - CSS mode or editing legacy/CSS themes / CSS 编辑器 - CSS 模式或编辑旧版/CSS 主题 -->
                 <template v-if="((isCreating && editorMode === 'css') || (!isCreating && selectedTheme?.editorMode !== 'visual'))">
-                  <label>CSS 样式</label>
+                  <label>{{ t('theme.cssStyle') }}</label>
                   <textarea
                     v-model="cssInput"
-                    placeholder="输入 CSS 样式代码..."
+                    :placeholder="t('theme.cssPlaceholder')"
                     :spellcheck="false"
                     :disabled="!isCreating && !isCustomTheme"
                   />
                 </template>
 
                 <p v-if="!isCreating && !isCustomTheme" class="info-hint">
-                  💡
-                  内置主题不可编辑，点击"复制"按钮可以基于此主题创建自定义主题
+                  {{ t('theme.builtInHint') }}
                 </p>
               </div>
             </template>
@@ -193,69 +192,69 @@
                 class="btn-secondary"
                 @click="handleCancelCreation"
               >
-                取消
+                {{ t('common.cancel') }}
               </button>
               <button
                 class="btn-primary"
                 @click="handleSave"
                 :disabled="!canSave"
               >
-                保存为新主题
+                {{ t('theme.saveAsNew') }}
               </button>
             </template>
             <template v-else-if="isCustomTheme">
               <button class="btn-icon-text" @click="handleDuplicate">
-                <Copy :size="16" /> 复制
+                <Copy :size="16" /> {{ t('common.copy') }}
               </button>
               <button
                 class="btn-icon-text"
                 @click="handleExport"
               >
-                <Download :size="16" /> 导出
+                <Download :size="16" /> {{ t('common.export') }}
               </button>
               <button
                 class="btn-icon-text"
                 @click="handleExportCSS"
               >
-                <Download :size="16" /> 导出 CSS
+                <Download :size="16" /> {{ t('theme.exportCss') }}
               </button>
               <button
                 class="btn-icon-text btn-danger"
                 @click="showDeleteConfirm = true"
               >
-                <Trash2 :size="16" /> 删除
+                <Trash2 :size="16" /> {{ t('common.delete') }}
               </button>
               <div class="flex-spacer"></div>
               <button class="btn-secondary" @click="$emit('close')">
-                取消
+                {{ t('common.cancel') }}
               </button>
               <button
                 class="btn-primary"
                 @click="handleSave"
                 :disabled="!hasChanges"
               >
-                保存修改
+                {{ t('theme.saveChanges') }}
               </button>
               <button class="btn-primary" @click="handleApply">
-                应用主题
+                {{ t('theme.applyTheme') }}
               </button>
             </template>
             <template v-else>
               <button class="btn-icon-text" @click="handleDuplicate">
-                <Copy :size="16" /> 复制
+                <Copy :size="16" /> {{ t('common.copy') }}
               </button>
               <button
                 class="btn-icon-text"
                 @click="handleExportCSS"
               >
-                <Download :size="16" /> 导出 CSS
+                <Download :size="16" /> {{ t('theme.exportCss') }}
               </button>
               <div class="flex-spacer"></div>
               <button class="btn-secondary" @click="$emit('close')">
-                取消
+                {{ t('common.cancel') }}
               </button>
               <button class="btn-primary" @click="handleApply">
-                应用主题
+                {{ t('theme.applyTheme') }}
               </button>
             </template>
           </div>
@@ -288,6 +287,7 @@ import { useToast } from "../../hooks/useToast";
 import { platformActions } from "../../utils/platformAdapter";
 import type { DesignerVariables } from "./ThemeDesigner/types";
 import ThemeLivePreview from "./ThemeLivePreview.vue";
+import { useI18n } from "../../i18n";
 
 // Props & Emits
 const props = defineProps<{
@@ -302,6 +302,7 @@ const emit = defineEmits<{
 const ThemeDesigner = defineAsyncComponent(() => import("./ThemeDesigner/index.vue"));
 
 // Stores
+const { t } = useI18n();
 const themeStore = useThemeStore();
 const editorStore = useEditorStore();
 const historyStore = useHistoryStore();
@@ -326,9 +327,9 @@ const handleImportFile = async (e: Event) => {
   if (file) {
     const success = await themeStore.importTheme(file);
     if (success) {
-      toast.success("主题导入成功");
+      toast.success(t('theme.importSuccess'));
     } else {
-      toast.error("导入失败，请检查文件格式");
+      toast.error(t('theme.importError'));
     }
     (e.target as HTMLInputElement).value = "";
   }
@@ -340,6 +341,13 @@ const handleExport = () => {
 
 const handleExportCSS = () => {
   themeStore.exportThemeCSS(selectedThemeId.value);
+};
+
+const getThemeName = (theme: any): string => {
+  if (theme.isBuiltIn) {
+    return t(`theme.names.${theme.id}`);
+  }
+  return theme.name;
 };
 
 // Used for change detection
@@ -380,13 +388,13 @@ const handleSelectTheme = (themeId: string) => {
   if (!theme) return;
 
   selectedThemeId.value = themeId;
-  nameInput.value = theme.name;
+  nameInput.value = getThemeName(theme);
   cssInput.value = theme.css;
   editorMode.value = (theme.editorMode as 'visual' | 'css') || "css";
   visualCss.value = "";
   designerVariables.value = theme.designerVariables;
   
-  originalName.value = theme.name;
+  originalName.value = getThemeName(theme);
   originalCss.value = theme.css;
   
   isCreating.value = false;
@@ -437,7 +445,7 @@ const handleApply = async () => {
       markdown: editorStore.markdown,
       theme: selectedThemeId.value,
       customCSS: "",
-      themeName: selectedTheme.value?.name || "默认主题",
+      themeName: selectedTheme.value?.name || t('theme.defaultTheme'),
     });
   }
   emit('close');
@@ -468,13 +476,13 @@ const handleSave = async () => {
     originalName.value = nameInput.value;
     originalCss.value = cssToSave;
     isCreating.value = false;
-    toast.success("主题创建成功");
+    toast.success(t('theme.createSuccess'));
     
-    // 创建成功后自动应用并关闭面板
+    // Apply and close panel after successful creation / 创建成功后自动应用并关闭面板
     emit('close');
   } else if (isCustomTheme.value) {
     const updates: any = {
-      name: nameInput.value.trim() || "未命名主题",
+      name: nameInput.value.trim() || t('theme.unnamedTheme'),
       css: cssInput.value,
     };
     if (selectedTheme.value?.editorMode === "visual" && designerVariables.value) {
@@ -488,15 +496,15 @@ const handleSave = async () => {
           markdown: editorStore.markdown,
           theme: selectedThemeId.value,
           customCSS: "",
-          themeName: nameInput.value.trim() || "未命名主题",
+          themeName: nameInput.value.trim() || t('theme.unnamedTheme'),
         });
       }
     }
-    originalName.value = nameInput.value.trim() || "未命名主题";
+    originalName.value = nameInput.value.trim() || t('theme.unnamedTheme');
     originalCss.value = cssInput.value;
-    toast.success("主题已保存");
+    toast.success(t('theme.saveSuccess'));
     
-    // 保存成功后自动关闭面板
+    // Automatically close panel after successful save / 保存成功后自动关闭面板
     emit('close');
   }
 };
@@ -508,15 +516,15 @@ const handleConfirmDelete = () => {
   themeStore.selectTheme("default");
   handleSelectTheme("default");
   showDeleteConfirm.value = false;
-  toast.success("主题已删除");
+  toast.success(t('theme.deleteSuccess'));
 };
 
 const handleDuplicate = () => {
   if (!selectedTheme.value) return;
-  const newName = `${selectedTheme.value.name} (副本)`;
+  const newName = `${selectedTheme.value.name}${t('theme.duplicateSuffix')}`;
   const duplicated = themeStore.duplicateTheme(selectedThemeId.value, newName);
   handleSelectTheme(duplicated.id);
-  toast.success("主题已复制");
+  toast.success(t('theme.copySuccess'));
 };
 
 // Lifecycle

@@ -1,6 +1,6 @@
 /**
- * 内置主题定义
- * 提取自 editorStore.ts，集中管理所有预设主题
+ * Built-in Theme Definitions / 内置主题定义
+ * Extracted from editorStore.ts, centralized management of all preset themes / 提取自 editorStore.ts，集中管理所有预设主题
  */
 import {
   basicTheme,
@@ -35,7 +35,7 @@ export const builtInThemes: CustomTheme[] = [
   },
   {
     id: "academic-paper",
-    name: "学术论文",
+    name: "Academic Paper / 学术论文",
     css: basicTheme + "\n" + academicPaperTheme + "\n" + codeGithubTheme,
     isBuiltIn: true,
     createdAt: new Date().toISOString(),
@@ -43,7 +43,7 @@ export const builtInThemes: CustomTheme[] = [
   },
   {
     id: "aurora-glass",
-    name: "极光玻璃",
+    name: "Aurora Glass / 极光玻璃",
     css: basicTheme + "\n" + auroraGlassTheme + "\n" + codeGithubTheme,
     isBuiltIn: true,
     createdAt: new Date().toISOString(),
@@ -91,7 +91,7 @@ export const builtInThemes: CustomTheme[] = [
   },
   {
     id: "neo-brutalism",
-    name: "新粗野主义",
+    name: "Neo Brutalism / 新粗野主义",
     css: basicTheme + "\n" + neoBrutalismTheme + "\n" + codeGithubTheme,
     isBuiltIn: true,
     createdAt: new Date().toISOString(),
@@ -124,6 +124,7 @@ export const builtInThemes: CustomTheme[] = [
 ];
 
 /**
+ * Default themes list (backward compatible format)
  * 默认主题列表（向后兼容格式）
  */
 export const defaultThemes: ThemeDefinition[] = [
@@ -135,6 +136,7 @@ export const defaultThemes: ThemeDefinition[] = [
 ];
 
 /**
+ * Get default theme CSS
  * 获取默认主题 CSS
  */
 export function getDefaultThemeCSS(): string {

@@ -1,4 +1,4 @@
-// 可视化主题设计器 - 默认值 | Visual Theme Designer - Default Values
+// Visual Theme Designer - Default Values / 可视化主题设计器 - 默认值
 import type { DesignerVariables } from "./types";
 import {
   fontFamilyOptions,
@@ -9,10 +9,10 @@ import {
 } from "@/config/styleOptions";
 
 /**
- * 设计器变量默认值 | Designer variables default values
+ * Designer variables default values / 设计器变量默认值
  */
 export const defaultVariables: DesignerVariables = {
-  // 全局 | Global
+  // Global / 全局
   fontFamily: fontFamilyOptions[0].value,
   fontSize: fontSizeOptions[2].value,
   primaryColor: primaryColorOptions[0].value,
@@ -20,7 +20,7 @@ export const defaultVariables: DesignerVariables = {
   pagePadding: 8,
   globalLetterSpacing: 0,
 
-  // 标题 | Heading
+  // Heading / 标题
   h1: {
     fontSize: headingSizePresets.h1.default,
     color: "#000",
@@ -58,14 +58,14 @@ export const defaultVariables: DesignerVariables = {
     letterSpacing: 0,
   },
 
-  // 段落 | Paragraph
+  // Paragraph / 正文
   paragraphMargin: 16,
   paragraphPadding: 0,
   paragraphColor: "#333",
   textIndent: false,
   textJustify: true,
 
-  // 引用 | Quote
+  // Quote / 引用
   quoteBackground: "#f5f5f5",
   quoteBorderColor: "#ddd",
   quoteTextColor: "#666",
@@ -78,7 +78,7 @@ export const defaultVariables: DesignerVariables = {
   quoteLineHeight: 1.6,
   quoteTextCentered: false,
 
-  // 代码 | Code
+  // Code / 代码
   codeBackground: "#f5f5f5",
   codeFontSize: 13,
   inlineCodeColor: "#c7254e",
@@ -87,14 +87,14 @@ export const defaultVariables: DesignerVariables = {
   showMacBar: true,
   codeTheme: "github",
 
-  // 图片 | Image
+  // Image / 图片
   imageMargin: 20,
   imageBorderRadius: 4,
   imageCaptionColor: "#999",
   imageCaptionFontSize: 14,
   imageCaptionTextAlign: "center",
 
-  // 链接/文本 | Link/Text
+  // Link & Text / 链接与文本
   linkColor: "",
   linkUnderline: true,
   italicColor: "inherit",
@@ -104,19 +104,19 @@ export const defaultVariables: DesignerVariables = {
   strongStyle: "color",
   strongColor: "inherit",
 
-  // 表格
+  // Table / 表格
   tableHeaderBackground: "#f8f8f8",
   tableHeaderColor: "inherit",
   tableBorderColor: "#dfe2e5",
   tableZebra: true,
 
-  // 分割线
+  // Horizontal Rule / 分割线
   hrColor: "#eee",
   hrHeight: 1,
   hrMargin: 20,
   hrStyle: "solid",
 
-  // 列表
+  // List / 列表
   ulStyle: "disc",
   ulStyleL2: "circle",
   olStyle: "decimal",
@@ -127,14 +127,14 @@ export const defaultVariables: DesignerVariables = {
   ulFontSize: "inherit",
   olFontSize: "inherit",
 
-  // 脚注
+  // Footnote / 脚注
   footnoteColor: "",
   footnoteFontSize: 12,
-  footnoteHeader: "参考资料",
+  footnoteHeader: "References",
   footnoteHeaderColor: "",
   footnoteHeaderStyle: "left-border",
 
-  // 提示块
+  // Callout / 提示块
   calloutStyle: "default",
 
   // Mermaid

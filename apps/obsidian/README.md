@@ -73,7 +73,22 @@ If you enjoy this plugin, please consider giving it a ⭐ on [GitHub](https://gi
 
 If you find this plugin helpful and want to support its development, you can buy me a coffee!
 
+### ☕️ International Support
+
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/pax_z)
+
+### 🧧 WeChat / Alipay
+
+<div style="display: flex; gap: 20px;">
+  <div style="text-align: center">
+    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
+    <p>WeChat Pay</p>
+  </div>
+  <div style="text-align: center">
+    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
+    <p>Alipay</p>
+  </div>
+</div>
 
 For bugs and feature requests, please [open an issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues).
 

@@ -22,7 +22,7 @@ const scopeCss = (css: string): string => {
 			const selectors = trimmed.split(',').map((s: string) => {
 				const st = s.trim();
 				
-				// 跳过已包含 #mdb 的选择器
+				// Skip selectors already containing #mdb / 跳过已包含 #mdb 的选择器
 				if (st.includes('#mdb')) {
 					return st;
 				}
@@ -40,7 +40,7 @@ const scopeCss = (css: string): string => {
 				if (st.startsWith('html ')) {
 					return '#mdb ' + st.substring(5);
 				}
-				// 移除 :root 选择器（CSS 变量会污染全局）
+				// Remove :root selector (CSS variables would pollute global scope) / 移除 :root 选择器（CSS 变量会污染全局）
 				if (st.startsWith(':root')) {
 					return ''; // 返回空字符串，后续会被过滤
 				}
@@ -56,7 +56,7 @@ const scopeCss = (css: string): string => {
 			return `${prefix}${filtered.join(', ')}{`;
 		}
 		
-		// 单个选择器处理
+		// Handle single selector / 单个选择器处理
 		if (trimmed === '*') {
 			return `${prefix}#mdb *{`;
 		}
@@ -78,7 +78,7 @@ const scopeCss = (css: string): string => {
 	});
 };
 
-// 移除 html2pdf.js 不支持的现代 CSS 颜色函数
+// Remove modern CSS color functions not supported by html2pdf.js / 移除 html2pdf.js 不支持的现代 CSS 颜色函数
 const sanitizeModernColorFunctions = (css: string): string => {
 	// 移除包含 oklch, oklab, lch, lab, color() 等现代颜色函数的属性
 	// 需要处理嵌套函数（如 color-mix）和多行属性
@@ -93,8 +93,8 @@ const sanitizeModernColorFunctions = (css: string): string => {
 	];
 	
 	modernColorFunctions.forEach(fn => {
-		// 移除包含这些函数的整个属性声明
-		// 匹配 property: value; 包括可能的多行和嵌套括号
+		// Remove entire property declaration containing these functions / 移除包含这些函数的整个属性声明
+		// Match property: value; including possible multi-lines and nested parentheses / 匹配 property: value; 包括可能的多行和嵌套括号
 		const regex = new RegExp(
 			`([a-z-][a-z0-9-]*)\\s*:\\s*[^;{]*${fn}[^;{]*;?`,
 			'gi'

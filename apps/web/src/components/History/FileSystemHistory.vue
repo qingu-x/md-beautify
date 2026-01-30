@@ -1,12 +1,12 @@
 <template>
   <aside class="history-sidebar">
     <div class="history-header">
-      <h3>文件列表</h3>
+      <h3>{{ t('sidebar.fileList') }}</h3>
       <div class="history-actions">
-        <button class="btn-secondary btn-icon-only" @click="handleCreate" data-tooltip="新建文章">
+        <button class="btn-secondary btn-icon-only" @click="handleCreate" :data-tooltip="t('sidebar.newArticle')">
           <Plus :size="16" />
         </button>
-        <button class="btn-secondary btn-icon-only" @click="handleSave" :disabled="!activePath || saving" data-tooltip="保存当前">
+        <button class="btn-secondary btn-icon-only" @click="handleSave" :disabled="!activePath || saving" :data-tooltip="t('sidebar.saveCurrent')">
           <Save :size="16" />
         </button>
       </div>
@@ -17,16 +17,16 @@
         <Search :size="14" class="search-icon" />
         <input
           type="text"
-          placeholder="搜索文件..."
+          :placeholder="t('sidebar.searchPlaceholder')"
           v-model="searchFilter"
         />
       </div>
     </div>
 
     <div class="history-body">
-      <div v-if="loading" class="history-empty">正在加载...</div>
+      <div v-if="loading" class="history-empty">{{ t('modal.loading') }}</div>
       <div v-else-if="visibleFiles.length === 0" class="history-empty">
-        {{ searchFilter ? '无匹配结果' : '暂无文件' }}
+        {{ searchFilter ? t('sidebar.noResults') : t('sidebar.empty') }}
       </div>
       <div v-else class="history-list">
         <template v-for="item in visibleFiles" :key="item.path">
@@ -58,15 +58,15 @@
     >
       <button v-if="!menuFile.isDirectory" @click="copyTitle(menuFile); closeActionMenu()">
         <Copy :size="14" />
-        复制标题
+        {{ t('sidebar.copyTitle') }}
       </button>
       <button @click="startRename(menuFile); closeActionMenu()">
         <Edit2 :size="14" />
-        重命名
+        {{ t('sidebar.rename') }}
       </button>
       <button class="danger" @click="deleteTarget = menuFile; closeActionMenu()">
         <Trash2 :size="14" />
-        删除
+        {{ t('sidebar.delete') }}
       </button>
     </div>
   </Teleport>
@@ -75,18 +75,18 @@
   <Teleport to="body">
     <div v-if="deleteTarget" class="history-confirm-backdrop" @click="!deleting && (deleteTarget = null)">
       <div class="history-confirm-modal" @click.stop>
-        <h4>删除{{ deleteTarget.isDirectory ? '文件夹' : '文件' }}</h4>
-        <p>确定要删除"{{ deleteTarget.name }}"吗？{{ deleteTarget.isDirectory ? '文件夹内的所有文件也会被删除。' : '' }}此操作不可撤销。</p>
+        <h4>{{ t('sidebar.deleteConfirmTitle', { type: deleteTarget.isDirectory ? t('sidebar.deleteFolder') : t('sidebar.deleteFile') }) }}</h4>
+        <p>{{ t('sidebar.deleteConfirmText', { name: deleteTarget.name, extra: deleteTarget.isDirectory ? t('sidebar.deleteConfirmExtra') : '' }) }}</p>
         <div class="history-confirm-actions">
           <button class="btn-secondary" @click="deleteTarget = null" :disabled="deleting">
-            取消
+            {{ t('sidebar.cancel') }}
           </button>
           <button
             class="btn-danger"
             @click="handleDeleteConfirm"
             :disabled="deleting"
           >
-            {{ deleting ? '删除中...' : '确认删除' }}
+            {{ deleting ? t('sidebar.deleting') : t('sidebar.confirmDelete') }}
           </button>
         </div>
       </div>
@@ -97,7 +97,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Plus, Save, MoreHorizontal, Copy, Edit2, Trash2, Search, Folder, FileText, ChevronRight, ChevronDown } from 'lucide-vue-next';
+import { useI18n } from '../../i18n';
 import { useEditorStore } from '../../store/editorStore';
+
+const { t } = useI18n();
 import { useThemeStore } from '../../store/themeStore';
 import { toast } from '../../hooks/useToast';
 import type { StorageAdapter } from '../../storage/StorageAdapter';
@@ -126,16 +129,16 @@ const actionMenuId = ref<string | null>(null);
 const menuFile = ref<StorageFileItem | null>(null);
 const menuPosition = ref({ top: 0, left: 0 });
 
-const defaultFsContent = `---
+const defaultFsContent = () => `---
 theme: default
-themeName: 默认主题
+themeName: ${t('sidebar.defaultThemeName')}
 ---
 
-# 新文章
+${t('sidebar.newArticleTitle')}
 
 `;
 
-// 扁平化文件列表（用于搜索）
+// Flatten file list (for search) / 扁平化文件列表（用于搜索）
 const flattenedFiles = computed(() => {
   const flatten = (items: StorageFileItem[]): StorageFileItem[] => {
     return items.reduce((acc: StorageFileItem[], item) => {
@@ -149,7 +152,7 @@ const flattenedFiles = computed(() => {
   return flatten(files.value || []);
 });
 
-// 过滤后的文件列表
+// Filtered file list / 过滤后的文件列表
 const visibleFiles = computed(() => {
   if (!searchFilter.value) return files.value;
   
@@ -158,14 +161,14 @@ const visibleFiles = computed(() => {
     !f.isDirectory && f.name.toLowerCase().includes(searchLower)
   );
   
-  // 如果有搜索，返回扁平列表
+  // Return flattened list if searching / 如果有搜索，返回扁平列表
   return matchedFiles;
 });
 
-// 展开所有包含匹配文件的文件夹
+// Expand all folders containing matched files / 展开所有包含匹配文件的文件夹
 watch(searchFilter, (newFilter) => {
   if (newFilter) {
-    // 搜索时展开所有文件夹
+    // Expand all folders when searching / 搜索时展开所有文件夹
     const allFolders = flattenedFiles.value.filter(f => f.isDirectory).map(f => f.path);
     expandedFolders.value = new Set(allFolders);
   }
@@ -177,7 +180,7 @@ const toggleFolder = (path: string) => {
   } else {
     expandedFolders.value.add(path);
   }
-  // 触发响应式更新
+  // Trigger reactive update / 触发响应式更新
   expandedFolders.value = new Set(expandedFolders.value);
 };
 
@@ -187,13 +190,13 @@ const parseFsFrontmatter = (content: string) => {
     return {
       body: content,
       theme: 'default',
-      themeName: '默认主题',
+      themeName: t('sidebar.defaultThemeName'),
     };
   }
   const raw = match[1];
   const body = content.slice(match[0].length).trimStart();
   const theme = raw.match(/theme:\s*(.+)/)?.[1]?.trim() ?? 'default';
-  const themeName = raw.match(/themeName:\s*(.+)/)?.[1]?.trim()?.replace(/^['"]|['"]$/g, '') ?? '默认主题';
+  const themeName = raw.match(/themeName:\s*(.+)/)?.[1]?.trim()?.replace(/^['"]|['"]$/g, '') ?? t('sidebar.defaultThemeName');
   return { body, theme, themeName };
 };
 
@@ -228,20 +231,20 @@ const handleOpen = async (file: StorageFileItem) => {
     activePath.value = file.path;
   } catch (error) {
     console.error(error);
-    toast.error('打开文件失败');
+    toast.error(t('sidebar.openError'));
   }
 };
 
 const handleCreate = async () => {
   try {
-    const fileName = `文稿-${Date.now()}.md`;
-    await props.adapter.writeFile(fileName, defaultFsContent);
+    const fileName = `${t('sidebar.newArticlePrefix')}${Date.now()}.md`;
+    await props.adapter.writeFile(fileName, defaultFsContent());
     await refreshFiles();
     await handleOpen({ path: fileName, name: fileName, isDirectory: false } as StorageFileItem);
-    toast.success('已创建新文章');
+    toast.success(t('sidebar.createSuccess'));
   } catch (error) {
     console.error(error);
-    toast.error('创建失败');
+    toast.error(t('sidebar.createError'));
   }
 };
 
@@ -256,10 +259,10 @@ themeName: ${themeStore.themeName}
 `;
     await props.adapter.writeFile(activePath.value, `${frontmatter}\n${editorStore.markdown}`);
     await refreshFiles();
-    toast.success('保存成功');
+    toast.success(t('sidebar.saveSuccess'));
   } catch (error) {
     console.error(error);
-    toast.error('保存失败');
+    toast.error(t('sidebar.saveError'));
   } finally {
     saving.value = false;
   }
@@ -294,10 +297,10 @@ const closeActionMenu = () => {
 const copyTitle = async (file: StorageFileItem) => {
   try {
     await navigator.clipboard.writeText(file.name.replace('.md', ''));
-    toast.success('标题已复制');
+    toast.success(t('sidebar.copySuccess'));
   } catch (error) {
     console.error(error);
-    toast.error('复制失败');
+    toast.error(t('sidebar.copyError'));
   }
 };
 
@@ -331,10 +334,10 @@ const submitRename = async () => {
     renamingPath.value = null;
     renameValue.value = '';
     await refreshFiles();
-    toast.success('重命名成功');
+    toast.success(t('sidebar.renameSuccess'));
   } catch (error) {
     console.error(error);
-    toast.error('重命名失败');
+    toast.error(t('sidebar.renameError'));
   }
 };
 
@@ -349,10 +352,10 @@ const handleDeleteConfirm = async () => {
       editorStore.setMarkdown('');
     }
     await refreshFiles();
-    toast.success('删除成功');
+    toast.success(t('sidebar.deleteSuccess'));
   } catch (error) {
     console.error(error);
-    toast.error('删除失败');
+    toast.error(t('sidebar.deleteError'));
   } finally {
     deleting.value = false;
     deleteTarget.value = null;

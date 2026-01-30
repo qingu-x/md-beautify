@@ -6,11 +6,11 @@
         alt="MD Beautify Logo"
         class="welcome-logo"
       />
-      <h1>欢迎使用 MD Beautify</h1>
-      <p>请选择一个文件夹作为工作区以开始写作</p>
+      <h1>{{ t('welcome.title') }}</h1>
+      <p>{{ t('welcome.subtitle') }}</p>
       <button class="btn-primary" @click="selectWorkspace">
         <FolderOpen :size="20" />
-        选择工作区文件夹
+        {{ t('welcome.selectWorkspace') }}
       </button>
     </div>
   </div>
@@ -19,7 +19,9 @@
 <script setup lang="ts">
 import { FolderOpen } from 'lucide-vue-next';
 import { useFileSystem } from '../../hooks/useFileSystem';
+import { useI18n } from '../../i18n';
 import './Welcome.css';
 
 const { selectWorkspace } = useFileSystem();
+const { t } = useI18n();
 </script>

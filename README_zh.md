@@ -173,9 +173,24 @@ MDB/
 
 如有问题或建议，欢迎提交 [Issue](https://github.com/qingu-x/md-beautify/issues)。
 
-如果你觉得这个项目对你有帮助，可以请我喝杯咖啡！
+如果你觉得这个项目对你有帮助，欢迎请作者喝杯咖啡！
+
+### ☕️ 国际赞助
 
 [![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://www.buymeacoffee.com/pax_z)
+
+### 🧧 国内赞助
+
+<div style="display: flex; gap: 20px;">
+  <div style="text-align: center">
+    <img src=".github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
+    <p>微信支付</p>
+  </div>
+  <div style="text-align: center">
+    <img src=".github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
+    <p>支付宝</p>
+  </div>
+</div>
 
 ---
 

@@ -5,6 +5,9 @@ import {
   codeBlockThemeOptions,
 } from "@/config/styleOptions";
 import type { DesignerVariables } from "../types";
+import { useI18n } from "../../../../i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   variables: DesignerVariables;
@@ -57,9 +60,9 @@ const handleCodeThemeChange = (themeId: string) => {
 
 <template>
   <div class="designer-section">
-    <div class="designer-group-label">行内代码</div>
+    <div class="designer-group-label">{{ t('designer.sections.inlineCode') }}</div>
     <div class="designer-field">
-      <label>样式预设</label>
+      <label>{{ t('designer.fields.stylePreset') }}</label>
       <div class="designer-options col-2">
         <button
           v-for="opt in inlineCodeStyleOptions"
@@ -68,14 +71,14 @@ const handleCodeThemeChange = (themeId: string) => {
           :class="{ active: variables.inlineCodeStyle === opt.id }"
           @click="handleInlineCodeStyleChange(opt.id)"
         >
-          {{ opt.label }}
+          {{ t(`designer.options.inlineCodeStyle.${opt.id}`) }}
         </button>
       </div>
     </div>
 
     <div class="designer-row">
       <div class="designer-field half">
-        <label>文字颜色</label>
+        <label>{{ t('designer.fields.textColor') }}</label>
         <ColorSelector
           :value="variables.inlineCodeColor"
           :presets="['#c7254e', '#333', variables.primaryColor]"
@@ -83,7 +86,7 @@ const handleCodeThemeChange = (themeId: string) => {
         />
       </div>
       <div class="designer-field half">
-        <label>背景颜色</label>
+        <label>{{ t('designer.fields.backgroundColor') }}</label>
         <ColorSelector
           :value="variables.inlineCodeBackground"
           :presets="['#f9f2f4', 'rgba(27,31,35,0.05)', 'transparent']"
@@ -92,9 +95,9 @@ const handleCodeThemeChange = (themeId: string) => {
       </div>
     </div>
 
-    <div class="designer-group-label mt-4">代码块</div>
+    <div class="designer-group-label mt-4">{{ t('designer.sections.codeBlock') }}</div>
     <div class="designer-field">
-      <label>字号: {{ variables.codeFontSize }}px</label>
+      <label>{{ t('designer.fields.fontSize') }}: {{ variables.codeFontSize }}px</label>
       <input
         type="range"
         class="designer-slider"
@@ -111,7 +114,7 @@ const handleCodeThemeChange = (themeId: string) => {
     </div>
 
     <div class="designer-field-row">
-      <span>Mac 风格控制栏</span>
+      <span>{{ t('designer.fields.showMacBar') }}</span>
       <label class="designer-switch">
         <input
           type="checkbox"
@@ -125,7 +128,7 @@ const handleCodeThemeChange = (themeId: string) => {
     </div>
 
     <div class="designer-field">
-      <label>高亮主题</label>
+      <label>{{ t('designer.fields.highlightTheme') }}</label>
       <div class="designer-options col-2">
         <button
           v-for="opt in codeBlockThemeOptions"
@@ -134,7 +137,7 @@ const handleCodeThemeChange = (themeId: string) => {
           :class="{ active: variables.codeTheme === opt.id }"
           @click="handleCodeThemeChange(opt.id)"
         >
-          {{ opt.label }}
+          {{ opt.id ? t(`designer.options.codeTheme.${opt.id}`) : opt.label }}
         </button>
       </div>
     </div>
