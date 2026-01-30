@@ -77,16 +77,9 @@
 
 ### 🧧 国内赞助
 
-<div style="display: flex; gap: 20px;">
-  <div style="text-align: center">
-    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
-    <p>微信支付</p>
-  </div>
-  <div style="text-align: center">
-    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
-    <p>支付宝</p>
-  </div>
-</div>
+| 微信支付                                                                                      | 支付宝                                                                                   |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| ![微信支付](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![支付宝](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
 
 如果有 Bug 或功能建议，请 [提交 Issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues)。
 

@@ -79,16 +79,9 @@ If you find this plugin helpful and want to support its development, you can buy
 
 ### 🧧 WeChat / Alipay
 
-<div style="display: flex; gap: 20px;">
-  <div style="text-align: center">
-    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
-    <p>WeChat Pay</p>
-  </div>
-  <div style="text-align: center">
-    <img src="https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
-    <p>Alipay</p>
-  </div>
-</div>
+| WeChat Pay                                                                                      | Alipay                                                                                   |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| ![WeChat Pay](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![Alipay](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
 
 For bugs and feature requests, please [open an issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues).
 

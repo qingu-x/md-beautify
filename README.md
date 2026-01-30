@@ -180,16 +180,9 @@ If you find this project helpful, you can buy me a coffee!
 
 ### 🧧 WeChat / Alipay
 
-<div style="display: flex; gap: 20px;">
-  <div style="text-align: center">
-    <img src=".github/assets/pay/wechatpay.jpg" alt="WeChat Pay" width="200" />
-    <p>WeChat Pay</p>
-  </div>
-  <div style="text-align: center">
-    <img src=".github/assets/pay/alipay.jpg" alt="Alipay" width="200" />
-    <p>Alipay</p>
-  </div>
-</div>
+| WeChat Pay                                                                                      | Alipay                                                                                   |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| ![WeChat Pay](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![Alipay](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
 
 ---
 
