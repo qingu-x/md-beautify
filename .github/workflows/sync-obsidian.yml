@@ -97,17 +97,14 @@ jobs:
           RELEASE_NOTES=$(printf "Automated release from monorepo\n\n**Source commit:** [\`%s\`](%s/%s/commit/%s)\n**Commit message:** %s" \
             "$COMMIT_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$COMMIT_MSG")
           
-          # 检查 Release 是否已存在，如果不存在则创建
-          if ! gh release view "$VERSION" --repo sliiu/obsidian-md-beautify-plugin > /dev/null 2>&1; then
-            gh release create "$VERSION" \
-              main.js manifest.json styles.css md-beautify-obsidian-${VERSION}.zip \
-              --repo sliiu/obsidian-md-beautify-plugin \
-              --title "$VERSION" \
-              --notes "$RELEASE_NOTES"
-          else
-            echo "Release $VERSION already exists, uploading/updating assets..."
-            gh release upload "$VERSION" \
-              main.js manifest.json styles.css \
-              --repo sliiu/obsidian-md-beautify-plugin \
-              --clobber
+          # 检查 Release 是否已存在，已存在则拒绝覆盖
+          if gh release view "$VERSION" --repo sliiu/obsidian-md-beautify-plugin > /dev/null 2>&1; then
+            echo "::error::Release $VERSION already exists. Refusing to overwrite."
+            exit 1
           fi
+
+          gh release create "$VERSION" \
+            main.js manifest.json styles.css md-beautify-obsidian-${VERSION}.zip \
+            --repo sliiu/obsidian-md-beautify-plugin \
+            --title "$VERSION" \
+            --notes "$RELEASE_NOTES"
