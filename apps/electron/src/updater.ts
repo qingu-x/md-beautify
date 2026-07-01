@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow } from 'electron';
 
-const GITHUB_REPO = 'qingu-x/md-beautify';
+const GITHUB_REPO = 'sliiu/md-beautify';
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases`;
 const API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 

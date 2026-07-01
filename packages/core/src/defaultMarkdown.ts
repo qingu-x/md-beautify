@@ -56,7 +56,7 @@ const DEFAULT_MARKDOWN_MAP: Record<DefaultMarkdownLocale, string> = {
 ## 四、链接与图片
 ### ✔ 超链接 3 种写法
 1. 行内式链接（最常用）：\`[链接文字](链接地址 "链接备注")\`
-   [MD Beautify](https://github.com/qingu-x/md-beautify "Markdown 排版工具")
+   [MD Beautify](https://github.com/sliiu/md-beautify "Markdown 排版工具")
 2. 参考式链接（适合多次引用同一链接）：先写 \`[链接文字][标记名]\`，文末定义标记
    [掘金][juejin] 、 [语雀][yuque]
 3. 锚点链接（跳转本文档内指定位置）：\`[跳转文字](#标题锚点名)\`
@@ -338,7 +338,7 @@ Syntax: \`- [ ]\` or \`- [x]\`.
 ## 4. Links and images
 ### ✔ Three link styles
 1. Inline links: \`[text](url "title")\`
-   [MD Beautify](https://github.com/qingu-x/md-beautify "Markdown layout tool")
+   [MD Beautify](https://github.com/sliiu/md-beautify "Markdown layout tool")
 2. Reference links: write \`[text][key]\`, define the key later
    [Juejin][juejin] 、 [Yuque][yuque]
 3. Anchor links: \`[Jump](#heading-id)\`

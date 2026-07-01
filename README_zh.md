@@ -20,9 +20,9 @@
 
 <p align="center">
   <a href="README.md">English</a> •
-  <a href="https://github.com/qingu-x/md-beautify">🌐 项目主页</a> •
-  <a href="https://github.com/qingu-x/md-beautify/releases">📦 下载桌面版</a> •
-  <a href="https://github.com/qingu-x/obsidian-md-beautify-plugin">Obsidian 插件</a>
+  <a href="https://github.com/sliiu/md-beautify">🌐 项目主页</a> •
+  <a href="https://github.com/sliiu/md-beautify/releases">📦 下载桌面版</a> •
+  <a href="https://github.com/sliiu/obsidian-md-beautify-plugin">Obsidian 插件</a>
 </p>
 
 <p align="center">
@@ -83,7 +83,7 @@ MD Beautify 基于 Wemd 的**色彩语义保全算法**，可在编辑器中高�
 
 ### 桌面版下载
 
-前往 [Releases](https://github.com/qingu-x/md-beautify/releases) 下载对应平台安装包：
+前往 [Releases](https://github.com/sliiu/md-beautify/releases) 下载对应平台安装包：
 
 - **macOS**: `.dmg`（Intel 版）/ `-arm64.dmg`（Apple Silicon 版）
 - **Windows**: `.exe`
@@ -171,7 +171,7 @@ MDB/
 
 ## 💬 反馈
 
-如有问题或建议，欢迎提交 [Issue](https://github.com/qingu-x/md-beautify/issues)。
+如有问题或建议，欢迎提交 [Issue](https://github.com/sliiu/md-beautify/issues)。
 
 如果你觉得这个项目对你有帮助，欢迎请作者喝杯咖啡！
 
@@ -181,9 +181,9 @@ MDB/
 
 ### 🧧 国内赞助
 
-| 微信支付                                                                                      | 支付宝                                                                                   |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| ![微信支付](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![支付宝](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
+| 微信支付                                                                                    | 支付宝                                                                                 |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![微信支付](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![支付宝](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
 
 ---
 

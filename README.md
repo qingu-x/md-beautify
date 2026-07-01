@@ -20,9 +20,9 @@
 
 <p align="center">
   <a href="README_zh.md">简体中文</a> •
-  <a href="https://github.com/qingu-x/md-beautify">🌐 Project Homepage</a> •
-  <a href="https://github.com/qingu-x/md-beautify/releases">📦 Download Desktop Version</a> •
-  <a href="https://github.com/qingu-x/obsidian-md-beautify-plugin">Obsidian Plugin</a>
+  <a href="https://github.com/sliiu/md-beautify">🌐 Project Homepage</a> •
+  <a href="https://github.com/sliiu/md-beautify/releases">📦 Download Desktop Version</a> •
+  <a href="https://github.com/sliiu/obsidian-md-beautify-plugin">Obsidian Plugin</a>
 </p>
 
 <p align="center">
@@ -83,7 +83,7 @@ Run the Web version locally to start writing immediately, no installation requir
 
 ### Desktop Version Download
 
-Go to [Releases](https://github.com/qingu-x/md-beautify/releases) to download the installer for your platform:
+Go to [Releases](https://github.com/sliiu/md-beautify/releases) to download the installer for your platform:
 
 - **macOS**: `.dmg` (Intel) / `-arm64.dmg` (Apple Silicon)
 - **Windows**: `.exe`
@@ -170,7 +170,7 @@ MDB/
 
 ## 💬 Feedback
 
-If you have questions or suggestions, please submit an [Issue](https://github.com/qingu-x/md-beautify/issues).
+If you have questions or suggestions, please submit an [Issue](https://github.com/sliiu/md-beautify/issues).
 
 If you find this project helpful, you can buy me a coffee!
 
@@ -180,9 +180,9 @@ If you find this project helpful, you can buy me a coffee!
 
 ### 🧧 WeChat / Alipay
 
-| WeChat Pay                                                                                      | Alipay                                                                                   |
-| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| ![WeChat Pay](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![Alipay](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
+| WeChat Pay                                                                                    | Alipay                                                                                 |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![WeChat Pay](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![Alipay](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
 
 ---
 

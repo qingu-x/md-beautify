@@ -753,7 +753,7 @@ function createMenu() {
                 },
                 {
                     label: t('githubRepo'),
-                    click: () => shell.openExternal('https://github.com/qingu-x/md-beautify'),
+                    click: () => shell.openExternal('https://github.com/sliiu/md-beautify'),
                 },
             ],
         },

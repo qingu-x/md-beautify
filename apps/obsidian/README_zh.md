@@ -1,6 +1,6 @@
 # MD Beautify for Obsidian
 
-**MD Beautify** 是一款为 Obsidian 打造的优雅 Markdown 排版插件。它是 [MD Beautify](https://github.com/qingu-x/md-beautify) 的 Obsidian 集成版本。它可以帮助你将笔记完美地转化为适用于微信公众号等平台的富文本格式。
+**MD Beautify** 是一款为 Obsidian 打造的优雅 Markdown 排版插件。它是 [MD Beautify](https://github.com/sliiu/md-beautify) 的 Obsidian 集成版本。它可以帮助你将笔记完美地转化为适用于微信公众号等平台的富文本格式。
 
 [English](README.md) | [简体中文](README_zh.md)
 
@@ -19,13 +19,13 @@
 
 ### 📸 插件截图
 
-![MD Beautify for Obsidian](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/screenshot.jpg)
+![MD Beautify for Obsidian](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/obsidian/screenshot.jpg)
 
 ### 🖼️ 效果预览
 
-| 浅色模式                                                                                       | 深色模式                                                                                      |
-| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| ![浅色模式](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/light.jpg) | ![深色模式](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/obsidian/dark.jpg) |
+| 浅色模式                                                                                     | 深色模式                                                                                    |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| ![浅色模式](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/obsidian/light.jpg) | ![深色模式](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/obsidian/dark.jpg) |
 
 ### 🚀 使用方法
 
@@ -61,13 +61,13 @@
 ### 📥 安装方式
 
 - **社区插件市场**：在 Obsidian 插件市场搜索 `MD Beautify`（正在审核中）。
-- **手动安装**：从 [Latest Release](https://github.com/qingu-x/obsidian-md-beautify-plugin/releases) 下载 `main.js`, `manifest.json`, `styles.css`，放入仓库的 `.obsidian/plugins/md-beautify/` 文件夹中。
+- **手动安装**：从 [Latest Release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases) 下载 `main.js`, `manifest.json`, `styles.css`，放入仓库的 `.obsidian/plugins/md-beautify/` 文件夹中。
 
 ---
 
 ### 💬 支持与反馈
 
-如果你喜欢这个插件，请在 [GitHub](https://github.com/qingu-x/obsidian-md-beautify-plugin) 上给它一个 ⭐！
+如果你喜欢这个插件，请在 [GitHub](https://github.com/sliiu/obsidian-md-beautify-plugin) 上给它一个 ⭐！
 
 如果你觉得这个插件对你有帮助，想要支持后续的开发，欢迎请作者喝杯咖啡！
 
@@ -77,11 +77,11 @@
 
 ### 🧧 国内赞助
 
-| 微信支付                                                                                      | 支付宝                                                                                   |
-| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| ![微信支付](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![支付宝](https://github.com/qingu-x/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
+| 微信支付                                                                                    | 支付宝                                                                                 |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![微信支付](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/pay/wechatpay.jpg) | ![支付宝](https://github.com/sliiu/md-beautify/blob/vue/.github/assets/pay/alipay.jpg) |
 
-如果有 Bug 或功能建议，请 [提交 Issue](https://github.com/qingu-x/obsidian-md-beautify-plugin/issues)。
+如果有 Bug 或功能建议，请 [提交 Issue](https://github.com/sliiu/obsidian-md-beautify-plugin/issues)。
 
 ---
 
