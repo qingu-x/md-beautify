@@ -9,7 +9,41 @@ on:
   workflow_dispatch: # 允许手动触发，方便调试和补发版本
 
 jobs:
+  check-release:
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read plugin version
+        id: version
+        run: echo "version=$(node -p "require('./apps/obsidian/src/assets/manifest.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if release already exists
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.OBSIDIAN_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::OBSIDIAN_RELEASE_TOKEN is empty or not accessible."
+            exit 1
+          fi
+
+          VERSION="${{ steps.version.outputs.version }}"
+          if gh release view "$VERSION" --repo sliiu/obsidian-md-beautify-plugin > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::warning::Release $VERSION already exists. Skipping sync, build and publish."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Release $VERSION does not exist, proceeding."
+          fi
+
   sync-and-publish:
+    needs: check-release
+    if: needs.check-release.outputs.exists != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -45,16 +79,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.OBSIDIAN_RELEASE_TOKEN }}
         run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "::error::OBSIDIAN_RELEASE_TOKEN is empty or not accessible."
-            echo "If this is an Organization Secret, please check:"
-            echo "1. Go to Organization Settings > Secrets and variables > Actions"
-            echo "2. Find 'OBSIDIAN_RELEASE_TOKEN' and click the edit icon"
-            echo "3. Ensure 'Repository access' includes this repository"
-            echo "4. Ensure 'Visibility' is compatible with this repository's privacy (Public/Private)"
-            exit 1
-          fi
-
           # 准备同步目录
           TEMP_DIR=$(mktemp -d)
           rsync -av --exclude='node_modules' --exclude='dist' apps/obsidian/ $TEMP_DIR/
@@ -87,7 +111,7 @@ jobs:
           git push -f origin main
 
           # 创建 Release
-          VERSION=$(node -p "require('./manifest.json').version")
+          VERSION="${{ needs.check-release.outputs.version }}"
           zip -j md-beautify-obsidian-${VERSION}.zip main.js manifest.json styles.css
           echo "Creating release for version $VERSION"
           
@@ -96,12 +120,6 @@ jobs:
           COMMIT_MSG=$(cd $GITHUB_WORKSPACE && git log -1 --pretty=format:"%s" $GITHUB_SHA)
           RELEASE_NOTES=$(printf "Automated release from monorepo\n\n**Source commit:** [\`%s\`](%s/%s/commit/%s)\n**Commit message:** %s" \
             "$COMMIT_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$COMMIT_MSG")
-          
-          # 检查 Release 是否已存在，已存在则拒绝覆盖
-          if gh release view "$VERSION" --repo sliiu/obsidian-md-beautify-plugin > /dev/null 2>&1; then
-            echo "::error::Release $VERSION already exists. Refusing to overwrite."
-            exit 1
-          fi
 
           gh release create "$VERSION" \
             main.js manifest.json styles.css md-beautify-obsidian-${VERSION}.zip \

@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, TFile, setIcon, requestUrl, Menu } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, TFile, setIcon, requestUrl, Menu, DropdownComponent } from 'obsidian';
 import mermaid from 'mermaid';
 import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, hasMathFormula, renderMathInElement, katexInlineCss, basicTheme, customDefaultTheme, codeGithubTheme, academicPaperTheme, auroraGlassTheme, bauhausTheme, cyberpunkNeonTheme, knowledgeBaseTheme, luxuryGoldTheme, morandiForestTheme, neoBrutalismTheme, receiptTheme, sunsetFilmTheme, templateTheme, generateExportHtml, exportToPdfNative, getDefaultMarkdown } from '@mdb/core';
 import { t, getLocaleKey } from './i18n';
@@ -204,6 +204,22 @@ const allThemes: Record<string, string> = {
 	sunsetFilm: basicTheme + '\n' + sunsetFilmTheme + '\n' + codeGithubTheme,
 	template: basicTheme + '\n' + templateTheme + '\n' + codeGithubTheme
 };
+
+function populateThemeDropdown(dropdown: DropdownComponent, plugin: MDBeautifyPlugin) {
+	dropdown.selectEl.empty();
+	Object.keys(allThemes).forEach(themeKey => {
+		const label = t(`theme_${themeKey}` as any) || themeKey;
+		dropdown.addOption(themeKey, label);
+	});
+	plugin.settings.customThemes.forEach(themeName => {
+		dropdown.addOption(themeName, themeName);
+	});
+	const validThemes = new Set([...Object.keys(allThemes), ...plugin.settings.customThemes]);
+	const theme = validThemes.has(plugin.settings.defaultTheme)
+		? plugin.settings.defaultTheme
+		: 'basic';
+	dropdown.setValue(theme);
+}
 
 interface MermaidDesignerVariables {
 	fontFamily?: string;
@@ -1485,22 +1501,15 @@ class MDBeautifyPreviewView extends ItemView {
 		
 		const themeSetting = new Setting(themeContainer)
 			.addDropdown(dropdown => {
-				// Built-in themes
-				Object.keys(allThemes).forEach(themeKey => {
-					const label = t(`theme_${themeKey}` as any) || themeKey;
-					dropdown.addOption(themeKey, label);
+				populateThemeDropdown(dropdown, this.plugin);
+				dropdown.selectEl.addEventListener('mousedown', () => {
+					populateThemeDropdown(dropdown, this.plugin);
 				});
-				// Custom themes
-				this.plugin.settings.customThemes.forEach(themeName => {
-					dropdown.addOption(themeName, themeName);
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.defaultTheme = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateAllPreviews(true);
 				});
-
-				dropdown.setValue(this.plugin.settings.defaultTheme)
-					.onChange(async (value) => {
-						this.plugin.settings.defaultTheme = value;
-						await this.plugin.saveSettings();
-						this.plugin.updateAllPreviews(true);
-					});
 			});
 	themeSetting.infoEl.remove();
 
@@ -2339,23 +2348,13 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		new Setting(container)
 			.setName(t('setting_base_theme'))
 			.addDropdown(dropdown => {
-				// Built-in themes
-				Object.keys(allThemes).forEach(themeKey => {
-					const label = t(`theme_${themeKey}` as any) || themeKey;
-					dropdown.addOption(themeKey, label);
+				populateThemeDropdown(dropdown, this.plugin);
+				dropdown.onChange(async (value) => {
+					this.plugin.settings.defaultTheme = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateAllPreviews(true);
+					this.display();
 				});
-				// Custom themes
-				this.plugin.settings.customThemes.forEach((themeName: string) => {
-					dropdown.addOption(themeName, themeName);
-				});
-
-				dropdown.setValue(themeId)
-					.onChange(async (value) => {
-						this.plugin.settings.defaultTheme = value;
-						await this.plugin.saveSettings();
-						this.plugin.updateAllPreviews(true);
-						this.display();
-					});
 			});
 
 		new Setting(container)
