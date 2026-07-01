@@ -1,0 +1,44 @@
+name: Attest Obsidian Release
+
+# Re-attest an existing release on sliiu/obsidian-md-beautify-plugin when assets
+# were published before provenance signing was enabled, or after removing extra files.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to attest (e.g. 1.0.7)
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download published assets
+        env:
+          GH_TOKEN: ${{ secrets.OBSIDIAN_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::OBSIDIAN_RELEASE_TOKEN is empty or not accessible."
+            exit 1
+          fi
+          mkdir -p release-artifacts
+          gh release download "${{ inputs.tag }}" \
+            --repo sliiu/obsidian-md-beautify-plugin \
+            --pattern main.js \
+            --pattern manifest.json \
+            --pattern styles.css \
+            --dir release-artifacts
+
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            release-artifacts/main.js
+            release-artifacts/manifest.json
+            release-artifacts/styles.css

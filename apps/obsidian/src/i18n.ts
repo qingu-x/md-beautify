@@ -243,7 +243,8 @@ const translations = {
 export type TranslationKey = keyof typeof translations.en;
 
 export const getLocaleKey = (): 'zh' | 'en' => {
-	return (moment.locale() === 'zh-cn' || moment.locale() === 'zh') ? 'zh' : 'en';
+	const locale: string = moment.locale();
+	return (locale === 'zh-cn' || locale === 'zh') ? 'zh' : 'en';
 };
 
 export const t = (key: TranslationKey, vars?: Record<string, string>): string => {

@@ -365,6 +365,28 @@
   width: 800px;
 }
 
+.mdb-offscreen {
+  display: none;
+}
+
+.mdb-mermaid-figure {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.mdb-mermaid-copy-img {
+  width: 100%;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.mdb-preview-custom-height {
+  height: auto;
+  min-height: 100%;
+}
+
 /* Mermaid 包装器样式 */
 #mdb .mermaid-wrapper {
   isolation: isolate;

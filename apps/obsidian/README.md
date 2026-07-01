@@ -65,6 +65,16 @@
 - **From Community Plugins**: Search for `MD Beautify` in Obsidian's Community Plugins (Coming soon).
 - **Manual**: Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases), and place them in your vault's `.obsidian/plugins/md-beautify/` folder.
 
+### Clipboard access
+
+Obsidian shows a **Clipboard Access** disclosure because this plugin uses the Clipboard API.
+
+- **Write-only, user-triggered.** The plugin writes to the clipboard only when you run **Copy Beautified** (or a related copy action). It does not read clipboard contents.
+- **Payload scope.** Copied data is built from the active Markdown note you choose to copy, as `text/html` with a `text/plain` fallback.
+- **Optional paste handling.** When **Auto-upload images** is enabled, paste/drop handlers inspect clipboard _event data_ for images or Mermaid blocks to upload or normalize. This is not a general clipboard read of existing clipboard contents.
+
+Release assets (`main.js`, `manifest.json`, `styles.css`) are built in GitHub Actions and include [artifact attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds) so users can verify provenance.
+
 ---
 
 ### 💬 Support & Feedback

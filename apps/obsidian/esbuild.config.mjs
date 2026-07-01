@@ -1,8 +1,14 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
-import path from "path";
 import { createRequire } from "module";
+
+const builtins = [
+	"assert", "buffer", "child_process", "cluster", "console", "constants",
+	"crypto", "dgram", "dns", "domain", "events", "fs", "http", "https",
+	"module", "net", "os", "path", "punycode", "querystring", "readline",
+	"repl", "stream", "string_decoder", "sys", "timers", "tls", "tty",
+	"url", "util", "vm", "zlib",
+];
 
 const require = createRequire(import.meta.url);
 const banner =

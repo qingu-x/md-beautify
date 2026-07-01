@@ -63,6 +63,16 @@
 - **社区插件市场**：在 Obsidian 插件市场搜索 `MD Beautify`（正在审核中）。
 - **手动安装**：从 [Latest Release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases) 下载 `main.js`, `manifest.json`, `styles.css`，放入仓库的 `.obsidian/plugins/md-beautify/` 文件夹中。
 
+### 剪贴板访问说明
+
+Obsidian 会显示 **Clipboard Access（剪贴板访问）** 提示，因为本插件使用了 Clipboard API。
+
+- **仅写入、由用户触发。** 仅在你执行 **复制美化内容**（或相关复制操作）时写入剪贴板，不会读取剪贴板已有内容。
+- **数据范围。** 复制内容由你当前选中的 Markdown 笔记生成，包含 `text/html` 与 `text/plain` 两种格式。
+- **可选粘贴处理。** 开启 **自动上传图片** 后，粘贴/拖放处理器会检查剪贴板*事件数据*中的图片或 Mermaid 块以上传或规范化，并非读取系统剪贴板中的任意内容。
+
+Release 资源（`main.js`、`manifest.json`、`styles.css`）由 GitHub Actions 构建，并附带 [artifact attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds)，便于验证构建来源。
+
 ---
 
 ### 💬 支持与反馈

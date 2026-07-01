@@ -48,6 +48,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,7 +78,22 @@ jobs:
           cd apps/obsidian
           pnpm run build
 
-      - name: Push and Create Release
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-artifacts
+          cp apps/obsidian/dist/main.js release-artifacts/main.js
+          cp apps/obsidian/src/assets/manifest.json release-artifacts/manifest.json
+          cp apps/obsidian/dist/styles.css release-artifacts/styles.css
+
+      - name: Attest release assets
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            release-artifacts/main.js
+            release-artifacts/manifest.json
+            release-artifacts/styles.css
+
+      - name: Push to standalone repo and create release
         env:
           GH_TOKEN: ${{ secrets.OBSIDIAN_RELEASE_TOKEN }}
         run: |
@@ -84,10 +101,10 @@ jobs:
           TEMP_DIR=$(mktemp -d)
           rsync -av --exclude='node_modules' --exclude='dist' apps/obsidian/ $TEMP_DIR/
           
-          # 确保关键文件在根目录
-          cp apps/obsidian/src/assets/manifest.json $TEMP_DIR/manifest.json
-          [ -f apps/obsidian/dist/main.js ] && cp apps/obsidian/dist/main.js $TEMP_DIR/main.js
-          [ -f apps/obsidian/dist/styles.css ] && cp apps/obsidian/dist/styles.css $TEMP_DIR/styles.css
+          # 使用与 attestation 相同的构建产物
+          cp release-artifacts/manifest.json $TEMP_DIR/manifest.json
+          cp release-artifacts/main.js $TEMP_DIR/main.js
+          cp release-artifacts/styles.css $TEMP_DIR/styles.css
           
           # 同步赞助配置文件
           mkdir -p $TEMP_DIR/.github
@@ -111,9 +128,7 @@ jobs:
           git commit -m "Sync from monorepo: ${GITHUB_SHA::7}"
           git push -f origin main
 
-          # 创建 Release
           VERSION="${{ needs.check-release.outputs.version }}"
-          zip -j md-beautify-obsidian-${VERSION}.zip main.js manifest.json styles.css
           echo "Creating release for version $VERSION"
           
           # 获取 monorepo commit 信息
@@ -122,8 +137,11 @@ jobs:
           RELEASE_NOTES=$(printf "Automated release from monorepo\n\n**Source commit:** [\`%s\`](%s/%s/commit/%s)\n**Commit message:** %s" \
             "$COMMIT_SHA" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$COMMIT_MSG")
 
+          # Obsidian only downloads main.js, manifest.json, and styles.css from releases
           gh release create "$VERSION" \
-            main.js manifest.json styles.css md-beautify-obsidian-${VERSION}.zip \
+            "$GITHUB_WORKSPACE/release-artifacts/main.js" \
+            "$GITHUB_WORKSPACE/release-artifacts/manifest.json" \
+            "$GITHUB_WORKSPACE/release-artifacts/styles.css" \
             --repo sliiu/obsidian-md-beautify-plugin \
             --title "$VERSION" \
             --notes "$RELEASE_NOTES"

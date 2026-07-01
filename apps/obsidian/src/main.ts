@@ -1,10 +1,57 @@
-import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, TFile, setIcon, requestUrl, Menu, DropdownComponent } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, TFile, setIcon, requestUrl, Menu, DropdownComponent, Editor } from 'obsidian';
 import mermaid from 'mermaid';
 import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, hasMathFormula, renderMathInElement, katexInlineCss, basicTheme, customDefaultTheme, codeGithubTheme, academicPaperTheme, auroraGlassTheme, bauhausTheme, cyberpunkNeonTheme, knowledgeBaseTheme, luxuryGoldTheme, morandiForestTheme, neoBrutalismTheme, receiptTheme, sunsetFilmTheme, templateTheme, generateExportHtml, exportToPdfNative, getDefaultMarkdown } from '@mdb/core';
-import { t, getLocaleKey } from './i18n';
+import { t, getLocaleKey, type TranslationKey } from './i18n';
+import { getEditorScrollDOM, getEditorScrollRatio, setEditorScrollRatio } from './editorScroll';
+
+const setElementHtml = (el: HTMLElement, html: string): void => {
+	el.empty();
+	const parsed = new DOMParser().parseFromString(html, 'text/html');
+	el.append(...Array.from(parsed.body.childNodes));
+};
+
+const appendSvgMarkup = (container: HTMLElement, svgMarkup: string): void => {
+	const parsed = new DOMParser().parseFromString(svgMarkup, 'image/svg+xml');
+	const svgEl = parsed.documentElement;
+	if (svgEl?.tagName.toLowerCase() === 'svg') {
+		container.appendChild(container.doc.importNode(svgEl, true));
+	}
+};
+
+const buildPreviewThemeCss = (scopedCss: string, isDarkMode: boolean): string => {
+	const colorScheme = isDarkMode ? 'dark' : 'light';
+	return `${katexInlineCss}
+${scopedCss}
+#mdb {
+	color-scheme: ${colorScheme};
+}
+#mdb * {
+	color-scheme: ${colorScheme};
+}
+#mdb .katex-mathml {
+	display: none !important;
+}
+#mdb .katex-html {
+	display: inline-block !important;
+}
+#mdb .katex-display .katex-html {
+	display: block !important;
+}
+.mdb-dark-mode .katex {
+	color: var(--text-normal);
+}
+.mdb-view-controls,
+.mdb-view-controls * {
+	color-scheme: unset;
+	color: var(--text-normal);
+}`;
+};
+
+const themeLabelKey = (themeKey: string): TranslationKey => `theme_${themeKey}` as TranslationKey;
+const hostLabelKey = (hostKey: string): TranslationKey => `host_${hostKey}` as TranslationKey;
 
 const scopeCss = (css: string): string => {
-	return css.replace(/(^|\n)(?!@)([^{}@]+)\{/g, (match, prefix, selector) => {
+	return css.replace(/(^|\n)(?!@)([^{}@]+)\{/g, (match: string, prefix: string, selector: string) => {
 		const trimmed = selector.trim();
 		
 		// 跳过空选择器
@@ -208,7 +255,7 @@ const allThemes: Record<string, string> = {
 function populateThemeDropdown(dropdown: DropdownComponent, plugin: MDBeautifyPlugin) {
 	dropdown.selectEl.empty();
 	Object.keys(allThemes).forEach(themeKey => {
-		const label = t(`theme_${themeKey}` as any) || themeKey;
+		const label = t(themeLabelKey(themeKey)) || themeKey;
 		dropdown.addOption(themeKey, label);
 	});
 	plugin.settings.customThemes.forEach(themeName => {
@@ -227,25 +274,26 @@ interface MermaidDesignerVariables {
 	mermaidTheme?: string;
 }
 
+interface MermaidThemeVariables {
+	fontFamily?: string;
+	fontSize?: string;
+	darkMode?: boolean;
+	[key: string]: string | number | boolean | undefined;
+}
+
 interface MermaidConfig {
 	theme: string;
 	darkMode?: boolean;
 	themeCSS?: string;
-	themeVariables: {
-		fontFamily?: string;
-		fontSize?: string;
-		[key: string]: any;
-	};
+	themeVariables: MermaidThemeVariables;
 	flowchart?: {
 		htmlLabels?: boolean;
 		padding?: number;
 		nodeSpacing?: number;
 		rankSpacing?: number;
-		[key: string]: any;
 	};
 	er?: {
 		fontSize?: number;
-		[key: string]: any;
 	};
 }
 
@@ -262,7 +310,7 @@ const getMermaidConfig = (
 	const fontSizeStr = designerVariables?.fontSize || "16px";
 	const fontSizeInt = parseInt(fontSizeStr) || 16;
 	
-	const themeVariables: any = {
+	const themeVariables: MermaidThemeVariables = {
 		fontFamily: mermaidFontFamily,
 		fontSize: fontSizeStr,
 		darkMode: isDarkMode,
@@ -464,11 +512,11 @@ const svgMarkupToPng = async (svgMarkup: string): Promise<string> => {
 
 	await new Promise<void>((resolve, reject) => {
 		img.onload = () => resolve();
-		img.onerror = (e) => reject(e);
+		img.onerror = () => reject(new Error('Failed to load SVG image'));
 	});
 
 	const scale = 3;
-	const canvas = document.createElement("canvas");
+	const canvas = img.ownerDocument.createElement("canvas");
 	canvas.width = width * scale;
 	canvas.height = height * scale;
 	const ctx = canvas.getContext("2d")!;
@@ -489,7 +537,6 @@ const renderMermaid = async (
 			".mermaid, pre.mermaid, pre.language-mermaid, pre.lang-mermaid, pre.custom > code.hljs, pre > code.language-mermaid, pre > code.lang-mermaid, pre > code.mermaid, code.language-mermaid, code.lang-mermaid, code.mermaid",
 		),
 	);
-	console.log("renderMermaid starting", { nodeCount: mermaidNodes.length, isDarkMode, renderIdBase });
 	if (mermaidNodes.length === 0) return;
 
 	ensureMermaidInitialized();
@@ -499,8 +546,8 @@ const renderMermaid = async (
 	const visited = new Set<HTMLElement>();
 	mermaidNodes.forEach((node) => {
 		const isCode = node.tagName === "CODE";
-		const containerEl = (isCode ? node.parentElement : node) as HTMLElement | null;
-		if (!containerEl || visited.has(containerEl)) return;
+		const containerEl = isCode ? node.parentElement : node;
+		if (!(containerEl instanceof HTMLElement) || visited.has(containerEl)) return;
 		visited.add(containerEl);
 		const diagramSource = isCode ? node.textContent : containerEl.dataset.mermaidRaw || node.textContent;
 		const diagram = normalizeMermaidText(diagramSource ?? "");
@@ -510,13 +557,6 @@ const renderMermaid = async (
 			node.classList.contains("lang-mermaid") ||
 			node.classList.contains("mermaid") ||
 			isMermaidDiagramText(diagram);
-		
-		console.log("Checking node", { 
-			tagName: node.tagName, 
-			classes: Array.from(node.classList),
-			shouldRender,
-			diagramPrefix: diagram.substring(0, 20)
-		});
 
 		if (!diagram.trim() || !shouldRender) return;
 		containerEl.classList.add("mermaid");
@@ -525,8 +565,6 @@ const renderMermaid = async (
 		}
 		targets.push({ container: containerEl, diagram });
 	});
-
-	console.log("Targets found", targets.length);
 
 	for (const [index, target] of targets.entries()) {
 		const block = target.container;
@@ -545,12 +583,11 @@ const renderMermaid = async (
 
 			const normalizedSvg = normalizeMermaidSvg(svg);
 			
-			const wrapper = document.createElement('div');
-			wrapper.className = 'mermaid-wrapper';
+			const wrapper = container.doc.createDiv({ cls: 'mermaid-wrapper' });
 			if (!isDarkMode) {
 				wrapper.setAttribute('data-ui-theme', 'light');
 			}
-			wrapper.innerHTML = normalizedSvg;
+			appendSvgMarkup(wrapper, normalizedSvg);
 			
 			const svgEl = wrapper.querySelector('svg');
 			if (svgEl) {
@@ -565,15 +602,15 @@ const renderMermaid = async (
 			if (block.parentNode) {
 				block.parentNode.replaceChild(wrapper, block);
 			} else {
-				block.innerHTML = '';
+				block.empty();
 				block.appendChild(wrapper);
 			}
 
-		} catch (error: any) {
-			const errorEl = document.createElement('div');
-			errorEl.className = 'mermaid-error';
-			errorEl.textContent = `${t('mermaid_render_failed')}${error?.message || String(error)}`;
-			block.innerHTML = '';
+		} catch (error: unknown) {
+			const errorEl = block.doc.createDiv({ cls: 'mermaid-error' });
+			const message = error instanceof Error ? error.message : String(error);
+			errorEl.setText(`${t('mermaid_render_failed')}${message}`);
+			block.empty();
 			block.appendChild(errorEl);
 		}
 	}
@@ -599,8 +636,8 @@ const renderMermaidBlocksForCopy = async (
 	const visited = new Set<HTMLElement>();
 	mermaidNodes.forEach((node) => {
 		const isCode = node.tagName === "CODE";
-		const containerEl = (isCode ? node.parentElement : node) as HTMLElement | null;
-		if (!containerEl || visited.has(containerEl)) return;
+		const containerEl = isCode ? node.parentElement : node;
+		if (!(containerEl instanceof HTMLElement) || visited.has(containerEl)) return;
 		visited.add(containerEl);
 		const diagramSource = isCode ? node.textContent : containerEl.dataset.mermaidRaw || node.textContent;
 		const diagram = normalizeMermaidText(diagramSource ?? "");
@@ -639,39 +676,45 @@ const renderMermaidBlocksForCopy = async (
 			})();
 
 			const timeoutPromise = new Promise<string>((_, reject) => 
-				setTimeout(() => reject(new Error('Mermaid render timeout')), renderTimeout)
+				window.setTimeout(() => reject(new Error('Mermaid render timeout')), renderTimeout)
 			);
 
 			const pngDataUrl = await Promise.race([renderPromise, timeoutPromise]);
 
-			const figure = document.createElement("div");
-			figure.style.cssText = "margin: 1em 0; text-align: center;";
+			const figure = target.container.doc.createDiv({ cls: 'mdb-mermaid-figure' });
 			figure.setAttribute('data-tool', 'MD Beautify');
 
-			const img = document.createElement("img");
+			const img = figure.doc.createEl('img', { cls: 'mdb-mermaid-copy-img' });
 			img.src = pngDataUrl;
-			img.style.cssText = "width: 100%; display: block; margin: 0 auto; max-width: 100%; height: auto;";
 
 			figure.appendChild(img);
 			target.container.parentNode?.replaceChild(figure, target.container);
 		} catch (error) {
 			console.error(`[Obsidian MD Beautify] Mermaid render failed (${index + 1}/${total}):`, error);
 			// 渲染失败时，保留原始代码块
-			const errorDiv = document.createElement("div");
-			errorDiv.style.cssText = "color: #c62828; background: rgba(198, 40, 40, 0.08); padding: 12px; border-radius: 6px; margin: 1em 0;";
-			errorDiv.textContent = `图表渲染失败: ${error instanceof Error ? error.message : String(error)}`;
+			const errorDiv = target.container.doc.createDiv({ cls: 'mermaid-error' });
+			errorDiv.setText(`图表渲染失败: ${error instanceof Error ? error.message : String(error)}`);
 			target.container.parentNode?.insertBefore(errorDiv, target.container);
 		}
 	}
 };
 
+type ImageHostKey = 'official' | 'qiniu' | 'aliyun' | 'tencent' | 's3';
+type ImageHostConfig = Record<string, string>;
+
+const IMAGE_HOST_KEYS: ImageHostKey[] = ['official', 'qiniu', 'aliyun', 'tencent', 's3'];
+
+function isImageHostKey(value: string): value is ImageHostKey {
+	return (IMAGE_HOST_KEYS as string[]).includes(value);
+}
+
 interface MDBeautifySettings {
 	defaultTheme: string;
 	copyAsHtml: boolean;
 	customThemeStyles: Record<string, string>;
-	activeImageHost: string;
+	activeImageHost: ImageHostKey;
 	officialUploadUrl: string;
-	imageHostConfigs: Record<string, any>;
+	imageHostConfigs: Record<ImageHostKey, ImageHostConfig>;
 	autoUploadImages: boolean;
 	customThemes: string[];
 	controlsVisible: boolean;
@@ -717,7 +760,7 @@ const DEFAULT_SETTINGS: MDBeautifySettings = {
 
 export default class MDBeautifyPlugin extends Plugin {
 	settings: MDBeautifySettings = DEFAULT_SETTINGS;
-	parser: any;
+	parser!: ReturnType<typeof createMarkdownParser>;
 
 	async onload() {
 		await this.loadSettings();
@@ -731,7 +774,7 @@ export default class MDBeautifyPlugin extends Plugin {
 
 		// Add ribbon icons
 		const ribbonIconEl = this.addRibbonIcon('eye', t('preview_ribbon_tooltip'), (_evt: MouseEvent) => {
-			this.activateView();
+			void this.activateView();
 		});
 		ribbonIconEl.addClass('mdb-ribbon-class');
 
@@ -740,7 +783,7 @@ export default class MDBeautifyPlugin extends Plugin {
 			id: 'copy-beautified',
 			name: t('copy_command_name'),
 			callback: () => {
-				this.copyBeautified();
+				void this.copyBeautified();
 			}
 		});
 
@@ -748,7 +791,7 @@ export default class MDBeautifyPlugin extends Plugin {
 			id: 'preview-beautified',
 			name: t('preview_command_name'),
 			callback: () => {
-				this.activateView();
+				void this.activateView();
 			}
 		});
 
@@ -756,7 +799,7 @@ export default class MDBeautifyPlugin extends Plugin {
 			id: 'upload-all-images',
 			name: t('command_upload_all_images'),
 			callback: () => {
-				this.uploadAllImagesInActiveView();
+				void this.uploadAllImagesInActiveView();
 			}
 		});
 
@@ -764,29 +807,33 @@ export default class MDBeautifyPlugin extends Plugin {
 			id: 'export-html',
 			name: t('export_html_command'),
 			callback: () => {
-				this.exportToHtml();
+				void this.exportToHtml();
 			}
 		});
 
 		this.addCommand({
 			id: 'export-pdf',
 			name: t('export_pdf_command'),
-			callback: () => this.exportToPdf(),
+			callback: () => void this.exportToPdf(),
 		});
 
 		// Add event listener for paste and drop events
 		this.registerEvent(
 			this.app.workspace.on('editor-paste', (evt, editor, _view) => {
+				if (evt.defaultPrevented) return;
 				if (this.settings.autoUploadImages) {
-					this.onPaste(evt, editor);
+					void this.onPaste(evt, editor);
+					evt.preventDefault();
 				}
 			})
 		);
 
 		this.registerEvent(
 			this.app.workspace.on('editor-drop', (evt, editor, _view) => {
+				if (evt.defaultPrevented) return;
 				if (this.settings.autoUploadImages) {
-					this.onPaste(evt as any, editor);
+					void this.onPaste(evt, editor);
+					evt.preventDefault();
 				}
 			})
 		);
@@ -831,8 +878,8 @@ export default class MDBeautifyPlugin extends Plugin {
 						menu.addItem((item) => {
 							item.setTitle(t('btn_upload'))
 								.setIcon('upload-cloud')
-								.onClick(async () => {
-									await this.uploadImageFromLink(editor, fullMatch, path);
+								.onClick(() => {
+									void this.uploadImageFromLink(editor, fullMatch, path);
 								});
 						});
 					}
@@ -852,7 +899,7 @@ export default class MDBeautifyPlugin extends Plugin {
 			});
 		});
 		
-		observer.observe(document.body, {
+		observer.observe(this.app.workspace.containerEl.doc.body, {
 			attributes: true,
 			attributeFilter: ['class']
 		});
@@ -861,7 +908,7 @@ export default class MDBeautifyPlugin extends Plugin {
 		this.register(() => observer.disconnect());
 	}
 
-	async onPaste(evt: ClipboardEvent | DragEvent, editor: any) {
+	async onPaste(evt: ClipboardEvent | DragEvent, editor: Editor) {
 		if (evt instanceof ClipboardEvent && evt.clipboardData) {
 			const text = evt.clipboardData.getData('text/plain');
 			const mermaidTextBlock = this.extractMermaidFromText(text);
@@ -899,9 +946,10 @@ export default class MDBeautifyPlugin extends Plugin {
 						editor.replaceSelection(`![image](${url})`);
 						notice.hide();
 						new Notice(t('msg_upload_success'));
-					} catch (err: any) {
+					} catch (err: unknown) {
 						notice.hide();
-						new Notice(t('msg_upload_failed') + err.message);
+						const message = err instanceof Error ? err.message : String(err);
+						new Notice(t('msg_upload_failed') + message);
 					}
 				}
 			}
@@ -929,18 +977,18 @@ export default class MDBeautifyPlugin extends Plugin {
 		return `\`\`\`mermaid\n${diagram.trim()}\n\`\`\``;
 	}
 
-	async uploadImageFromLink(editor: any, fullLink: string, path: string) {
+	async uploadImageFromLink(editor: Editor, fullLink: string, path: string) {
 		const notice = new Notice(t('msg_uploading_image'), 0);
 		try {
 			// Resolve the file from Obsidian vault
 			const decodedPath = decodeURIComponent(path);
 			const file = this.app.metadataCache.getFirstLinkpathDest(decodedPath, "");
-			if (!file) {
+			if (!(file instanceof TFile)) {
 				throw new Error("File not found: " + decodedPath);
 			}
 
 			// Read file as array buffer
-			const arrayBuffer = await this.app.vault.readBinary(file as TFile);
+			const arrayBuffer = await this.app.vault.readBinary(file);
 			const blob = new Blob([arrayBuffer], { type: 'image/' + file.extension });
 			const fileObj = new File([blob], file.name, { type: 'image/' + file.extension });
 
@@ -954,9 +1002,10 @@ export default class MDBeautifyPlugin extends Plugin {
 			
 			notice.hide();
 			new Notice(t('msg_upload_success'));
-		} catch (err: any) {
+		} catch (err: unknown) {
 			notice.hide();
-			new Notice(t('msg_upload_failed') + err.message);
+			const message = err instanceof Error ? err.message : String(err);
+			new Notice(t('msg_upload_failed') + message);
 		}
 	}
 
@@ -995,7 +1044,16 @@ export default class MDBeautifyPlugin extends Plugin {
 				throw new Error(`Upload failed with status ${response.status}`);
 			}
 			
-			return response.json.url;
+			const payload: unknown = response.json;
+			if (
+				typeof payload !== 'object' ||
+				payload === null ||
+				!('url' in payload) ||
+				typeof payload.url !== 'string'
+			) {
+				throw new Error('Upload response missing url');
+			}
+			return payload.url;
 		}
 		
 		throw new Error('Unsupported image host: ' + host);
@@ -1075,10 +1133,9 @@ export default class MDBeautifyPlugin extends Plugin {
 
 	async activateView() {
 		const { workspace } = this.app;
-
-		let leaf: WorkspaceLeaf | null = null;
 		const leaves = workspace.getLeavesOfType(VIEW_TYPE_MDBEAUTIFY_PREVIEW);
 
+		let leaf: WorkspaceLeaf | null;
 		if (leaves.length > 0) {
 			leaf = leaves[0];
 		} else {
@@ -1089,7 +1146,7 @@ export default class MDBeautifyPlugin extends Plugin {
 		}
 
 		if (leaf) {
-			workspace.revealLeaf(leaf);
+			await workspace.revealLeaf(leaf);
 		}
 	}
 
@@ -1141,10 +1198,8 @@ export default class MDBeautifyPlugin extends Plugin {
 			
 			const html = this.parser.render(content);
 			
-		const tempContainer = document.createElement('div');
-		tempContainer.innerHTML = html;
-		tempContainer.style.display = 'none';
-		document.body.appendChild(tempContainer);
+		const tempContainer = activeView.containerEl.doc.body.createDiv({ cls: 'mdb-offscreen' });
+		setElementHtml(tempContainer, html);
 		
 		// 渲染 Mermaid 图表
 		const mermaidCount = tempContainer.querySelectorAll('.mermaid, pre.language-mermaid, code.language-mermaid').length;
@@ -1158,7 +1213,7 @@ export default class MDBeautifyPlugin extends Plugin {
 		}
 		
 	const renderedHtml = tempContainer.innerHTML;
-	document.body.removeChild(tempContainer);
+	tempContainer.remove();
 	
 	loadingNotice.setMessage(`${t('exporting')} - 生成 HTML...`);
 	
@@ -1171,9 +1226,9 @@ export default class MDBeautifyPlugin extends Plugin {
 	});
 	
 	loadingNotice.setMessage(`${t('exporting')} - 保存文件...`);
-	const blob = new Blob([fullHtml], { type: 'text/html' });
+		const blob = new Blob([fullHtml], { type: 'text/html' });
 		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
+		const a = activeView.containerEl.doc.createEl('a');
 		a.href = url;
 		a.download = `${title}.html`;
 		a.click();
@@ -1181,9 +1236,10 @@ export default class MDBeautifyPlugin extends Plugin {
 		
 		loadingNotice.hide();
 		new Notice(t('export_success'));
-		} catch (err: any) {
+		} catch (err: unknown) {
 			loadingNotice.hide();
-			new Notice(t('export_failed') + err.message);
+			const message = err instanceof Error ? err.message : String(err);
+			new Notice(t('export_failed') + message);
 		}
 	}
 
@@ -1209,10 +1265,8 @@ export default class MDBeautifyPlugin extends Plugin {
 
 			const html = this.parser.render(content);
 			
-		const tempContainer = document.createElement('div');
-		tempContainer.innerHTML = html;
-		tempContainer.style.display = 'none';
-		document.body.appendChild(tempContainer);
+		const tempContainer = activeView.containerEl.doc.body.createDiv({ cls: 'mdb-offscreen' });
+		setElementHtml(tempContainer, html);
 		
 		const mermaidCount = tempContainer.querySelectorAll('.mermaid, pre.language-mermaid, code.language-mermaid').length;
 		if (mermaidCount > 0) {
@@ -1225,7 +1279,7 @@ export default class MDBeautifyPlugin extends Plugin {
 		}
 		
 		const renderedHtml = tempContainer.innerHTML;
-		document.body.removeChild(tempContainer);
+		tempContainer.remove();
 		
 		loadingNotice.setMessage(`${t('exporting')} - 生成 HTML...`);
 		
@@ -1238,9 +1292,10 @@ export default class MDBeautifyPlugin extends Plugin {
 		loadingNotice.hide();
 		exportToPdfNative(fullHtml);
 		new Notice(t('msg_vector_print_instruction'));
-		} catch (err: any) {
+		} catch (err: unknown) {
 			loadingNotice.hide();
-			new Notice(t('export_failed') + err.message);
+			const message = err instanceof Error ? err.message : String(err);
+			new Notice(t('export_failed') + message);
 		}
 	}
 
@@ -1316,8 +1371,8 @@ export default class MDBeautifyPlugin extends Plugin {
 			const styledHtml = processHtml(html, sanitizedCss, true, true);
 			
 		const finalHtml = this.convertCheckboxesToEmoji(styledHtml);
-		const copyContainer = document.body.createDiv({ cls: 'mdb-copy-temp' });
-		copyContainer.innerHTML = finalHtml;
+		const copyContainer = this.app.workspace.containerEl.doc.body.createDiv({ cls: 'mdb-copy-temp' });
+		setElementHtml(copyContainer, finalHtml);
 
 		// 渲染 Mermaid 图表
 		const mermaidCount = copyContainer.querySelectorAll('.mermaid, pre.language-mermaid, code.language-mermaid').length;
@@ -1344,12 +1399,12 @@ export default class MDBeautifyPlugin extends Plugin {
 			copyContainer.remove();
 			loadingNotice.hide();
 			new Notice(t('copy_success') + (sourceViewName ? `: ${sourceViewName}` : ''));
-		} catch (err: any) {
+		} catch (err: unknown) {
 			loadingNotice.hide();
 			console.error('MD Beautify copy error:', err);
-			new Notice(t('copy_failed') + (err.message || String(err)));
-			const tempDiv = document.querySelector('body > div[style*="-9999px"]');
-			if (tempDiv) tempDiv.remove();
+			const message = err instanceof Error ? err.message : String(err);
+			new Notice(t('copy_failed') + message);
+			this.app.workspace.containerEl.doc.body.find('.mdb-copy-temp')?.remove();
 		}
 	}
 
@@ -1369,11 +1424,12 @@ export default class MDBeautifyPlugin extends Plugin {
 	}
 
 	showPreviewModal() {
-		this.activateView();
+		void this.activateView();
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data: unknown = await this.loadData();
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, typeof data === 'object' && data !== null ? data as Partial<MDBeautifySettings> : {});
 	}
 
 	async saveSettings() {
@@ -1393,7 +1449,7 @@ export default class MDBeautifyPlugin extends Plugin {
 
 	isDarkMode() {
 		return this.settings.themeMode === 'auto' 
-			? document.body.classList.contains('theme-dark')
+			? this.app.workspace.containerEl.doc.body.classList.contains('theme-dark')
 			: this.settings.themeMode === 'dark';
 	}
 }
@@ -1401,7 +1457,6 @@ export default class MDBeautifyPlugin extends Plugin {
 class MDBeautifyPreviewView extends ItemView {
 	plugin: MDBeautifyPlugin;
 	previewEl!: HTMLElement;
-	styleEl!: HTMLStyleElement;
 	scrollContainer!: HTMLElement;
 	private lastScrollTime = 0;
 	private lastScrollSource: 'editor' | 'preview' | null = null;
@@ -1442,19 +1497,17 @@ class MDBeautifyPreviewView extends ItemView {
 		container.empty();
 		container.classList.add('mdb-preview-view');
 
-		this.styleEl = container.createEl('style');
-
 		const controlsEl = container.createDiv({ cls: 'mdb-view-controls' });
 
 		const actionsRow = controlsEl.createDiv({ cls: 'mdb-controls-row' });
 
 		const copyBtn = actionsRow.createEl('button', { text: t('btn_copy'), cls: 'mod-cta' });
-		copyBtn.onclick = () => this.plugin.copyBeautified();
+		copyBtn.onclick = () => void this.plugin.copyBeautified();
 
 		const uploadBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
 		setIcon(uploadBtn, 'upload-cloud');
 		uploadBtn.setAttribute('aria-label', t('command_upload_all_images'));
-		uploadBtn.onclick = () => this.plugin.uploadAllImagesInActiveView();
+		uploadBtn.onclick = () => void this.plugin.uploadAllImagesInActiveView();
 
 		const exportBtn = actionsRow.createEl('button', { cls: 'clickable-icon' });
 		setIcon(exportBtn, 'download');
@@ -1466,14 +1519,14 @@ class MDBeautifyPreviewView extends ItemView {
 			menu.addItem((item) => {
 				item.setTitle(t('export_html_command'))
 					.setIcon('code')
-					.onClick(() => this.plugin.exportToHtml());
+					.onClick(() => void this.plugin.exportToHtml());
 			});
 			
 			// PDF 导出
 			menu.addItem((item) => {
 				item.setTitle(t('export_pdf_command'))
 					.setIcon('file-text')
-					.onClick(() => this.plugin.exportToPdf());
+					.onClick(() => void this.plugin.exportToPdf());
 			});
 			
 			menu.showAtMouseEvent(e);
@@ -1540,13 +1593,13 @@ class MDBeautifyPreviewView extends ItemView {
 
 		const hostSetting = new Setting(hostContainer)
 			.addDropdown(dropdown => {
-				const hosts = ['official', 'qiniu', 'aliyun', 'tencent', 's3'];
-				hosts.forEach(host => {
-					const label = t(`host_${host}` as any) || host;
+				IMAGE_HOST_KEYS.forEach(host => {
+					const label = t(hostLabelKey(host)) || host;
 					dropdown.addOption(host, label);
 				});
 				dropdown.setValue(this.plugin.settings.activeImageHost)
 					.onChange(async (value) => {
+						if (!isImageHostKey(value)) return;
 						this.plugin.settings.activeImageHost = value;
 						await this.plugin.saveSettings();
 					});
@@ -1663,12 +1716,14 @@ class MDBeautifyPreviewView extends ItemView {
 		scaleInput.min = '10';
 		scaleInput.max = '200';
 		scaleInput.value = String(this.plugin.settings.previewManualScale);
-		scaleInput.oninput = async () => {
+		scaleInput.oninput = () => {
 			const value = parseInt(scaleInput.value);
 			this.plugin.settings.previewManualScale = value;
 			scaleLabel.textContent = `${value}%`;
-			await this.plugin.saveSettings();
-			this.updatePreviewScale();
+			void (async () => {
+				await this.plugin.saveSettings();
+				this.updatePreviewScale();
+			})();
 		};
 
 		const scaleLabel = scaleSlider.createSpan({ text: `${this.plugin.settings.previewManualScale}%`, cls: 'mdb-scale-label' });
@@ -1677,7 +1732,7 @@ class MDBeautifyPreviewView extends ItemView {
 		const originalToggleOnclick = toggleBtn.onclick;
 		toggleBtn.onclick = async (e) => {
 			if (originalToggleOnclick) {
-				const result = originalToggleOnclick.call(toggleBtn, e);
+				const result: unknown = originalToggleOnclick.call(toggleBtn, e);
 				if (result instanceof Promise) await result;
 			}
 			deviceRow.classList.toggle('mdb-hidden', !this.plugin.settings.controlsVisible);
@@ -1703,7 +1758,7 @@ class MDBeautifyPreviewView extends ItemView {
 		this.updatePreviewWidth();
 		
 		// 初始化缩放
-		setTimeout(() => this.updatePreviewScale(), 100);
+		window.setTimeout(() => this.updatePreviewScale(), 100);
 		
 		// 监听窗口大小变化
 		const resizeObserver = new ResizeObserver(() => {
@@ -1757,11 +1812,9 @@ class MDBeautifyPreviewView extends ItemView {
 
 	private setupEditorScrollListener() {
 		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		if (!activeView || !activeView.editor) return;
+		if (!activeView?.editor) return;
 
-		const editor = activeView.editor;
-		const cm = (editor as any).cm;
-		const scrollDOM = cm?.scrollDOM || (editor as any).scrollDOM;
+		const scrollDOM = getEditorScrollDOM(activeView.editor);
 
 		if (scrollDOM && !scrollDOM.dataset.mdBeautifyHasListener) {
 			scrollDOM.dataset.mdBeautifyHasListener = 'true';
@@ -1781,36 +1834,11 @@ class MDBeautifyPreviewView extends ItemView {
 
 		// Try to find the active or most recent markdown view
 		const activeView = this.lastActiveView ?? this.plugin.getTargetMarkdownView();
-		if (!activeView || !activeView.editor) return;
+		if (!activeView?.editor) return;
 
-		const editor = activeView.editor;
-		
 		try {
-			let ratio = 0;
-			let hasRatio = false;
-
-			// CM6 support
-			const cm = (editor as any).cm;
-			const scrollDOM = cm?.scrollDOM || (editor as any).scrollDOM;
-			
-			if (scrollDOM) {
-				const { scrollTop, scrollHeight, clientHeight } = scrollDOM;
-				const totalScrollableHeight = scrollHeight - clientHeight;
-				if (totalScrollableHeight > 0) {
-					ratio = scrollTop / totalScrollableHeight;
-					hasRatio = true;
-				}
-			} else if ((editor as any).getScrollInfo) {
-				// CM5 fallback
-				const scrollInfo = (editor as any).getScrollInfo();
-				const totalScrollableHeight = scrollInfo.height - scrollInfo.clientHeight;
-				if (totalScrollableHeight > 0) {
-					ratio = scrollInfo.top / totalScrollableHeight;
-					hasRatio = true;
-				}
-			}
-
-			if (!hasRatio) return;
+			const ratio = getEditorScrollRatio(activeView.editor);
+			if (ratio === null) return;
 
 			const previewTotalHeight = this.previewEl.scrollHeight - this.previewEl.clientHeight;
 			if (previewTotalHeight <= 0) return;
@@ -1821,7 +1849,7 @@ class MDBeautifyPreviewView extends ItemView {
 				this.lastScrollTime = Date.now();
 				this.previewEl.scrollTop = newScrollTop;
 			}
-		} catch (e) {
+		} catch {
 			// Ignore
 		}
 	}
@@ -1831,12 +1859,12 @@ class MDBeautifyPreviewView extends ItemView {
 		
 		const { width, height, isCustom } = this.getPreviewSize();
 
-		this.previewEl.style.width = width;
 		if (!isCustom || !height.includes('%')) {
-			this.previewEl.style.height = height;
+			this.previewEl.setCssProps({ width, height });
+			this.previewEl.removeClass('mdb-preview-custom-height');
 		} else {
-			this.previewEl.style.height = 'auto';
-			this.previewEl.style.minHeight = '100%';
+			this.previewEl.setCssProps({ width });
+			this.previewEl.addClass('mdb-preview-custom-height');
 		}
 	}
 
@@ -1855,13 +1883,13 @@ class MDBeautifyPreviewView extends ItemView {
 				const scaleX = containerWidth / previewWidth;
 				const scaleY = previewHeight > 0 ? containerHeight / previewHeight : 1;
 				const scale = Math.min(scaleX, scaleY, 1);
-				this.previewEl.style.transform = `scale(${scale})`;
+				this.previewEl.setCssProps({ transform: `scale(${scale})` });
 			} else {
-				this.previewEl.style.transform = 'scale(1)';
+				this.previewEl.setCssProps({ transform: 'scale(1)' });
 			}
 		} else {
 			const scale = this.plugin.settings.previewManualScale / 100;
-			this.previewEl.style.transform = `scale(${scale})`;
+			this.previewEl.setCssProps({ transform: `scale(${scale})` });
 		}
 	}
 
@@ -1905,32 +1933,11 @@ class MDBeautifyPreviewView extends ItemView {
 		const ratio = this.previewEl.scrollTop / previewTotalHeight;
 
 		const activeView = this.lastActiveView ?? this.plugin.getTargetMarkdownView();
-		if (!activeView || !activeView.editor) return;
-
-		const editor = activeView.editor;
+		if (!activeView?.editor) return;
 
 		try {
-			const cm = (editor as any).cm;
-			const scrollDOM = cm?.scrollDOM || (editor as any).scrollDOM;
-
-			if (scrollDOM) {
-				const { scrollHeight, clientHeight } = scrollDOM;
-				const totalScrollableHeight = scrollHeight - clientHeight;
-				if (totalScrollableHeight > 0) {
-					const newScrollTop = ratio * totalScrollableHeight;
-					if (Math.abs(scrollDOM.scrollTop - newScrollTop) > 1) {
-						scrollDOM.scrollTop = newScrollTop;
-					}
-				}
-			} else if ((editor as any).getScrollInfo) {
-				const scrollInfo = (editor as any).getScrollInfo();
-				const totalScrollableHeight = scrollInfo.height - scrollInfo.clientHeight;
-				if (totalScrollableHeight > 0) {
-					const newScrollTop = ratio * totalScrollableHeight;
-					(editor as any).scrollTo(null, newScrollTop);
-				}
-			}
-		} catch (e) {
+			setEditorScrollRatio(activeView.editor, ratio);
+		} catch {
 			// Ignore
 		}
 	}
@@ -1951,13 +1958,7 @@ class MDBeautifyPreviewView extends ItemView {
 
 		if (this.previewEl) {
 			this.previewEl.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
-			if (isDarkMode) {
-				this.previewEl.classList.add('mdb-dark-mode');
-				this.previewEl.style.setProperty('color-scheme', 'dark', 'important');
-			} else {
-				this.previewEl.classList.remove('mdb-dark-mode');
-				this.previewEl.style.setProperty('color-scheme', 'light', 'important');
-			}
+			this.previewEl.toggleClass('mdb-dark-mode', isDarkMode);
 		}
 
 		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -1991,7 +1992,8 @@ class MDBeautifyPreviewView extends ItemView {
 		// 如果没有活跃的 Markdown 视图，检查工作区是否还有任何 Markdown 叶子节点
 		const markdownLeaves = this.app.workspace.getLeavesOfType("markdown");
 		if (markdownLeaves.length === 0) {
-			this.previewEl.innerHTML = `<p class="mdb-preview-empty">${t('no_active_markdown')}</p>`;
+			this.previewEl.empty();
+			this.previewEl.createEl('p', { cls: 'mdb-preview-empty', text: t('no_active_markdown') });
 		}
 		// 如果还有 Markdown 视图只是失去了焦点（例如点击了预览视图或侧边栏），则保留当前预览内容
 	}
@@ -2015,65 +2017,20 @@ class MDBeautifyPreviewView extends ItemView {
 			const isDarkMode = this.plugin.isDarkMode();
 			const themeCss = this.plugin.getThemeCss(undefined, isDarkMode, false);
 			const scopedCss = scopeCss(themeCss);
-			const sanitizedCss = `${scopedCss}
-#mdb {
-	color-scheme: ${isDarkMode ? 'dark' : 'light'};
-}
-#mdb * {
-	color-scheme: ${isDarkMode ? 'dark' : 'light'};
-}
-.mdb-view-controls,
-.mdb-view-controls * {
-	color-scheme: unset;
-	color: var(--text-normal);
-}`;
-			
-			// Update style element for live preview (non-inlined)
-			this.styleEl.innerHTML = sanitizedCss;
+			const combinedCss = buildPreviewThemeCss(scopedCss, isDarkMode);
 
 			const html = this.plugin.parser.render(content);
-			// For preview, we don't inline styles for better performance, and we replace local images with placeholders
-			const finalHtml = processHtml(html, sanitizedCss, false, false, true);
-			this.previewEl.innerHTML = finalHtml;
+			const finalHtml = processHtml(html, combinedCss, true, false, true);
+			setElementHtml(this.previewEl, finalHtml);
 			
 			void this.renderMermaidBlocks(isDarkMode);
 
-			// 参考 web 端的实现方式，同步 data-ui-theme 属性和暗色模式类
 			this.previewEl.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
-			if (isDarkMode) {
-				this.previewEl.classList.add('mdb-dark-mode');
-				this.previewEl.style.colorScheme = 'dark';
-			} else {
-				this.previewEl.classList.remove('mdb-dark-mode');
-				this.previewEl.style.colorScheme = 'light';
-			}
-
-			// 合并所有样式到一个 style 标签中，减少重复标签
-			// 包含内联字体的 KaTeX CSS、主题 CSS 以及 KaTeX 修正样式
-			const combinedCss = `
-				${katexInlineCss}
-				${scopedCss}
-				#mdb .katex-mathml {
-					display: none !important;
-				}
-				#mdb .katex-html {
-					display: inline-block !important;
-				}
-				#mdb .katex-display .katex-html {
-					display: block !important;
-				}
-				/* 修复公式颜色在深色模式下的显示 */
-				.mdb-dark-mode .katex {
-					color: var(--text-normal);
-				}
-			`;
-			
-			// Update style element for live preview
-			this.styleEl.innerHTML = combinedCss;
+			this.previewEl.toggleClass('mdb-dark-mode', isDarkMode);
 
 			// 参考 web 端实现，添加 KaTeX 文本节点后处理
 			if (hasMathFormula(content)) {
-				setTimeout(() => {
+				window.setTimeout(() => {
 					if (this.previewEl) {
 						renderMathInElement(this.previewEl);
 					}
@@ -2095,21 +2052,23 @@ class MDBeautifyPreviewView extends ItemView {
 				restoreScroll();
 				
 				// Delayed restores to account for image loading
-				setTimeout(restoreScroll, 100);
-				setTimeout(restoreScroll, 300);
-				setTimeout(() => {
+				window.setTimeout(restoreScroll, 100);
+				window.setTimeout(restoreScroll, 300);
+				window.setTimeout(() => {
 					restoreScroll();
 					this.isRestoringScroll = false;
 				}, 1000);
 			}
-		} catch (err: any) {
-			this.previewEl.innerHTML = `<p class="mdb-preview-error">Preview Error: ${err.message || String(err)}</p>`;
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : String(err);
+			this.previewEl.empty();
+			this.previewEl.createEl('p', { cls: 'mdb-preview-error', text: `Preview Error: ${message}` });
 		}
 	}
 
 	private async renderMermaidBlocks(isDarkMode: boolean) {
 		if (!this.previewEl) return;
-		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 		
 		const renderToken = ++this.mermaidRenderId;
 		await renderMermaid(
@@ -2133,7 +2092,9 @@ class ThemeManagerModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this;
-		contentEl.createEl('h2', { text: t('title_theme_manager') });
+		new Setting(contentEl)
+			.setName(t('title_theme_manager'))
+			.setHeading();
 
 		const createSection = contentEl.createDiv({ cls: 'mdb-theme-manager-section' });
 
@@ -2175,7 +2136,9 @@ class ThemeManagerModal extends Modal {
 		
 		if (this.plugin.settings.customThemes.length === 0) return;
 
-		container.createEl('h3', { text: t('tab_theme'), cls: 'mdb-list-title' });
+		new Setting(container)
+			.setName(t('tab_theme'))
+			.setHeading();
 		
 		const list = container.createDiv({ cls: 'mdb-theme-list' });
 
@@ -2190,9 +2153,9 @@ class ThemeManagerModal extends Modal {
 
 			deleteBtn.onclick = async () => {
 				const confirmMsg = t('msg_confirm_delete_theme', { themeName });
-				if (confirm(confirmMsg)) {
+				new ConfirmModal(this.app, confirmMsg, async () => {
 					// Remove from customThemes
-					this.plugin.settings.customThemes = this.plugin.settings.customThemes.filter(t => t !== themeName);
+					this.plugin.settings.customThemes = this.plugin.settings.customThemes.filter(name => name !== themeName);
 					// Remove style data
 					delete this.plugin.settings.customThemeStyles[themeName];
 					
@@ -2205,7 +2168,7 @@ class ThemeManagerModal extends Modal {
 					this.renderThemeList(container);
 					this.onChanged();
 					this.plugin.updateAllPreviews(true);
-				}
+				}).open();
 			};
 		});
 	}
@@ -2213,6 +2176,33 @@ class ThemeManagerModal extends Modal {
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
+	}
+}
+
+class ConfirmModal extends Modal {
+	constructor(app: App, private message: string, private onConfirm: () => void | Promise<void>) {
+		super(app);
+	}
+
+	onOpen() {
+		const { contentEl } = this;
+		contentEl.createEl('p', { text: this.message });
+
+		new Setting(contentEl)
+			.addButton(btn => btn
+				.setButtonText(t('btn_delete'))
+				.setWarning()
+				.onClick(() => {
+					void this.onConfirm();
+					this.close();
+				}))
+			.addButton(btn => btn
+				.setButtonText('Cancel')
+				.onClick(() => this.close()));
+	}
+
+	onClose() {
+		this.contentEl.empty();
 	}
 }
 
@@ -2229,8 +2219,9 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		const header = containerEl.createDiv({ cls: 'mdb-settings-header' });
-		header.createEl('h2', { text: t('settings_header') });
+		new Setting(containerEl)
+			.setName(t('settings_header'))
+			.setHeading();
 
 		const nav = containerEl.createDiv({ cls: 'mdb-settings-nav' });
 
@@ -2254,7 +2245,7 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		if (this.activeTab === 'general') {
 			this.renderGeneralSettings(content);
 		} else if (this.activeTab === 'theme') {
-			this.renderThemeSettings(content);
+			void this.renderThemeSettings(content);
 		} else if (this.activeTab === 'imagehost') {
 			this.renderImageHostSettings(content);
 		}
@@ -2271,7 +2262,9 @@ class MDBeautifySettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		container.createEl('h3', { text: t('setting_header_preview') });
+		new Setting(container)
+			.setName(t('setting_header_preview'))
+			.setHeading();
 
 		new Setting(container)
 			.setName(t('setting_default_device'))
@@ -2335,7 +2328,6 @@ class MDBeautifySettingTab extends PluginSettingTab {
 			.addSlider(slider => slider
 				.setLimits(10, 200, 10)
 				.setValue(this.plugin.settings.previewManualScale)
-				.setDynamicTooltip()
 				.onChange(async (value) => {
 					this.plugin.settings.previewManualScale = value;
 					await this.plugin.saveSettings();
@@ -2402,82 +2394,48 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		const editorContainer = container.createDiv({ cls: 'mdb-theme-editor-container' });
 
 		const cssSection = editorContainer.createDiv({ cls: 'mdb-editor-section' });
-		cssSection.createEl('h3', { text: t('setting_custom_css') });
+		new Setting(cssSection)
+			.setName(t('setting_custom_css'))
+			.setHeading();
 		
 		const cssEditor = cssSection.createEl('textarea');
 		// Show current effective CSS (either custom or built-in base)
 		cssEditor.value = this.plugin.getThemeCss(themeId);
 
 		const previewSection = editorContainer.createDiv({ cls: 'mdb-editor-section' });
-		previewSection.createEl('h3', { text: t('preview_title') });
+		new Setting(previewSection)
+			.setName(t('preview_title'))
+			.setHeading();
 
 		const previewFrame = previewSection.createDiv({ cls: 'mdb-editor-preview' });
-
-		const previewStyle = previewFrame.createEl('style');
 		const previewContent = previewFrame.createDiv();
+		let lastPreviewMarkup = '';
 
 		const updateSettingsPreview = async () => {
 			const isDarkMode = this.plugin.isDarkMode();
 			const themeCss = this.plugin.getThemeCss(themeId, isDarkMode, false);
-			
-			// 只有在样式真正改变时才更新，减少重绘
-			const scopedCss = themeCss.replace(/#mdb/g, '.mdb-preview-wrapper');
-			if (previewStyle.innerHTML !== scopedCss) {
-				previewStyle.innerHTML = scopedCss;
-			}
+			const combinedSettingsCss = buildPreviewThemeCss(scopeCss(themeCss), isDarkMode);
 			
 			const html = this.plugin.parser.render(defaultMarkdown);
-			// 使用 processHtml 处理 HTML，确保 Mermaid 代码块被正确识别
-			// 设置 inlineStyles 为 false, 因为我们已经在 previewStyle 中注入了样式
-			const processedHtml = processHtml(html, themeCss, false, false, true);
-			
-			// 只有在 HTML 改变时才更新
+			const processedHtml = processHtml(html, combinedSettingsCss, true, false, true);
 			const newHtml = `<div class="mdb-preview-wrapper">${processedHtml}</div>`;
-			if (previewContent.innerHTML !== newHtml) {
-				previewContent.innerHTML = newHtml;
-				
-				// Apply theme isolation classes
+			
+			if (lastPreviewMarkup !== newHtml) {
+				lastPreviewMarkup = newHtml;
+				setElementHtml(previewContent, newHtml);
 				previewContent.setAttribute('data-ui-theme', isDarkMode ? 'dark' : 'light');
-				if (isDarkMode) {
-					previewContent.classList.add('mdb-dark-mode');
-				} else {
-					previewContent.classList.remove('mdb-dark-mode');
-				}
+				previewContent.toggleClass('mdb-dark-mode', isDarkMode);
 				
-				// 使用 setTimeout 确保 DOM 已经渲染并且宽高已计算
-				// 解决 Mermaid 初始化时机问题和容器坍塌导致的渲染失败
-				setTimeout(async () => {
-					if (!previewContent.isConnected) return;
-					
-					// 合并所有样式，包含内联字体的 KaTeX CSS 和修正样式
-					const combinedSettingsCss = `
-						${katexInlineCss}
-						${scopedCss}
-						#mdb .katex-mathml {
-							display: none !important;
-						}
-						#mdb .katex-html {
-							display: inline-block !important;
-						}
-						#mdb .katex-display .katex-html {
-							display: block !important;
-						}
-						/* 修复公式颜色在深色模式下的显示 */
-						.mdb-dark-mode .katex {
-							color: var(--text-normal);
-						}
-					`;
-					
-					if (previewStyle.innerHTML !== combinedSettingsCss) {
-						previewStyle.innerHTML = combinedSettingsCss;
-					}
+				window.setTimeout(() => {
+					void (async () => {
+						if (!previewContent.isConnected) return;
 
-					// 参考 web 端实现，添加 KaTeX 文本节点后处理
-					if (hasMathFormula(defaultMarkdown)) {
-						renderMathInElement(previewContent);
-					}
+						if (hasMathFormula(defaultMarkdown)) {
+							renderMathInElement(previewContent);
+						}
 
-					await renderMermaid(previewContent, isDarkMode, `mdb-settings-mermaid-${Date.now()}`);
+						await renderMermaid(previewContent, isDarkMode, `mdb-settings-mermaid-${Date.now()}`);
+					})();
 				}, 150);
 			}
 		};
@@ -2486,14 +2444,18 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		await updateSettingsPreview();
 
 		// Auto save and live sync with debounce
-		let debounceTimer: any;
+		let debounceTimer: number | null = null;
 		cssEditor.oninput = () => {
-			clearTimeout(debounceTimer);
-			debounceTimer = setTimeout(async () => {
-				this.plugin.settings.customThemeStyles[themeId] = cssEditor.value;
-				await this.plugin.saveSettings();
-				updateSettingsPreview();
-				this.plugin.updateAllPreviews(true);
+			if (debounceTimer !== null) {
+				window.clearTimeout(debounceTimer);
+			}
+			debounceTimer = window.setTimeout(() => {
+				void (async () => {
+					this.plugin.settings.customThemeStyles[themeId] = cssEditor.value;
+					await this.plugin.saveSettings();
+					await updateSettingsPreview();
+					this.plugin.updateAllPreviews(true);
+				})();
 			}, 500);
 		};
 	}
@@ -2515,13 +2477,14 @@ class MDBeautifySettingTab extends PluginSettingTab {
 			.setName(t('setting_active_image_host'))
 			.setDesc(t('setting_active_image_host_desc'))
 			.addDropdown(dropdown => {
-				const hosts = ['official', 'qiniu', 'aliyun', 'tencent', 's3'];
+				const hosts: ImageHostKey[] = ['official', 'qiniu', 'aliyun', 'tencent', 's3'];
 				hosts.forEach(h => {
-					const label = t(`host_${h}` as any) || h;
+					const label = t(hostLabelKey(h)) || h;
 					dropdown.addOption(h, label);
 				});
 				dropdown.setValue(host)
 					.onChange(async (value) => {
+						if (!isImageHostKey(value)) return;
 						this.plugin.settings.activeImageHost = value;
 						await this.plugin.saveSettings();
 						this.display();
@@ -2534,7 +2497,6 @@ class MDBeautifySettingTab extends PluginSettingTab {
 				.setName(t('setting_official_url'))
 				.setDesc(t('setting_official_url_desc'))
 				.addText(text => text
-					.setPlaceholder('https://api.wemd.app/upload')
 					.setValue(this.plugin.settings.officialUploadUrl)
 					.onChange(async (value) => {
 						this.plugin.settings.officialUploadUrl = value;
@@ -2545,7 +2507,7 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		}
 	}
 
-	renderHostConfigFields(container: HTMLElement, type: string) {
+	renderHostConfigFields(container: HTMLElement, type: ImageHostKey) {
 		if (type === 'qiniu') {
 			this.createConfigInput(container, type, 'Access Key', 'accessKey', true);
 			this.createConfigInput(container, type, 'Secret Key', 'secretKey', true);
@@ -2562,14 +2524,15 @@ class MDBeautifySettingTab extends PluginSettingTab {
 		}
 	}
 
-	createConfigInput(container: HTMLElement, type: string, name: string, key: string, isPassword = false, placeholder = '') {
+	createConfigInput(container: HTMLElement, type: ImageHostKey, name: string, key: string, isPassword = false, placeholder = '') {
+		const hostConfig = this.plugin.settings.imageHostConfigs[type];
 		const s = new Setting(container)
 			.setName(name)
 			.addText(text => text
 				.setPlaceholder(placeholder)
-				.setValue(this.plugin.settings.imageHostConfigs[type][key] || '')
+				.setValue(hostConfig[key] ?? '')
 				.onChange(async (value) => {
-					this.plugin.settings.imageHostConfigs[type][key] = value;
+					hostConfig[key] = value;
 					await this.plugin.saveSettings();
 				}));
 		
