@@ -5,7 +5,7 @@ on:
     branches:
       - vue
     paths:
-      - 'apps/obsidian/**'
+      - 'apps/obsidian/src/assets/manifest.json'
       - '.github/workflows/sync-obsidian.yml'
   workflow_dispatch: # 允许手动触发，方便调试和补发版本
 

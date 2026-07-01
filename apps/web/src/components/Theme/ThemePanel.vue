@@ -489,6 +489,7 @@ const handleSave = async () => {
       updates.designerVariables = designerVariables.value;
     }
     themeStore.updateTheme(selectedThemeId.value, updates);
+    themeStore.selectTheme(selectedThemeId.value);
 
     if (platformActions.shouldPersistHistory()) {
       if (themeStore.themeId === selectedThemeId.value) {

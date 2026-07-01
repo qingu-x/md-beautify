@@ -1002,7 +1002,7 @@ export default class MDBeautifyPlugin extends Plugin {
 	}
 
 	async uploadAllImagesInActiveView() {
-		const view = this.getActiveOrFirstMarkdownView();
+		const view = this.getTargetMarkdownView();
 		
 		if (!view || !view.file) {
 			new Notice(t('no_active_view'));
@@ -1093,23 +1093,35 @@ export default class MDBeautifyPlugin extends Plugin {
 		}
 	}
 
-	getActiveOrFirstMarkdownView(): MarkdownView | null {
-		let activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-		
-		if (!activeView) {
-			const leaves = this.app.workspace.getLeavesOfType("markdown");
-			if (leaves.length > 0) {
-				activeView = leaves[0].view as MarkdownView;
+	getTargetMarkdownView(): MarkdownView | null {
+		const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (activeView) {
+			return activeView;
+		}
+
+		// 预览面板获得焦点时，使用预览正在展示的文件
+		const previewLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_MDBEAUTIFY_PREVIEW);
+		for (const leaf of previewLeaves) {
+			if (leaf.view instanceof MDBeautifyPreviewView) {
+				const linkedView = leaf.view.getLinkedMarkdownView();
+				if (linkedView) {
+					return linkedView;
+				}
 			}
 		}
-		
-		return activeView;
+
+		const markdownLeaves = this.app.workspace.getLeavesOfType('markdown');
+		if (markdownLeaves.length > 0) {
+			return markdownLeaves[0].view as MarkdownView;
+		}
+
+		return null;
 	}
 
 	async exportToHtml() {
 		const loadingNotice = new Notice(t('exporting'), 0);
 		try {
-			const activeView = this.getActiveOrFirstMarkdownView();
+			const activeView = this.getTargetMarkdownView();
 			
 			if (!activeView || !activeView.file) {
 				loadingNotice.hide();
@@ -1178,7 +1190,7 @@ export default class MDBeautifyPlugin extends Plugin {
 	async exportToPdf() {
 		const loadingNotice = new Notice(t('exporting'), 0);
 		try {
-			const activeView = this.getActiveOrFirstMarkdownView();
+			const activeView = this.getTargetMarkdownView();
 			
 			if (!activeView || !activeView.file) {
 				loadingNotice.hide();
@@ -1280,7 +1292,7 @@ export default class MDBeautifyPlugin extends Plugin {
 			let content = '';
 			let sourceViewName = '';
 
-			const activeMarkdownView = this.getActiveOrFirstMarkdownView();
+			const activeMarkdownView = this.getTargetMarkdownView();
 			
 			if (activeMarkdownView) {
 				content = activeMarkdownView.editor.getValue();
@@ -1413,6 +1425,16 @@ class MDBeautifyPreviewView extends ItemView {
 
 	getIcon() {
 		return "eye";
+	}
+
+	getLinkedMarkdownView(): MarkdownView | null {
+		if (
+			this.lastActiveView?.file &&
+			this.app.vault.getAbstractFileByPath(this.lastActiveView.file.path)
+		) {
+			return this.lastActiveView;
+		}
+		return null;
 	}
 
 	async onOpen() {
@@ -1706,7 +1728,10 @@ class MDBeautifyPreviewView extends ItemView {
 		);
 		
 		this.registerEvent(
-			this.app.workspace.on('active-leaf-change', () => {
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				if (leaf?.view instanceof MarkdownView) {
+					this.lastActiveView = leaf.view;
+				}
 				this.schedulePreviewUpdate();
 				this.setupEditorScrollListener();
 			})
@@ -1755,7 +1780,7 @@ class MDBeautifyPreviewView extends ItemView {
 		}
 
 		// Try to find the active or most recent markdown view
-		const activeView = this.plugin.getActiveOrFirstMarkdownView();
+		const activeView = this.lastActiveView ?? this.plugin.getTargetMarkdownView();
 		if (!activeView || !activeView.editor) return;
 
 		const editor = activeView.editor;
@@ -1879,7 +1904,7 @@ class MDBeautifyPreviewView extends ItemView {
 
 		const ratio = this.previewEl.scrollTop / previewTotalHeight;
 
-		const activeView = this.plugin.getActiveOrFirstMarkdownView();
+		const activeView = this.lastActiveView ?? this.plugin.getTargetMarkdownView();
 		if (!activeView || !activeView.editor) return;
 
 		const editor = activeView.editor;

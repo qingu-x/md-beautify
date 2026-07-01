@@ -24,6 +24,261 @@ const BLOCK_TAGS = [
   "hr",
 ] as const;
 
+type CounterContentPart =
+  | { type: "text"; value: string }
+  | { type: "counter"; name: string };
+
+type HeadingCounterRule = {
+  level: number;
+  className?: "prefix" | "content" | "suffix";
+  pseudo: "before" | "after";
+  increment?: string;
+  contentParts: CounterContentPart[];
+  styleDecls: string;
+};
+
+function parseCounterContent(raw: string): CounterContentPart[] {
+  const parts: CounterContentPart[] = [];
+  let remaining = raw.trim();
+
+  while (remaining.length > 0) {
+    const counterMatch = remaining.match(/^counter\s*\(\s*([^)]+?)\s*\)/i);
+    if (counterMatch) {
+      parts.push({ type: "counter", name: counterMatch[1].trim() });
+      remaining = remaining.slice(counterMatch[0].length).trim();
+      continue;
+    }
+
+    const textMatch = remaining.match(/^("[^"]*"|'[^']*')/);
+    if (textMatch) {
+      parts.push({
+        type: "text",
+        value: textMatch[1].slice(1, -1),
+      });
+      remaining = remaining.slice(textMatch[0].length).trim();
+      continue;
+    }
+
+    break;
+  }
+
+  return parts;
+}
+
+function parseHeadingSelector(
+  selector: string,
+): Pick<HeadingCounterRule, "level" | "className" | "pseudo"> | null {
+  const normalized = selector
+    .trim()
+    .replace(/^#mdb\s+/i, "")
+    .replace(/\s+/g, " ");
+
+  const match = normalized.match(
+    /^h([1-6])(?:\s+\.(prefix|content|suffix))?\s*(?:::-before|::after|:before|:after)?\s*$/i,
+  );
+  if (!match) {
+    return null;
+  }
+
+  const pseudo = /(?:::-after|:after)\s*$/i.test(normalized)
+    ? "after"
+    : "before";
+  return {
+    level: Number.parseInt(match[1], 10),
+    className: match[2] as HeadingCounterRule["className"],
+    pseudo,
+  };
+}
+
+function extractHeadingCounterRules(css: string): HeadingCounterRule[] {
+  const rules: HeadingCounterRule[] = [];
+  const ruleBlockRegex = /([^{}]+)\{([^{}]*)\}/g;
+
+  let match: RegExpExecArray | null;
+  while ((match = ruleBlockRegex.exec(css)) !== null) {
+    const selectorPart = match[1];
+    const block = match[2];
+
+    if (!/counter\s*\(/i.test(block) || !/\bh[1-6]\b/i.test(selectorPart)) {
+      continue;
+    }
+
+    const contentMatch = block.match(/content:\s*([\s\S]+?)(?:;|$)/i);
+    if (!contentMatch) {
+      continue;
+    }
+
+    const incrementMatch = block.match(/counter-increment:\s*([^\s;]+)/i);
+    const styleDecls = block
+      .replace(/content:\s*[\s\S]+?(?:;|$)/i, "")
+      .replace(/counter-increment:\s*[^;]+;?/i, "")
+      .replace(/counter-reset:\s*[^;]+;?/i, "")
+      .trim()
+      .replace(/\s+/g, " ");
+
+    const contentParts = parseCounterContent(contentMatch[1]);
+    if (contentParts.length === 0) {
+      continue;
+    }
+
+    for (const selector of selectorPart.split(",")) {
+      const parsed = parseHeadingSelector(selector);
+      if (!parsed) {
+        continue;
+      }
+
+      rules.push({
+        ...parsed,
+        increment: incrementMatch?.[1],
+        contentParts,
+        styleDecls,
+      });
+    }
+  }
+
+  return rules;
+}
+
+function removeHeadingCounterRules(css: string): string {
+  return css.replace(/[^{}]+\{[^{}]*\}/g, (ruleBlock) => {
+    const braceIndex = ruleBlock.indexOf("{");
+    if (braceIndex === -1) {
+      return ruleBlock;
+    }
+
+    const selectorPart = ruleBlock.slice(0, braceIndex);
+    const block = ruleBlock.slice(braceIndex + 1, -1);
+
+    if (!/counter\s*\(/i.test(block) || !/\bh[1-6]\b/i.test(selectorPart)) {
+      return ruleBlock;
+    }
+
+    return "";
+  });
+}
+
+function removeBrokenJuiceCounterSpans(html: string): string {
+  return html.replace(
+    /<span[^>]*>[^<]*(?:ounter\s*\(\s*counter|Part['']counter\s*\(\s*counter)[^<]*<\/span>/gi,
+    "",
+  );
+}
+
+function escapeHtmlAttr(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
+function renderCounterContent(
+  parts: CounterContentPart[],
+  counters: Record<string, number>,
+  increment?: string,
+): string {
+  if (increment) {
+    counters[increment] = (counters[increment] ?? 0) + 1;
+  }
+
+  return parts
+    .map((part) => {
+      if (part.type === "text") {
+        return part.value;
+      }
+      return String(counters[part.name] ?? 0);
+    })
+    .join("");
+}
+
+function injectIntoHeadingSpan(
+  inner: string,
+  className: string,
+  pseudo: "before" | "after",
+  injected: string,
+): string {
+  const openTag = new RegExp(
+    `<span\\s+[^>]*class=["'][^"']*\\b${className}\\b[^"']*["'][^>]*>`,
+    "i",
+  );
+  if (openTag.test(inner)) {
+    if (pseudo === "before") {
+      return inner.replace(openTag, (match) => `${match}${injected}`);
+    }
+    const closePattern = new RegExp(
+      `(<span\\s+[^>]*class=["'][^"']*\\b${className}\\b[^"']*["'][^>]*>[\\s\\S]*?)<\\/span>`,
+      "i",
+    );
+    return inner.replace(closePattern, `$1${injected}</span>`);
+  }
+  return pseudo === "before" ? `${injected}${inner}` : `${inner}${injected}`;
+}
+
+function injectHeadingCounterMarkup(
+  html: string,
+  css: string,
+): { html: string; css: string; processed: boolean } {
+  const rules = extractHeadingCounterRules(css);
+  if (rules.length === 0) {
+    return { html, css, processed: false };
+  }
+
+  const counters: Record<string, number> = {};
+  const resetMatch = css.match(
+    /(?:#mdb|body)\s*\{[^}]*counter-reset:\s*([^;}]+)/i,
+  );
+  if (resetMatch) {
+    resetMatch[1].split(/\s+/).forEach((name) => {
+      const trimmed = name.trim();
+      if (trimmed) {
+        counters[trimmed] = 0;
+      }
+    });
+  }
+
+  const newHtml = html.replace(
+    /<h([1-6])(\s[^>]*)?>([\s\S]*?)<\/h\1>/gi,
+    (full, levelStr: string, attrs = "", inner: string) => {
+      const level = Number.parseInt(levelStr, 10);
+      const levelRules = rules.filter((rule) => rule.level === level);
+      if (levelRules.length === 0) {
+        return full;
+      }
+
+      let newInner = inner;
+      for (const rule of levelRules) {
+        const text = renderCounterContent(
+          rule.contentParts,
+          counters,
+          rule.increment,
+        );
+        const styleAttr = rule.styleDecls
+          ? ` style="${escapeHtmlAttr(rule.styleDecls)}"`
+          : "";
+        const injected = `<span${styleAttr}>${text}</span>`;
+
+        if (rule.className) {
+          newInner = injectIntoHeadingSpan(
+            newInner,
+            rule.className,
+            rule.pseudo,
+            injected,
+          );
+        } else if (rule.pseudo === "before") {
+          newInner = `${injected}${newInner}`;
+        } else {
+          newInner = `${newInner}${injected}`;
+        }
+      }
+
+      return `<h${levelStr}${attrs}>${newInner}</h${levelStr}>`;
+    },
+  );
+
+  const didInject = newHtml !== html;
+  return {
+    html: newHtml,
+    css: didInject ? removeHeadingCounterRules(css) : css,
+    processed: didInject,
+  };
+}
+
 /**
  * Process HTML, add data-tool attribute and apply CSS styles
  * 处理 HTML，添加 data-tool 属性并应用 CSS 样式
@@ -123,6 +378,8 @@ export const processHtml = (
       "",
     );
   }
+
+  let juiceInlinePseudoElements = inlinePseudoElements;
 
   // Handle pseudo-elements for blockquotes (large quotes, corner frames, etc.) / 处理引用的伪元素 (大引号、直角边框等)
   if (inlinePseudoElements) {
@@ -237,6 +494,14 @@ export const processHtml = (
         );
       }
     }
+
+    const hadCounterRules = extractHeadingCounterRules(css).length > 0;
+    const counterResult = injectHeadingCounterMarkup(html, css);
+    html = counterResult.html;
+    css = counterResult.css;
+    if (hadCounterRules) {
+      juiceInlinePseudoElements = false;
+    }
   }
 
   // 包裹在 section#mdb 中，复制时添加透明背景防止某些浏览器保留选区背景色
@@ -251,13 +516,17 @@ export const processHtml = (
 
   try {
     let res = juice.inlineContent(wrappedHtml, css, {
-      inlinePseudoElements,
+      inlinePseudoElements: juiceInlinePseudoElements,
       preserveImportant: true,
     });
 
     // 如果 juice 处理结果为空（可能是由于某些极端输入或配置），则返回包装后的 HTML
     if (!res) {
       return wrappedHtml;
+    }
+
+    if (inlinePseudoElements) {
+      res = removeBrokenJuiceCounterSpans(res);
     }
 
     // 在 juice 处理之后，为代码块追加关键内联样式

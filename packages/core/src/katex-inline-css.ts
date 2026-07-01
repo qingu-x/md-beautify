@@ -7,7 +7,7 @@
  * To regenerate: npm run prepare
  *
  * Original: katex@0.16.27
- * Generated: 2026-07-01T11:54:25.422Z
+ * Generated: 2026-07-01T16:18:35.199Z
  * Size: ~359.2KB
  */
 

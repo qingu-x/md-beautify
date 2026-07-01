@@ -197,19 +197,28 @@ export const useThemeStore = defineStore("theme", () => {
     return darkCss;
   }
 
-  function getThemeCSS(themeId: string, isDarkMode: boolean) {
+  function resolveThemeCss(themeId: string): string {
     const theme =
       allThemes.value.find((t) => t.id === themeId) || currentTheme.value;
+    // Prefer live customCSS for the active theme (history restore, per-article overrides)
+    if (themeId === selectedThemeId.value && customCSS.value) {
+      return customCSS.value;
+    }
+    return theme.css;
+  }
+
+  function getThemeCSS(themeId: string, isDarkMode: boolean) {
+    const css = resolveThemeCss(themeId);
     if (isDarkMode) {
-      return getWechatDarkCss(theme.css);
+      return getWechatDarkCss(css);
     }
 
     // 如果是浅色模式且包含转换标记，只提取浅色部分（标记之前的内容）
-    if (theme.css.includes(DARK_MARK)) {
-      return theme.css.split(DARK_MARK)[0].trim();
+    if (css.includes(DARK_MARK)) {
+      return css.split(DARK_MARK)[0].trim();
     }
 
-    return theme.css;
+    return css;
   }
 
   function selectTheme(themeId: string) {

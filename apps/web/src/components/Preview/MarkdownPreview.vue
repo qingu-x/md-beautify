@@ -125,6 +125,8 @@ const updateAutoScale = () => {
 const parser = createMarkdownParser();
 
 const themeCSS = computed(() => {
+  // Track customCSS so preview/export stay in sync with history overrides
+  themeStore.customCSS;
   return themeStore.getThemeCSS(themeStore.themeId, uiThemeStore.theme === "dark");
 });
 
