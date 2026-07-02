@@ -2,24 +2,20 @@ import { ref, computed } from "vue";
 import zh from "./locales/zh";
 import en from "./locales/en";
 import { setLocale as setCoreLocale } from "@mdb/core";
+import { resolveInitialLocale, type Locale } from "../utils/locale";
 
-export type Locale = "zh" | "en";
+export type { Locale };
 
 const messages = {
   zh,
   en,
 };
 
-const getDefaultLocale = (): Locale => {
-  const saved = localStorage.getItem("mdb-locale");
-  if (saved === "zh" || saved === "en") {
-    return saved;
-  }
-  const browserLang = navigator.language.toLowerCase();
-  return browserLang.startsWith("zh") ? "zh" : "en";
-};
+const currentLocale = ref<Locale>(resolveInitialLocale());
 
-const currentLocale = ref<Locale>(getDefaultLocale());
+export function getCurrentLocale(): Locale {
+  return currentLocale.value;
+}
 
 // 同步设置 core 包的语言
 setCoreLocale(currentLocale.value);

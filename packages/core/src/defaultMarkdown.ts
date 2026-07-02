@@ -576,3 +576,9 @@ const normalizeLocale = (locale?: string): DefaultMarkdownLocale => {
 export const getDefaultMarkdown = (locale?: string): string => {
   return DEFAULT_MARKDOWN_MAP[normalizeLocale(locale)];
 };
+
+export const isDefaultMarkdown = (markdown: string): boolean => {
+  return (
+    markdown === DEFAULT_MARKDOWN_MAP.zh || markdown === DEFAULT_MARKDOWN_MAP.en
+  );
+};

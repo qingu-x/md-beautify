@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { getDefaultMarkdown } from "@mdb/core";
+import { getDefaultMarkdown, isDefaultMarkdown } from "@mdb/core";
+import { getCurrentLocale } from "../i18n";
+import { resolveInitialLocale, type Locale } from "../utils/locale";
 import { useThemeStore } from "./themeStore";
 // import { createMarkdownParser } from "@mdb/core";
 import { copyToEditor as execCopyToEditor } from "../services/wechatCopyService";
@@ -14,16 +16,12 @@ export interface ResetOptions {
   themeName?: string;
 }
 
-const getInitialLocale = () => {
-  if (typeof localStorage !== "undefined") {
-    const saved = localStorage.getItem("mdb-locale");
-    if (saved) return saved;
-  }
-  return typeof navigator !== "undefined" ? navigator.language : "en";
-};
+const initialLocale = resolveInitialLocale();
+export const defaultMarkdown = getDefaultMarkdown(initialLocale);
 
-const resolvedLocale = getInitialLocale();
-export const defaultMarkdown = getDefaultMarkdown(resolvedLocale);
+export function getEditorDefaultMarkdown(locale?: Locale): string {
+  return getDefaultMarkdown(locale ?? getCurrentLocale());
+}
 
 export const useEditorStore = defineStore("editor", () => {
   const markdown = ref(defaultMarkdown);
@@ -63,11 +61,17 @@ export const useEditorStore = defineStore("editor", () => {
     workspaceDir.value = dir;
   }
 
+  function syncMarkdownForLocale(locale: Locale) {
+    if (isDefaultMarkdown(markdown.value)) {
+      markdown.value = getDefaultMarkdown(locale);
+    }
+  }
+
   function resetDocument(options?: ResetOptions) {
     if (options?.markdown !== undefined) {
       markdown.value = options.markdown;
     } else {
-      markdown.value = defaultMarkdown;
+      markdown.value = getEditorDefaultMarkdown();
     }
 
     // Reset theme (via themeStore) / 重置主题（通过 themeStore）
@@ -152,6 +156,7 @@ export const useEditorStore = defineStore("editor", () => {
     setPreviewManualScale,
     setSyncScroll,
     resetDocument,
+    syncMarkdownForLocale,
     copyToEditor,
   };
 });

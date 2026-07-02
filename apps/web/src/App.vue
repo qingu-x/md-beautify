@@ -137,13 +137,18 @@ import { platform } from './utils/platformAdapter';
 import './styles/global.css';
 import './App.css';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const { workspacePath, saveFile } = useFileSystem({ registerListeners: true });
 const storageStore = useStorageStore();
 const historyStore = useHistoryStore();
 const fileStore = useFileStore();
 const editorStore = useEditorStore();
+
+watch(locale, (nextLocale, prevLocale) => {
+  if (nextLocale === prevLocale) return;
+  editorStore.syncMarkdownForLocale(nextLocale);
+});
 
 const ready = computed(() => storageStore.ready);
 const storageType = computed(() => storageStore.type);

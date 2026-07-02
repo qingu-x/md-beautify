@@ -157,7 +157,7 @@ import { useI18n } from '../../i18n';
 import { useEditorStore } from '../../store/editorStore';
 import { useThemeStore } from '../../store/themeStore';
 import { useHistoryStore } from '../../store/historyStore';
-import { defaultMarkdown } from '../../store/editorStore';
+import { getEditorDefaultMarkdown } from '../../store/editorStore';
 import { toast } from '../../hooks/useToast';
 import type { HistorySnapshot } from '../../store/historyTypes';
 
@@ -253,7 +253,7 @@ const handleDeleteConfirm = async () => {
 };
 
 const handleCreateArticle = async (withExample = false) => {
-  const initial = withExample ? defaultMarkdown : '# ' + t('history.newArticle') + '\n\n';
+  const initial = withExample ? getEditorDefaultMarkdown() : '# ' + t('history.newArticle') + '\n\n';
   const title = withExample ? t('history.exampleArticle') : t('history.newArticle');
   
   try {
