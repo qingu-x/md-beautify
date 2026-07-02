@@ -1,5 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting, Notice, MarkdownView, Modal, ItemView, WorkspaceLeaf, TFile, setIcon, requestUrl, Menu, DropdownComponent, Editor } from 'obsidian';
 import mermaid from 'mermaid';
+import type MarkdownIt from 'markdown-it';
 import { createMarkdownParser, processHtml, convertCssToWeChatDarkMode, hasMathFormula, renderMathInElement, katexInlineCss, basicTheme, customDefaultTheme, codeGithubTheme, academicPaperTheme, auroraGlassTheme, bauhausTheme, cyberpunkNeonTheme, knowledgeBaseTheme, luxuryGoldTheme, morandiForestTheme, neoBrutalismTheme, receiptTheme, sunsetFilmTheme, templateTheme, generateExportHtml, exportToPdfNative, getDefaultMarkdown } from '@mdb/core';
 import { t, getLocaleKey, type TranslationKey } from './i18n';
 import { getEditorScrollDOM, getEditorScrollRatio, setEditorScrollRatio } from './editorScroll';
@@ -760,7 +761,7 @@ const DEFAULT_SETTINGS: MDBeautifySettings = {
 
 export default class MDBeautifyPlugin extends Plugin {
 	settings: MDBeautifySettings = DEFAULT_SETTINGS;
-	parser!: ReturnType<typeof createMarkdownParser>;
+	parser!: MarkdownIt;
 
 	async onload() {
 		await this.loadSettings();
@@ -2190,16 +2191,22 @@ class ConfirmModal extends Modal {
 		contentEl.createEl('p', { text: this.message });
 
 		new Setting(contentEl)
-			.addButton(btn => btn
-				.setButtonText(t('btn_delete'))
-				.setWarning()
-				.onClick(() => {
-					void this.onConfirm();
-					this.close();
-				}))
-			.addButton(btn => btn
-				.setButtonText('Cancel')
-				.onClick(() => this.close()));
+			.addButton(btn => {
+				btn
+					.setButtonText(t('btn_delete'))
+					.setWarning()
+					.onClick(() => {
+						void this.onConfirm();
+						this.close();
+					});
+				return btn;
+			})
+			.addButton(btn => {
+				btn
+					.setButtonText('Cancel')
+					.onClick(() => this.close());
+				return btn;
+			});
 	}
 
 	onClose() {

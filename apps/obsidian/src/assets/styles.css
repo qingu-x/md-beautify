@@ -41,8 +41,11 @@
   word-break: break-all;
 }
 
-#mdb em {
-  font-style: italic !important;
+.mdb-preview-view .mdb-view-preview-content #mdb em,
+.mdb-preview-view .mdb-view-preview-content #mdb i,
+.mdb-preview-wrapper #mdb em,
+.mdb-preview-wrapper #mdb i {
+  font-style: italic;
   font-synthesis: style;
 }
 
@@ -633,12 +636,10 @@
 }
 
 /* 主题模式切换 */
-.mdb-view-preview-scroll.mdb-dark-mode {
-  /* background-color: #1e1e1f !important; */
-  color-scheme: dark !important;
+.mdb-preview-view .mdb-view-preview-scroll.mdb-dark-mode {
+  color-scheme: dark;
 }
 
-.mdb-view-preview-scroll:not(.mdb-dark-mode) {
-  /* background-color: #ffffff !important; */
-  color-scheme: light !important;
+.mdb-preview-view .mdb-view-preview-scroll:not(.mdb-dark-mode) {
+  color-scheme: light;
 }

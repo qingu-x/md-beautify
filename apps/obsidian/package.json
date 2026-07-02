@@ -1,6 +1,6 @@
 {
   "name": "md-beautify-obsidian",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Obsidian plugin for MD Beautify",
   "main": "dist/main.js",
   "scripts": {
