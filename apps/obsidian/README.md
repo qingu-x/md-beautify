@@ -62,8 +62,21 @@
 
 ### 📥 Installation
 
-- **From Community Plugins**: Search for `MD Beautify` in Obsidian's Community Plugins (Coming soon).
-- **Manual**: Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases), and place them in your vault's `.obsidian/plugins/md-beautify/` folder.
+#### Manual installation
+
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases).
+2. Create `.obsidian/plugins/md-beautify/` in your vault if it does not exist.
+3. Copy the three files into that folder.
+4. Open **Settings → Community plugins**, reload plugins if prompted, then enable **MD Beautify**.
+
+#### Install with BRAT
+
+If you use the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin, add the beta repository `sliiu/obsidian-md-beautify-plugin`, then install and enable **MD Beautify** from BRAT’s plugin list.
+
+#### From Community Plugins
+
+1. Open **Settings → Community plugins** and disable **Restricted mode** if it is on.
+2. Click **Browse**, search for **MD Beautify**, then click **Install** and **Enable**.
 
 ### Clipboard access
 

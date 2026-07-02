@@ -60,8 +60,21 @@
 
 ### 📥 安装方式
 
-- **社区插件市场**：在 Obsidian 插件市场搜索 `MD Beautify`（正在审核中）。
-- **手动安装**：从 [Latest Release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases) 下载 `main.js`, `manifest.json`, `styles.css`，放入仓库的 `.obsidian/plugins/md-beautify/` 文件夹中。
+#### 手动安装
+
+1. 从 [Latest Release](https://github.com/sliiu/obsidian-md-beautify-plugin/releases) 下载 `main.js`、`manifest.json`、`styles.css`。
+2. 在仓库中创建 `.obsidian/plugins/md-beautify/` 目录（若不存在）。
+3. 将三个文件复制到该目录。
+4. 打开 **设置 → 社区插件**，必要时重新加载插件，然后启用 **MD Beautify**。
+
+#### 使用 BRAT 安装
+
+若已安装 [BRAT](https://github.com/TfTHacker/obsidian42-brat) 插件，添加 beta 仓库 `sliiu/obsidian-md-beautify-plugin`，然后在 BRAT 插件列表中安装并启用 **MD Beautify**。
+
+#### 从社区插件市场安装
+
+1. 打开 **设置 → 社区插件**，如已开启 **安全模式** 请先关闭。
+2. 点击 **浏览**，搜索 **MD Beautify**，然后点击 **安装** 并 **启用**。
 
 ### 剪贴板访问说明
 
