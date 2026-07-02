@@ -14,7 +14,7 @@ const appendSvgMarkup = (container: HTMLElement, svgMarkup: string): void => {
 	const parsed = new DOMParser().parseFromString(svgMarkup, 'image/svg+xml');
 	const svgEl = parsed.documentElement;
 	if (svgEl?.tagName.toLowerCase() === 'svg') {
-		container.appendChild(container.doc.importNode(svgEl, true));
+		container.appendChild(container.ownerDocument.importNode(svgEl, true));
 	}
 };
 
@@ -1137,7 +1137,7 @@ export default class MDBeautifyPlugin extends Plugin {
 
 		let leaf: WorkspaceLeaf | null;
 		if (leaves.length > 0) {
-			leaf = leaves[0];
+			leaf = leaves[0] ?? null;
 		} else {
 			leaf = workspace.getRightLeaf(false);
 			if (leaf) {
@@ -1169,7 +1169,8 @@ export default class MDBeautifyPlugin extends Plugin {
 
 		const markdownLeaves = this.app.workspace.getLeavesOfType('markdown');
 		if (markdownLeaves.length > 0) {
-			return markdownLeaves[0].view as MarkdownView;
+			const view = markdownLeaves[0].view;
+			return view instanceof MarkdownView ? view : null;
 		}
 
 		return null;

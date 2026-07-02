@@ -5,6 +5,7 @@ on:
     branches:
       - vue
     paths:
+      - 'apps/obsidian/manifest.json'
       - 'apps/obsidian/src/assets/manifest.json'
       - '.github/workflows/sync-obsidian.yml'
   workflow_dispatch: # 允许手动触发，方便调试和补发版本
@@ -21,7 +22,7 @@ jobs:
 
       - name: Read plugin version
         id: version
-        run: echo "version=$(node -p "require('./apps/obsidian/src/assets/manifest.json').version")" >> $GITHUB_OUTPUT
+        run: echo "version=$(node -p "require('./apps/obsidian/manifest.json').version")" >> $GITHUB_OUTPUT
 
       - name: Check if release already exists
         id: check
@@ -81,9 +82,19 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release-artifacts
+          cp apps/obsidian/manifest.json release-artifacts/manifest.json
           cp apps/obsidian/dist/main.js release-artifacts/main.js
-          cp apps/obsidian/src/assets/manifest.json release-artifacts/manifest.json
           cp apps/obsidian/dist/styles.css release-artifacts/styles.css
+          node -e "JSON.parse(require('fs').readFileSync('release-artifacts/manifest.json','utf8')); console.log('manifest.json is valid JSON')"
+
+      - name: Verify standalone source passes community lint
+        run: |
+          STANDALONE_CHECK=$(mktemp -d)
+          rsync -avL --exclude='node_modules' --exclude='dist' apps/obsidian/ "$STANDALONE_CHECK/"
+          node apps/obsidian/scripts/prepare-standalone.mjs "$STANDALONE_CHECK"
+          cd "$STANDALONE_CHECK"
+          pnpm install --frozen-lockfile=false
+          pnpm run lint
 
       - name: Attest release assets
         uses: actions/attest-build-provenance@v2
@@ -99,9 +110,10 @@ jobs:
         run: |
           # 准备同步目录
           TEMP_DIR=$(mktemp -d)
-          rsync -av --exclude='node_modules' --exclude='dist' apps/obsidian/ $TEMP_DIR/
+          rsync -avL --exclude='node_modules' --exclude='dist' apps/obsidian/ $TEMP_DIR/
+          node apps/obsidian/scripts/prepare-standalone.mjs $TEMP_DIR
           
-          # 使用与 attestation 相同的构建产物
+          # Overwrite with attested release assets (guarantees real JSON, not symlinks)
           cp release-artifacts/manifest.json $TEMP_DIR/manifest.json
           cp release-artifacts/main.js $TEMP_DIR/main.js
           cp release-artifacts/styles.css $TEMP_DIR/styles.css

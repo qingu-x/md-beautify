@@ -6,16 +6,28 @@ interface Cm5ScrollInfo {
 	clientHeight: number;
 }
 
-type ScrollCapableEditor = Editor & {
+interface ScrollCapableEditor {
 	cm?: { scrollDOM?: HTMLElement };
 	scrollDOM?: HTMLElement;
-	getScrollInfo?: () => Cm5ScrollInfo | { top: number; left: number };
+	getScrollInfo?: () => unknown;
 	scrollTo?: (x: number | null, y: number) => void;
-};
+}
 
 function asScrollEditor(editor: Editor): ScrollCapableEditor {
-	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- CM6 scrollDOM is not on the public Editor type
-	return editor as ScrollCapableEditor;
+	return editor;
+}
+
+function isCm5ScrollInfo(value: unknown): value is Cm5ScrollInfo {
+	return (
+		typeof value === "object" &&
+		value !== null &&
+		"height" in value &&
+		"clientHeight" in value &&
+		"top" in value &&
+		typeof value.height === "number" &&
+		typeof value.clientHeight === "number" &&
+		typeof value.top === "number"
+	);
 }
 
 function getCm5ScrollInfo(editor: Editor): Cm5ScrollInfo | null {
@@ -24,22 +36,10 @@ function getCm5ScrollInfo(editor: Editor): Cm5ScrollInfo | null {
 		return null;
 	}
 	const info = scrollEditor.getScrollInfo();
-	if (
-		typeof info !== "object" ||
-		info === null ||
-		!("height" in info) ||
-		!("clientHeight" in info) ||
-		typeof info.height !== "number" ||
-		typeof info.clientHeight !== "number" ||
-		typeof info.top !== "number"
-	) {
+	if (!isCm5ScrollInfo(info)) {
 		return null;
 	}
-	return {
-		top: info.top,
-		height: info.height,
-		clientHeight: info.clientHeight,
-	};
+	return info;
 }
 
 export function getEditorScrollDOM(editor: Editor): HTMLElement | null {

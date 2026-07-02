@@ -8,11 +8,14 @@ const targetVersion = pkg.version;
 
 console.log(`Reading target version ${targetVersion} from package.json`);
 
-// 更新 manifest.json
-const manifestPath = 'src/assets/manifest.json';
-const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+// 更新 manifest.json（根目录为 Obsidian 标准位置，同步到 src/assets 供构建使用）
+const manifestPaths = ['manifest.json', 'src/assets/manifest.json'];
+const manifest = JSON.parse(readFileSync(manifestPaths[0], 'utf8'));
 manifest.version = targetVersion;
-writeFileSync(manifestPath, JSON.stringify(manifest, null, '\t') + '\n');
+const manifestContents = JSON.stringify(manifest, null, '\t') + '\n';
+for (const manifestPath of manifestPaths) {
+	writeFileSync(manifestPath, manifestContents);
+}
 
 // 更新 versions.json (Obsidian 用于版本追踪)
 const versionsPath = 'versions.json';
